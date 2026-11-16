@@ -210,6 +210,12 @@ and what was decided against.
 - Context: [related work](docs/related-work.md), [roadmap](docs/roadmap.md),
   [development](docs/development.md)
 
+## If you use it
+
+If you download varco and it is of use to you, a star on GitHub would be
+appreciated: it is how the author learns that someone uses it. Reports of
+what worked and what did not on other Macs are welcome as issues.
+
 ## Licence
 
 MIT for the code and documents of this repository; the patches under
