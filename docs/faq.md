@@ -29,13 +29,18 @@ Dockerfiles do ([`mlx/docker/`](../mlx/docker/),
 [`pytorch/docker/`](../pytorch/docker/)).
 
 **Is it as fast as running on the Mac?** For work that is mostly GPU time,
-yes, within the 3% the measurements can resolve. For short steps that each
-read a value, it is slower: 1 to 2% for BGE-M3 embeddings in Kiri and 11 to
-12% with Docker Desktop, and 13% on a 26 ms PyTorch training step in Kiri.
-GPT-2 generation with PyTorch, which reads a value per token, ran at 411
-tokens per second in a Docker Desktop container and at 475 in a Kiri
-container, where the Mac gave 579 and 581 (one run a side). The tables are
-in [benchmarks](benchmarks.md).
+yes. Qwen3.6-35B-A3B-4bit with mlx-lm generated the same text in a
+container as on the Mac, at 130 tokens per second in the first generation
+of a run and 141 in the second, with Docker Desktop and with Kiri alike; on
+the Mac the same program gave 125 to 135
+([the runs](benchmarks.md#qwen36-35b-generation-on-the-released-code)).
+Programs that read a value back after every short step are slower, because
+each read is a round trip of 150–200 µs: BGE-M3 embeddings by 1 to 2% in
+Kiri and 11 to 12% with Docker Desktop, a 26 ms PyTorch training step by
+13% in Kiri. GPT-2 generation with PyTorch, which reads a value per token,
+ran at 411 tokens per second with Docker Desktop and 475 in Kiri, where the
+Mac gave 579 and 581 (one run a side). The tables are in
+[benchmarks](benchmarks.md).
 
 **Are the results the same as on the Mac?**
 In almost every program tested, to the bit: the results are compared by the
