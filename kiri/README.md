@@ -3,8 +3,12 @@
 [Kiri](https://github.com/libracoder/kiri) is a container engine for macOS,
 Windows and Linux that speaks the Docker API. These are two patches against
 its commit `260cf66`, licensed under Apache-2.0 as Kiri is
-([LICENSE-APACHE-2.0](LICENSE-APACHE-2.0)). They are not part of Kiri and
-were not proposed to it.
+([LICENSE-APACHE-2.0](LICENSE-APACHE-2.0)). They are not part of Kiri. On
+16 November 2026 the channel was proposed to Kiri in its
+[issue 356](https://github.com/libracoder/kiri/issues/356), and the memory
+change was reported in its
+[issue 210](https://github.com/libracoder/kiri/issues/210), which tracks the
+same cause and for which Kiri's maintainer announced a fix in Kiri 0.2.2.
 
 | Patch | What it does |
 |---|---|
