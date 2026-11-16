@@ -1,0 +1,36 @@
+    /* palette:start (light) - docs/assets/src/palette-light.css; the build script rewrites this block */
+    body { background: #ffffff; color: #2d3142; }
+    .sheet { fill: #f5f5f5; stroke: #d5d6d8; }
+    .zone { fill: #eeeeef; stroke: #91939c; }
+    .ctr-fill { fill: #fafafa; }
+    .ctr-head { fill: #e1e1e3; }
+    .ctr { stroke: #878993; }
+    .band { fill: #f0e3e0; stroke: #bf4520; }
+    .n-prog { fill: #e4e6e9; stroke: #5a6580; }
+    .n-end { fill: #ffffff; stroke: #2d3142; }
+    .n-part { fill: #f4f5f6; stroke: #878993; }
+    .n-gpu { fill: #2d3142; stroke: #2d3142; }
+    .n-file { fill: #e5e5e7; stroke: #4f5d75; }
+    .n-fold { stroke: #4f5d75; }
+    .n-none { fill: none; stroke: #878993; }
+    .cell { fill: #f4f5f6; stroke: #878993; }
+    .cell-full { fill: #797b86; stroke: #878993; }
+    .bar { fill: #a2a9b5; }
+    .bar-ink { fill: #2d3142; }
+    .mask-paper { fill: #f5f5f5; }
+    .mask-zone { fill: #eeeeef; }
+    .mask-band { fill: #f0e3e0; }
+    .mask-end { fill: #ffffff; }
+    .ln { stroke: #4f5d75; }
+    .ln.strong { stroke: #2d3142; }
+    .ln.faint { stroke: #788395; }
+    .mk { fill: #4f5d75; }
+    .mk-strong { fill: #2d3142; }
+    .mk-faint { fill: #788395; }
+    .rule { stroke: #d1d2d5; }
+    .c-ink { fill: #2d3142; }
+    .c-muted { fill: #4f5d75; }
+    .c-soft { fill: #5a6580; }
+    .c-inv { fill: #f5f5f5; }
+    .c-inv2 { fill: #cdced1; }
+    /* palette:end */

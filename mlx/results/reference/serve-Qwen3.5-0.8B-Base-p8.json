@@ -1,0 +1,870 @@
+{
+ "args": {
+  "mac": "http://127.0.0.1:18081",
+  "container": "http://127.0.0.1:18082",
+  "stages": "single,stream,long,concurrent,idle",
+  "blocks": 2,
+  "max_tokens": 120,
+  "long_words": 1500,
+  "nonce": 6065100,
+  "out": "results/serve-Qwen3.5-0.8B-Base-p8.json"
+ },
+ "first": {
+  "mac": {
+   "first": null,
+   "tps": null,
+   "seconds": 0.7106469999998808,
+   "prompt_tokens": 32,
+   "completion_tokens": 120,
+   "cached_tokens": 0,
+   "finish": "length",
+   "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+   "sha": "25db5c3534014d94"
+  },
+  "container": {
+   "first": null,
+   "tps": null,
+   "seconds": 1.1966270419652574,
+   "prompt_tokens": 32,
+   "completion_tokens": 120,
+   "cached_tokens": 0,
+   "finish": "length",
+   "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+   "sha": "25db5c3534014d94"
+  }
+ },
+ "runs": {
+  "single": {
+   "mac": [
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.6445805830298923,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.6560867090011016,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.6458950840169564,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.6431457919534296,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    }
+   ],
+   "container": [
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.8031882499926724,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.874389250006061,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.7935622500372119,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.7813430420355871,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio, un'ombra che avvolgeva le coste, e il suo sole, un'arcata di luce che si affacciava solo in pochi punti. Il Faro, un'isola di pietra e di terra, era un punto di riferimento assoluto. Non era un luogo di festa, ma di attesa. Un luogo dove il tempo si ritraeva, dove il vento si fermava e dove il sole, pur non essendo mai completamente visibile, si sentiva ancora.\n\nIl suo guard",
+     "sha": "25db5c3534014d94"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "stream": {
+   "mac": [
+    {
+     "first": 0.053509124962147325,
+     "tps": 185.20186516466453,
+     "seconds": 0.6960571669624187,
+     "prompt_tokens": 273,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl nome del luogo era noto a tutti: il Faro. Non era un semplice edificio, ma un'istituzione, un'opera di arte e di scienza, che si affacciava sulla costa con una torre di pietra che sembrava nascere dal mare. La sua funzione era chiara: proteggere le coste dalle tempeste, ma anche, in un senso più profondo, proteggere l'umanità.\n\nIl suo guardiano era un uomo di trent'anni, con una faccia che sembrava un'opera di pittura, occhi che",
+     "sha": "14e1806a710168c5"
+    },
+    {
+     "first": 0.07696366700110957,
+     "tps": 182.19194922763478,
+     "seconds": 0.7301258749794215,
+     "prompt_tokens": 486,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl cielo era un'opera di colori, un'opera di luce che si era accesa con un suono di vento che si era fatto sentire come un'ombra. Il cielo era un'opera di luce che si era accesa con un suono di vento che si era fatto sentire come un'ombra. Il cielo era un'opera di luce che si era accesa con un suono di vento che si era fatto sentire come un'ombra. Il cielo era un'opera di luce che si era accesa con un suono di vento che si",
+     "sha": "25908058643a8474"
+    },
+    {
+     "first": 0.09413687500637025,
+     "tps": 179.34115494656305,
+     "seconds": 0.7576818329980597,
+     "prompt_tokens": 706,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl cielo era un cielo di un'aria pesante e di un'ombra che si avvolgeva come un velo di polvere. Il sole, che si era nascosto dietro le nuvole, non brillava, ma si spegneva in un'ombra di fuoco che si estendeva come un'ombra di fumo. Il vento, che si era sollevato dal mare, era un vento di pioggia, che si era infilato nelle finestre e nelle porte, creando un silenzio che sembrava essere stato spezzato solo da un rumore",
+     "sha": "f2be8afa1ee35474"
+    },
+    {
+     "first": 0.1231944999890402,
+     "tps": 181.49395817630958,
+     "seconds": 0.7788685840205289,
+     "prompt_tokens": 941,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl cielo era un'opera di colori, un'opera di luce che si era accesa con un suono come un'esplosione. Il sole, che sembrava un'esplosione di fuoco, si era posato sul mare, illuminandolo con un calore che si trasformava in un'ombra. Il sole, che sembrava un'esplosione di fuoco, si era posato sul mare, illuminandolo con un calore che si trasformava in un'ombra. Il sole, che sembrava un'esplosione",
+     "sha": "2ebd2f4f8a7af46f"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.06006237503606826,
+     "tps": 129.65047299330652,
+     "seconds": 0.9779211250133812,
+     "prompt_tokens": 273,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl nome del luogo era noto a tutti: il Faro. Non era un semplice edificio, ma un'istituzione, un'opera di arte e di scienza, che si affacciava sulla costa con una torre di pietra che sembrava nascere dal mare. La sua funzione era chiara: proteggere le coste dalle tempeste, ma anche, in un senso più profondo, proteggere l'umanità.\n\nIl suo guardiano era un uomo di trent'anni, con una faccia che sembrava un'opera di pittura, occhi che",
+     "sha": "14e1806a710168c5"
+    },
+    {
+     "first": 0.0955584580078721,
+     "tps": 127.7354095174182,
+     "seconds": 1.0271770000108518,
+     "prompt_tokens": 486,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl cielo era un'opera di colori, un'opera di luce che si era accesa con un suono di vento che si era fatto sentire come un'ombra. Il cielo era un'opera di luce che si era accesa con un suono di vento che si era fatto sentire come un'ombra. Il cielo era un'opera di luce che si era accesa con un suono di vento che si era fatto sentire come un'ombra. Il cielo era un'opera di luce che si era accesa con un suono di vento che si",
+     "sha": "25908058643a8474"
+    },
+    {
+     "first": 0.10497125005349517,
+     "tps": 126.12816476442933,
+     "seconds": 1.0484612500295043,
+     "prompt_tokens": 706,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl cielo era un cielo di un'aria pesante e di un'ombra che si avvolgeva come un velo di polvere. Il sole, che si era nascosto dietro le nuvole, non brillava, ma si spegneva in un'ombra di fuoco che si estendeva come un'ombra di fumo. Il vento, che si era sollevato dal mare, era un vento di pioggia, che si era infilato nelle finestre e nelle porte, creando un silenzio che sembrava essere stato spezzato solo da un rumore",
+     "sha": "f2be8afa1ee35474"
+    },
+    {
+     "first": 0.1370448749512434,
+     "tps": 124.51221814839059,
+     "seconds": 1.092779915954452,
+     "prompt_tokens": 941,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "**Il Faro e il Guardiano**\n\nIl cielo era un'opera di colori, un'opera di luce che si era accesa con un suono come un'esplosione. Il sole, che sembrava un'esplosione di fuoco, si era posato sul mare, illuminandolo con un calore che si trasformava in un'ombra. Il sole, che sembrava un'esplosione di fuoco, si era posato sul mare, illuminandolo con un calore che si trasformava in un'ombra. Il sole, che sembrava un'esplosione",
+     "sha": "2ebd2f4f8a7af46f"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "long": {
+   "mac": [
+    {
+     "first": 0.2784102500299923,
+     "tps": 179.41817255497642,
+     "seconds": 0.3564577919896692,
+     "prompt_tokens": 2320,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 130 righe numerate.<|im_end|>\n",
+     "sha": "f7d69ea8ac47e3c0",
+     "prompt_tps": 8333.026530991849
+    },
+    {
+     "first": 0.2783152910415083,
+     "tps": 180.53984489095214,
+     "seconds": 0.3558930830331519,
+     "prompt_tokens": 2288,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 123 righe numerate.<|im_end|>\n",
+     "sha": "8f97576632fc112d",
+     "prompt_tps": 8220.892181086681
+    },
+    {
+     "first": 0.2817183749866672,
+     "tps": 178.5810136520396,
+     "seconds": 0.36014791700290516,
+     "prompt_tokens": 2295,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 125 righe numerate.<|im_end|>\n",
+     "sha": "39f05d242aef2c2d",
+     "prompt_tps": 8146.433473175524
+    },
+    {
+     "first": 0.28753679199144244,
+     "tps": 178.28944014530927,
+     "seconds": 0.3660907919984311,
+     "prompt_tokens": 2300,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 126 righe numerate.<|im_end|>\n",
+     "sha": "5dd67e12f6e8a91e",
+     "prompt_tps": 7998.976353845012
+    }
+   ],
+   "container": [
+    {
+     "first": 0.29927999997744337,
+     "tps": 120.34534813440611,
+     "seconds": 0.41562174999853596,
+     "prompt_tokens": 2320,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 130 righe numerate.<|im_end|>\n",
+     "sha": "f7d69ea8ac47e3c0",
+     "prompt_tps": 7751.937985080385
+    },
+    {
+     "first": 0.302818208001554,
+     "tps": 122.98533765534876,
+     "seconds": 0.4166616660077125,
+     "prompt_tokens": 2288,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 123 righe numerate.<|im_end|>\n",
+     "sha": "8f97576632fc112d",
+     "prompt_tps": 7555.688328980067
+    },
+    {
+     "first": 0.3122108340030536,
+     "tps": 132.06130006300017,
+     "seconds": 0.4182347499881871,
+     "prompt_tokens": 2295,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 125 righe numerate.<|im_end|>\n",
+     "sha": "39f05d242aef2c2d",
+     "prompt_tps": 7350.801926295593
+    },
+    {
+     "first": 0.29292808298487216,
+     "tps": 148.96839334552774,
+     "seconds": 0.3869211249984801,
+     "prompt_tokens": 2300,
+     "completion_tokens": 15,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 126 righe numerate.<|im_end|>\n",
+     "sha": "5dd67e12f6e8a91e",
+     "prompt_tps": 7851.75656961091
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "same start": {
+   "mac": [
+    {
+     "first": 0.03565991600044072,
+     "tps": 187.17769859275225,
+     "seconds": 0.062379583017900586,
+     "prompt_tokens": 2321,
+     "completion_tokens": 6,
+     "cached_tokens": 2294,
+     "finish": "stop",
+     "text": "Ferro.<|im_end|>\n",
+     "sha": "7a18620a710c3d98"
+    },
+    {
+     "first": 0.03540295799029991,
+     "tps": 184.85662058404515,
+     "seconds": 0.2355925829615444,
+     "prompt_tokens": 2289,
+     "completion_tokens": 38,
+     "cached_tokens": 2262,
+     "finish": "stop",
+     "text": "Sì, la prima parola della riga 3 è \"finestra\".\n</think>\n\nSì, la prima parola della riga 3 è \"finestra\".<|im_end|>\n",
+     "sha": "4b6b8d823d205491"
+    },
+    {
+     "first": 0.035318666021339595,
+     "tps": 184.3648223291778,
+     "seconds": 0.20350150001468137,
+     "prompt_tokens": 2296,
+     "completion_tokens": 32,
+     "cached_tokens": 2269,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"giardino\".\n</think>\n\nLa prima parola della riga 3 è \"giardino\".<|im_end|>\n",
+     "sha": "257968a6e99c455d"
+    },
+    {
+     "first": 0.03487000003224239,
+     "tps": 184.4955312256398,
+     "seconds": 0.20290150004439056,
+     "prompt_tokens": 2301,
+     "completion_tokens": 32,
+     "cached_tokens": 2274,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"paese\".\n</think>\n\nLa prima parola della riga 3 è \"paese\".<|im_end|>\n",
+     "sha": "ce870d3d8808d878"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.046939457999542356,
+     "tps": 151.7999694199372,
+     "seconds": 0.07988683303119615,
+     "prompt_tokens": 2321,
+     "completion_tokens": 6,
+     "cached_tokens": 2294,
+     "finish": "stop",
+     "text": "Ferro.<|im_end|>\n",
+     "sha": "7a18620a710c3d98"
+    },
+    {
+     "first": 0.0461719169979915,
+     "tps": 132.76128387488322,
+     "seconds": 0.32487804198171943,
+     "prompt_tokens": 2289,
+     "completion_tokens": 38,
+     "cached_tokens": 2262,
+     "finish": "stop",
+     "text": "Sì, la prima parola della riga 3 è \"finestra\".\n</think>\n\nSì, la prima parola della riga 3 è \"finestra\".<|im_end|>\n",
+     "sha": "4b6b8d823d205491"
+    },
+    {
+     "first": 0.04774091701256111,
+     "tps": 146.82969260602013,
+     "seconds": 0.2588781249942258,
+     "prompt_tokens": 2296,
+     "completion_tokens": 32,
+     "cached_tokens": 2269,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"giardino\".\n</think>\n\nLa prima parola della riga 3 è \"giardino\".<|im_end|>\n",
+     "sha": "257968a6e99c455d"
+    },
+    {
+     "first": 0.04204720800044015,
+     "tps": 149.53000547492374,
+     "seconds": 0.24937516602221876,
+     "prompt_tokens": 2301,
+     "completion_tokens": 32,
+     "cached_tokens": 2274,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"paese\".\n</think>\n\nLa prima parola della riga 3 è \"paese\".<|im_end|>\n",
+     "sha": "ce870d3d8808d878"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "follow up": {
+   "mac": [
+    {
+     "first": 0.03550412500044331,
+     "tps": 184.1521689432307,
+     "seconds": 0.09524887503357604,
+     "prompt_tokens": 2344,
+     "completion_tokens": 12,
+     "cached_tokens": 2317,
+     "finish": "stop",
+     "text": "Ferro.\n</think>\n\nFerro.<|im_end|>\n",
+     "sha": "1faf206d5c4cd02c"
+    },
+    {
+     "first": 0.03602050000336021,
+     "tps": 183.69993989487327,
+     "seconds": 0.2374640420312062,
+     "prompt_tokens": 2325,
+     "completion_tokens": 38,
+     "cached_tokens": 2285,
+     "finish": "stop",
+     "text": "Sì, la seconda parola della riga 3 è \"cielo\".\n</think>\n\nSì, la seconda parola della riga 3 è \"cielo\".<|im_end|>\n",
+     "sha": "71ec3bda7f77f348"
+    },
+    {
+     "first": 0.036409542022738606,
+     "tps": 184.70530781208845,
+     "seconds": 0.20428325003013015,
+     "prompt_tokens": 2329,
+     "completion_tokens": 32,
+     "cached_tokens": 2292,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"stella\".\n</think>\n\nLa seconda parola della riga 3 è \"stella\".<|im_end|>\n",
+     "sha": "fd8284d817843503"
+    },
+    {
+     "first": 0.036336874996777624,
+     "tps": 184.33289973085618,
+     "seconds": 0.0851693750009872,
+     "prompt_tokens": 2334,
+     "completion_tokens": 10,
+     "cached_tokens": 2297,
+     "finish": "stop",
+     "text": "la.\n</think>\n\nla.<|im_end|>\n",
+     "sha": "18cf0a140e9961f2"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.05032520805252716,
+     "tps": 129.18031615741629,
+     "seconds": 0.1354862080188468,
+     "prompt_tokens": 2344,
+     "completion_tokens": 12,
+     "cached_tokens": 2317,
+     "finish": "stop",
+     "text": "Ferro.\n</think>\n\nFerro.<|im_end|>\n",
+     "sha": "1faf206d5c4cd02c"
+    },
+    {
+     "first": 0.0480405839625746,
+     "tps": 139.2862305545119,
+     "seconds": 0.31369187496602535,
+     "prompt_tokens": 2325,
+     "completion_tokens": 38,
+     "cached_tokens": 2285,
+     "finish": "stop",
+     "text": "Sì, la seconda parola della riga 3 è \"cielo\".\n</think>\n\nSì, la seconda parola della riga 3 è \"cielo\".<|im_end|>\n",
+     "sha": "71ec3bda7f77f348"
+    },
+    {
+     "first": 0.046626915980596095,
+     "tps": 148.20979845630958,
+     "seconds": 0.2557997499825433,
+     "prompt_tokens": 2329,
+     "completion_tokens": 32,
+     "cached_tokens": 2292,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"stella\".\n</think>\n\nLa seconda parola della riga 3 è \"stella\".<|im_end|>\n",
+     "sha": "fd8284d817843503"
+    },
+    {
+     "first": 0.041955667024012655,
+     "tps": 156.34726654689126,
+     "seconds": 0.09953225002391264,
+     "prompt_tokens": 2334,
+     "completion_tokens": 10,
+     "cached_tokens": 2297,
+     "finish": "stop",
+     "text": "la.\n</think>\n\nla.<|im_end|>\n",
+     "sha": "18cf0a140e9961f2"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "2 at once": {
+   "mac": [
+    {
+     "seconds": 0.7053910830290988,
+     "completion_tokens": 240,
+     "tps": 340.2367931408902,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "1e7d979cf2f3d9ba",
+     "text": "**Il Gatto di Piazza**\n\nIl giorno del 15 marzo, il cielo era un cielo di un'azzurra pallida, come se il sole avesse appena sceso e non avesse ancora fatto il suo giro completo. In quel momento, il gatto di Piazza, un gatto di un'età di due anni, si trovava in una piazza di Milano, circondata da un'ampia piazza di legno e da un'ampia piazza di pietra.\n\nIl gatto, con le sue orecchie lunghe e le orecchie nere che sembravano un po' di\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    },
+    {
+     "seconds": 0.7115406249649823,
+     "completion_tokens": 240,
+     "tps": 337.2962717509086,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "58d5aaf01e4c6a55",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome di un animale domestico che non ha mai avuto un nome.\n\nGatto era un gatto di un certo tipo. Non era un gatto di un gatto, ma un gatto di un gatto. Era un gatto che non aveva mai visto un gatto, né mai avuto la possibilità di\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    },
+    {
+     "seconds": 0.7031882919836789,
+     "completion_tokens": 240,
+     "tps": 341.3026108881381,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "2c669b51a5bdcb2d",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un'ora, e poi si dimenticava.\n\nGatto era un gatto di un'età media, con un corpo di un po' più lungo di un cane, ma con un'aspetto più morbido e morbido. Aveva occhi di un colore grigio-nero,\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    },
+    {
+     "seconds": 0.7093751659849659,
+     "completion_tokens": 240,
+     "tps": 338.3259120253534,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "e4ae1c9d08117492",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un amico che non si conosceva.\n\nGatto era un gatto di un certo colore, un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    }
+   ],
+   "container": [
+    {
+     "seconds": 0.9952752499957569,
+     "completion_tokens": 240,
+     "tps": 241.13932301744987,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "1e7d979cf2f3d9ba",
+     "text": "**Il Gatto di Piazza**\n\nIl giorno del 15 marzo, il cielo era un cielo di un'azzurra pallida, come se il sole avesse appena sceso e non avesse ancora fatto il suo giro completo. In quel momento, il gatto di Piazza, un gatto di un'età di due anni, si trovava in una piazza di Milano, circondata da un'ampia piazza di legno e da un'ampia piazza di pietra.\n\nIl gatto, con le sue orecchie lunghe e le orecchie nere che sembravano un po' di\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    },
+    {
+     "seconds": 0.898936124984175,
+     "completion_tokens": 240,
+     "tps": 266.982261953512,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "58d5aaf01e4c6a55",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome di un animale domestico che non ha mai avuto un nome.\n\nGatto era un gatto di un certo tipo. Non era un gatto di un gatto, ma un gatto di un gatto. Era un gatto che non aveva mai visto un gatto, né mai avuto la possibilità di\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    },
+    {
+     "seconds": 0.8412423750269227,
+     "completion_tokens": 240,
+     "tps": 285.2923332497595,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "2c669b51a5bdcb2d",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un'ora, e poi si dimenticava.\n\nGatto era un gatto di un'età media, con un corpo di un po' più lungo di un cane, ma con un'aspetto più morbido e morbido. Aveva occhi di un colore grigio-nero,\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    },
+    {
+     "seconds": 0.9340814169845544,
+     "completion_tokens": 240,
+     "tps": 256.93691752778824,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "e4ae1c9d08117492",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un amico che non si conosceva.\n\nGatto era un gatto di un certo colore, un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non",
+     "errors": []
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "4 at once": {
+   "mac": [
+    {
+     "seconds": 0.8038396670017391,
+     "completion_tokens": 480,
+     "tps": 597.1340053301469,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "b0f9e0a24cc7b037",
+     "text": "**Il Gatto di Piazza**\n\nIl giorno del 15 marzo, il cielo era un cielo di un'azzurra pallida, come se il sole avesse appena sceso e non avesse ancora fatto il suo giro completo. In quel momento, il gatto di Piazza, un gatto di un'età di due anni, si trovava in una piazza di Milano, circondata da un'ampia piazza di legno e da un'ampia piazza di pietra.\n\nIl gatto, con le sue orecchie lunghe e le orecchie nere che sembravano un po' di\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che si era fermato sul mare di Sirena, il mare che si era fermato sul mare, aveva fatto un gesto di silenzio. Il cielo, che per secoli aveva sorreggendoli, si era abbassato, lasciando il sole, il sole che si era abbassato, a illuminare il mare con una luce che sembrava essere stata fatta per un altro pianeta.\n\nIl vulcano, che per secoli aveva custodito il mare, aveva fatto un gesto di silenzio. Il mare, che per secoli aveva\n---\n**Il Violino**\n\nIl nome del violino era un nome di fantasia, un nome che non esisteva nel mondo reale, ma che il suo proprietario, un uomo di nome Giovanni, aveva scelto per il suo nome. Giovanni era un uomo di una certa età, con una barba grigia che gli dava un'aura di quiete e di quieto, e che, per la sua età, sembrava avere un'aura di quieto. Era un uomo che non si sentiva mai troppo, e che, per la sua età, sembrava avere un'aura di quiet",
+     "errors": []
+    },
+    {
+     "seconds": 0.812441750022117,
+     "completion_tokens": 480,
+     "tps": 590.8115873992604,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "225851adb01e56e8",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome di un animale domestico che non ha mai avuto un nome.\n\nGatto era un gatto di un certo tipo. Non era un gatto di un gatto, ma un gatto di un gatto. Era un gatto che non aveva mai visto un gatto, né mai avuto la possibilità di\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che si era fermato sul mare di Sirena, il mare che si era fermato sul mare, aveva fatto un gesto di silenzio. E allora, il vulcano, il gigante di pietra che aveva sempre avuto il diritto di parlare, si alzò. Non con un rumore di pietra, ma con un suono che sembrava essere il canto di un orso che si sveglia in un buio.\n\nIl suo corpo era una montagna di roccia, di granito e di lava, che si era formata\n---\n**Il Violino**\n\nIl nome del violino era un nome di fantasia, un nome che non esisteva nel mondo reale, ma che il suo proprietario, un uomo di nome Giovanni, aveva scelto per il suo nome. Giovanni era un uomo di una certa età, con una barba grigia che gli dava un'aura di quiete e di quieto, e che, per la sua età, sembrava avere un'aura di quieto. Era un uomo che non si sentiva mai troppo, e che, per la sua età, sembrava avere un'aura di quiet",
+     "errors": []
+    },
+    {
+     "seconds": 0.8036739999661222,
+     "completion_tokens": 480,
+     "tps": 597.2570968082006,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "dcba9f58b6f9c2ff",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un'ora, e poi si dimenticava.\n\nGatto era un gatto di un'età media, con un corpo di un po' più lungo di un cane, ma con un'aspetto più morbido e morbido. Aveva occhi di un colore grigio-nero,\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che soffia dal cielo di Sirena era un suono di pietra, un suono che non era solo vento, ma un'eco di terribile energia. Il vulcano, con la sua bocca di fuoco che si estendeva come una lunga spina dorsale, era il cuore pulsante di questo mondo. E il suo cuore batteva con un ritmo che non era solo fisico, ma esisteva in un'immensa, profonda paura.\n\nIl giorno del 1200, il vulcano non era solo\n---\n**Il Violino**\n\nIl nome del violino era un nome che non esisteva, né in Italia, né in Francia, né in Germania. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava",
+     "errors": []
+    },
+    {
+     "seconds": 0.803727374994196,
+     "completion_tokens": 480,
+     "tps": 597.2174333410832,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "4e2e89f8b91cd47e",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un amico che non si conosceva.\n\nGatto era un gatto di un certo colore, un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che soffia dal cielo di Sirena era un suono di pietra, un suono che non era solo vento, ma un'eco di terribile energia. Il vulcano, con la sua bocca di fuoco che si estendeva come una lunga spina dorsale, era il cuore pulsante di questo mondo. E il suo cuore batteva con un ritmo che non era solo fisico, ma esisteva in un'immensa, profonda paura.\n\nIl giorno del 1200, il vulcano non era solo\n---\n**Il Violino**\n\nIl nome del violino era un nome che non esisteva, né in Italia, né in Francia, né in Germania. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava",
+     "errors": []
+    }
+   ],
+   "container": [
+    {
+     "seconds": 1.7129454590030946,
+     "completion_tokens": 480,
+     "tps": 280.21907964270616,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "e871625c087323a9",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Era un nome che non era mai stato pronunciato, né mai sentito. Era un nome che non era mai stato scritto, né mai mai scritto. Era un nome che non era mai stato scritto, né mai mai scritto. Era un nome che non era mai stato scritto, né mai mai scritto. Era un nome che non era mai stato scritto, né mai mai scritto. Era un nome che non era mai stato scritto, né mai mai scritto. Era un nome che non era mai stato\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che si era fermato sul mare di Sirena, il mare che si era fermato sul mare, aveva fatto un gesto di silenzio. E allora, il vulcano, il gigante di pietra che aveva sempre avuto il diritto di parlare, si alzò. Non con un rumore di pietra, ma con un suono di pietra che sembrava essere stato fatto da un vento che non aveva mai sentito.\n\nIl suo corpo era una montagna di roccia, di granito e di lava, con le sue creste che sembravano\n---\n**Il Violino**\n\nIl nome del violino era un nome di fantasia, un nome che non esisteva nel mondo reale, ma che il suo proprietario, un uomo di trent'anni e di un'aura di quiete che sembrava un'ombra di quiete, aveva scelto per il suo nome. Il nome era \"Il Violino\", e il suo nome era un nome che non era mai stato pronunciato.\n\nIl violino era un oggetto di arte, un oggetto di bellezza, un oggetto di desiderio. Era un oggetto che si trovava in una stanza di legno,",
+     "errors": []
+    },
+    {
+     "seconds": 1.093268333002925,
+     "completion_tokens": 480,
+     "tps": 439.0504924637891,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "225851adb01e56e8",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome di un animale domestico che non ha mai avuto un nome.\n\nGatto era un gatto di un certo tipo. Non era un gatto di un gatto, ma un gatto di un gatto. Era un gatto che non aveva mai visto un gatto, né mai avuto la possibilità di\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che si era fermato sul mare di Sirena, il mare che si era fermato sul mare, aveva fatto un gesto di silenzio. E allora, il vulcano, il gigante di pietra che aveva sempre avuto il diritto di parlare, si alzò. Non con un rumore di pietra, ma con un suono che sembrava essere il canto di un orso che si sveglia in un buio.\n\nIl suo corpo era una montagna di roccia, di granito e di lava, che si era formata\n---\n**Il Violino**\n\nIl nome del violino era un nome di fantasia, un nome che non esisteva nel mondo reale, ma che il suo proprietario, un uomo di nome Giovanni, aveva scelto per il suo nome. Giovanni era un uomo di una certa età, con una barba grigia che gli dava un'aura di quiete e di quieto, e che, per la sua età, sembrava avere un'aura di quieto. Era un uomo che non si sentiva mai troppo, e che, per la sua età, sembrava avere un'aura di quiet",
+     "errors": []
+    },
+    {
+     "seconds": 1.015865458000917,
+     "completion_tokens": 480,
+     "tps": 472.5035153223673,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "dcba9f58b6f9c2ff",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un'ora, e poi si dimenticava.\n\nGatto era un gatto di un'età media, con un corpo di un po' più lungo di un cane, ma con un'aspetto più morbido e morbido. Aveva occhi di un colore grigio-nero,\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che soffia dal cielo di Sirena era un suono di pietra, un suono che non era solo vento, ma un'eco di terribile energia. Il vulcano, con la sua bocca di fuoco che si estendeva come una lunga spina dorsale, era il cuore pulsante di questo mondo. E il suo cuore batteva con un ritmo che non era solo fisico, ma esisteva in un'immensa, profonda paura.\n\nIl giorno del 1200, il vulcano non era solo\n---\n**Il Violino**\n\nIl nome del violino era un nome che non esisteva, né in Italia, né in Francia, né in Germania. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava",
+     "errors": []
+    },
+    {
+     "seconds": 1.019574082980398,
+     "completion_tokens": 480,
+     "tps": 470.78481888915206,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "4e2e89f8b91cd47e",
+     "text": "**Il Gatto che Non Sapeva**\n\nIl nome del gatto era semplicemente \"Gatto\". Non era un nome speciale, non aveva un nome di famiglia, e non era un nome che si ricordava. Era solo un nome che si diceva, come un nome che si diceva per un amico che non si conosceva.\n\nGatto era un gatto di un certo colore, un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai visto. Era un gatto di un colore che non era mai stato mai\n---\n**Il Treno che Non Si Sente**\n\nIl treno era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non si sentiva, ma che si sentiva in modo diverso. Era un oggetto di grande fascino, un oggetto che non\n---\n**Il Volcano di Sirena**\n\nIl vento che soffia dal cielo di Sirena era un suono di pietra, un suono che non era solo vento, ma un'eco di terribile energia. Il vulcano, con la sua bocca di fuoco che si estendeva come una lunga spina dorsale, era il cuore pulsante di questo mondo. E il suo cuore batteva con un ritmo che non era solo fisico, ma esisteva in un'immensa, profonda paura.\n\nIl giorno del 1200, il vulcano non era solo\n---\n**Il Violino**\n\nIl nome del violino era un nome che non esisteva, né in Italia, né in Francia, né in Germania. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava solo in un libro di cartone, un'immagine su un poster di un museo di arte, e in un'etichetta di un bottino di mare. Era un nome che si trovava",
+     "errors": []
+    }
+   ],
+   "identical": [
+    false,
+    true,
+    true,
+    true
+   ]
+  },
+  "after 3 s idle": {
+   "mac": [
+    {
+     "first": 0.07489687501220033,
+     "seconds": 0.17995058401720598,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    },
+    {
+     "first": 0.07558125001378357,
+     "seconds": 0.17927650001365691,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    },
+    {
+     "first": 0.058204625034704804,
+     "seconds": 0.16544850001810119,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    },
+    {
+     "first": 0.06867908401181921,
+     "seconds": 0.17439041699981317,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.09526970802107826,
+     "seconds": 0.22282233304576948,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    },
+    {
+     "first": 0.05253429099684581,
+     "seconds": 0.205779166019056,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    },
+    {
+     "first": 0.06099345802795142,
+     "seconds": 0.2159046659944579,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    },
+    {
+     "first": 0.04920558398589492,
+     "seconds": 0.17839024995919317,
+     "sha": "aa4f4125be64d2ca",
+     "text": "**Il Faro e il suo Guardiano**\n\nIl mare era un'oceana di silenzio"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  }
+ }
+}

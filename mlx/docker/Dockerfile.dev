@@ -1,0 +1,10 @@
+# Toolchain image used for incremental builds of the patched MLX (./upstream
+# is bind-mounted at /src, the build tree lives inside the container at /build).
+#   docker build -f docker/Dockerfile.dev -t varco-mlx-dev:latest docker
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential cmake ninja-build git ccache ca-certificates \
+      libopenblas-dev liblapacke-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir numpy
+WORKDIR /work

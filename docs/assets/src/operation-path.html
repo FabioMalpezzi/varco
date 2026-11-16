@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The path of one operation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1000px; width: 100%; }
+    .frame > .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 0.5rem;
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; line-height: 1.2; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 880px; display: block; }
+    @media print {
+      .frame > .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+
+    /* ---- diagram: structure (the same in the light and dark sources) ---- */
+    .t-name { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; }
+    .t-part { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; }
+    .t-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; }
+    .t-sub  { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 400; }
+    .t-subb { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; }
+    .t-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 400; }
+    .t-msg  { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+    .t-eye  { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; }
+    .t-fig  { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 16px; font-weight: 600; }
+    .mid { text-anchor: middle; }
+    .end { text-anchor: end; }
+    .sheet { stroke-width: 1; }
+    .zone { stroke-width: 1.2; }
+    .zone.vm { stroke-dasharray: 7 5; }
+    .ctr { fill: none; stroke-width: 1; }
+    .band { stroke-width: 1.2; }
+    .n-prog, .n-part, .n-file, .n-none { stroke-width: 1; }
+    .n-end { stroke-width: 1.5; }
+    .n-gpu { stroke-width: 1; stroke-linejoin: round; }
+    .n-none, .dashed { stroke-dasharray: 4 3; }
+    .n-fold { fill: none; stroke-width: 1; }
+    .ln { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+    .ln.strong { stroke-width: 2.4; }
+    .ln.back { stroke-dasharray: 5 4; }
+    .ln.faint { stroke-width: 1.2; stroke-dasharray: 2 4; }
+    .rule { fill: none; stroke-width: 1; }
+
+    /* palette:start (light) - docs/assets/src/palette-light.css; the build script rewrites this block */
+    body { background: #ffffff; color: #2d3142; }
+    .sheet { fill: #f5f5f5; stroke: #d5d6d8; }
+    .zone { fill: #eeeeef; stroke: #91939c; }
+    .ctr-fill { fill: #fafafa; }
+    .ctr-head { fill: #e1e1e3; }
+    .ctr { stroke: #878993; }
+    .band { fill: #f0e3e0; stroke: #bf4520; }
+    .n-prog { fill: #e4e6e9; stroke: #5a6580; }
+    .n-end { fill: #ffffff; stroke: #2d3142; }
+    .n-part { fill: #f4f5f6; stroke: #878993; }
+    .n-gpu { fill: #2d3142; stroke: #2d3142; }
+    .n-file { fill: #e5e5e7; stroke: #4f5d75; }
+    .n-fold { stroke: #4f5d75; }
+    .n-none { fill: none; stroke: #878993; }
+    .cell { fill: #f4f5f6; stroke: #878993; }
+    .cell-full { fill: #797b86; stroke: #878993; }
+    .bar { fill: #a2a9b5; }
+    .bar-ink { fill: #2d3142; }
+    .mask-paper { fill: #f5f5f5; }
+    .mask-zone { fill: #eeeeef; }
+    .mask-band { fill: #f0e3e0; }
+    .mask-end { fill: #ffffff; }
+    .ln { stroke: #4f5d75; }
+    .ln.strong { stroke: #2d3142; }
+    .ln.faint { stroke: #788395; }
+    .mk { fill: #4f5d75; }
+    .mk-strong { fill: #2d3142; }
+    .mk-faint { fill: #788395; }
+    .rule { stroke: #d1d2d5; }
+    .c-ink { fill: #2d3142; }
+    .c-muted { fill: #4f5d75; }
+    .c-soft { fill: #5a6580; }
+    .c-inv { fill: #f5f5f5; }
+    .c-inv2 { fill: #cdced1; }
+    /* palette:end */
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · varco</p>
+    <h1>The path of one operation</h1>
+    <div class="diagram-container">
+      <svg viewBox="0 0 880 704" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="operation-path-title operation-path-desc">
+        <title id="operation-path-title">The path of one operation to the GPU and back</title>
+        <desc id="operation-path-desc">Two panels. With MLX, which is lazy, the program builds a graph and evaluates it; the container end records the nodes and sends them as one GRAPH message with no reply, and goes on building the next step; mlx-remote-server rebuilds the nodes with import_function, evaluates them on the GPU and, as soon as the GPU has finished, sends a DONE frame with the outputs the container marked, so that when the program reads the value it is already there. With PyTorch, which is eager, the first call with given shapes defines a signature in a D frame; every later call is an O frame of a few integers written from C++, with no reply; bridge.session runs the operator on the real MPS; only when the program reads a value does the container send a J op message marked sync and wait for the value, one round trip, 150 to 200 microseconds more than on the Mac.</desc>
+        <defs>
+          <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk" points="0 0, 10 4, 0 8"/></marker>
+          <marker id="arrow-strong" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto"><polygon class="mk-strong" points="0 0, 12 5, 0 10"/></marker>
+          <marker id="arrow-faint" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk-faint" points="0 0, 10 4, 0 8"/></marker>
+        </defs>
+        <rect class="sheet" x="0.5" y="0.5" width="879" height="703" rx="10"/>
+        <!-- zones: the virtual machine and macOS -->
+        <g class="l-zones">
+          <rect class="zone vm" x="20" y="20" width="344" height="308" rx="8"/>
+          <text x="34" y="40" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="528" y="20" width="332" height="308" rx="8"/>
+          <text x="542" y="40" class="t-eye c-soft">macOS</text>
+          <rect class="zone vm" x="20" y="344" width="344" height="308" rx="8"/>
+          <text x="34" y="364" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="528" y="344" width="332" height="308" rx="8"/>
+          <text x="542" y="364" class="t-eye c-soft">macOS</text>
+        </g>
+        <!-- containers -->
+        <g class="l-ctrs">
+          <rect class="ctr-fill" x="32" y="52" width="320" height="264" rx="6"/>
+          <path class="ctr-head" d="M 32,76 V 58 Q 32,52 38,52 H 346 Q 352,52 352,58 V 76 Z"/>
+          <rect class="ctr" x="32" y="52" width="320" height="264" rx="6"/>
+          <text x="44" y="68.5" class="t-eye c-muted">CONTAINER</text>
+          <text x="121.3" y="68.5" class="t-sub c-muted">an MLX program (lazy)</text>
+          <rect class="ctr-fill" x="32" y="376" width="320" height="264" rx="6"/>
+          <path class="ctr-head" d="M 32,400 V 382 Q 32,376 38,376 H 346 Q 352,376 352,382 V 400 Z"/>
+          <rect class="ctr" x="32" y="376" width="320" height="264" rx="6"/>
+          <text x="44" y="392.5" class="t-eye c-muted">CONTAINER</text>
+          <text x="121.3" y="392.5" class="t-sub c-muted">a PyTorch program (eager)</text>
+        </g>
+        <!-- the channel -->
+        <g class="l-bands">
+          <rect class="band" x="368" y="80" width="156" height="156" rx="6"/>
+          <rect class="band" x="368" y="404" width="156" height="232" rx="6"/>
+        </g>
+        <!-- connectors -->
+        <g class="l-lines">
+          <path class="ln " d="M 340,120 L 544,120" marker-end="url(#arrow)"/>
+          <path class="ln back" d="M 544,196 L 340,196" marker-end="url(#arrow)"/>
+          <path class="ln " d="M 340,444 L 544,444" marker-end="url(#arrow)"/>
+          <path class="ln " d="M 340,520 L 544,520" marker-end="url(#arrow)"/>
+          <path class="ln " d="M 340,584 L 544,584" marker-end="url(#arrow)"/>
+          <path class="ln back" d="M 544,608 L 340,608" marker-end="url(#arrow)"/>
+        </g>
+        <!-- connector labels -->
+        <g class="l-labels">
+          <text x="446" y="110" class="t-msg c-ink mid">GRAPH</text>
+          <text x="446" y="138" class="t-sub c-muted mid">no reply</text>
+          <text x="446" y="186" class="t-msg c-ink mid">DONE</text>
+          <text x="446" y="214" class="t-sub c-muted mid">the marked outputs</text>
+          <text x="446" y="434" class="t-msg c-ink mid">D frame</text>
+          <text x="446" y="462" class="t-sub c-muted mid">a signature, once</text>
+          <text x="446" y="510" class="t-msg c-ink mid">O frame</text>
+          <text x="446" y="538" class="t-sub c-muted mid">no reply</text>
+          <text x="446" y="574" class="t-msg c-ink mid">J op, sync</text>
+          <text x="446" y="626" class="t-sub c-muted mid">the value</text>
+        </g>
+        <!-- nodes -->
+        <g class="l-nodes">
+          <rect class="n-prog" x="44" y="88" width="296" height="64" rx="6"/>
+          <text x="56" y="107.8" class="t-msg c-ink">y = model(x); mx.eval(y)</text>
+          <text x="56" y="123.8" class="t-sub c-muted">the container end records the nodes</text>
+          <text x="56" y="139.8" class="t-sub c-muted">and sends them as one message</text>
+          <rect class="n-prog" x="44" y="164" width="296" height="64" rx="6"/>
+          <text x="56" y="191.8" class="t-subb c-ink">builds the next step</text>
+          <text x="56" y="207.8" class="t-sub c-muted">without waiting for the Mac</text>
+          <rect class="n-prog" x="44" y="240" width="296" height="64" rx="6"/>
+          <text x="56" y="267.8" class="t-msg c-ink">y.item()</text>
+          <text x="56" y="283.8" class="t-sub c-muted">the value is already there</text>
+          <rect class="n-end" x="544" y="88" width="300" height="140" rx="6"/>
+          <text x="560" y="108" class="t-code c-ink">mlx-remote-server</text>
+          <text x="560" y="128" class="t-sub c-muted">rebuilds the nodes (<tspan class="t-mono">import_function</tspan>)</text>
+          <text x="560" y="144" class="t-sub c-muted">and evaluates them on the GPU</text>
+          <text x="560" y="192" class="t-sub c-muted">as soon as the GPU has finished, sends</text>
+          <text x="560" y="208" class="t-sub c-muted">back the outputs the container marked</text>
+          <rect class="n-prog" x="44" y="412" width="296" height="64" rx="6"/>
+          <text x="56" y="431.8" class="t-msg c-ink">z = x @ w</text>
+          <text x="56" y="447.8" class="t-sub c-muted">the first time with these shapes:</text>
+          <text x="56" y="463.8" class="t-sub c-muted">the container end defines a signature</text>
+          <rect class="n-prog" x="44" y="488" width="296" height="64" rx="6"/>
+          <text x="56" y="507.8" class="t-msg c-ink">z = x @ w</text>
+          <text x="56" y="523.8" class="t-sub c-muted">every call after that: a few integers</text>
+          <text x="56" y="539.8" class="t-sub c-muted">written from C++</text>
+          <rect class="n-prog" x="44" y="564" width="296" height="64" rx="6"/>
+          <text x="56" y="583.8" class="t-msg c-ink">z.sum().item()</text>
+          <text x="56" y="599.8" class="t-sub c-muted">asks and waits for the value: one round</text>
+          <text x="56" y="615.8" class="t-sub c-muted">trip, 150–200 µs more than on the Mac</text>
+          <rect class="n-end" x="544" y="412" width="300" height="216" rx="6"/>
+          <text x="560" y="434" class="t-code c-ink">bridge.session</text>
+          <text x="560" y="524" class="t-sub c-muted">runs the operator on the real MPS</text>
+          <text x="560" y="600" class="t-sub c-muted">replies with the value</text>
+        </g>
+        <!-- notes -->
+        <g class="l-text">
+          <path class="rule" d="M 20,668 H 860"/>
+          <path class="ln" d="M 20,684 H 60" marker-end="url(#arrow)"/>
+          <text x="72" y="688" class="t-sub c-muted">sent with no reply: the container does not wait</text>
+          <path class="ln back" d="M 456,684 H 496" marker-end="url(#arrow)"/>
+          <text x="508" y="688" class="t-sub c-muted">sent back by the Mac: a value the program reads</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

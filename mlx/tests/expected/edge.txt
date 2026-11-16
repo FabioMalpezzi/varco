@@ -1,0 +1,19 @@
+# The tests of the stage "edge" of mlx/tests/run-all.sh, one name per line.
+# tests/compare.py fails when a result lacks one of them or holds another.
+# After adding or removing a test, on a Mac, from mlx/:
+#   tests/run-all.sh edge
+#   python3 tests/compare.py --inventory edge results/edge-native.json > tests/expected/edge.txt
+# and read the diff before committing it: a name that goes is a test that no
+# longer runs. (The first of the two fails until the second is done.)
+custom_function
+float64_on_gpu
+after_error
+huge_allocation
+after_huge_allocation
+segmented_mm
+fp8
+metal_kernel
+compiled_on_cpu_default
+load_on_gpu_stream
+threads
+memory_info

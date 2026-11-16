@@ -1,0 +1,11 @@
+# The model test: mlx-embeddings on top of the patched mlx (which pip keeps,
+# since it is installed as mlx 0.32.4).
+#   docker build -f docker/Dockerfile.embeddings -t varco-mlx-embeddings:latest docker
+# BASE is the image to build on: build-images.sh gives the varco-mlx it just
+# built, whatever its tag.
+ARG BASE=varco-mlx:latest
+FROM $BASE
+ARG MLX_EMBEDDINGS_VERSION=0.1.0
+RUN pip install --no-cache-dir "mlx-embeddings==$MLX_EMBEDDINGS_VERSION" \
+    && pip list 2>/dev/null | grep -i "^mlx " \
+    && python -c "import mlx.core as mx; assert mx.default_device() == mx.gpu"

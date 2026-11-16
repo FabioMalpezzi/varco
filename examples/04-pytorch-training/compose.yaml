@@ -1,0 +1,14 @@
+# A PyTorch Lightning training in a container, computed on the Mac's GPU
+# through the PyTorch bridge. The bridge's server must be running on the Mac
+# (run.sh starts it). Checkpoints are written to ./out on the Mac.
+services:
+  train:
+    # The default bridge network: no network of the project's own is left behind.
+    network_mode: bridge
+    image: varco-torch:${TORCH:-2.15.0}
+    # The data loader's worker processes pass batches through shared memory.
+    shm_size: 2g
+    volumes:
+      - ./:/app:ro
+      - ./out:/out
+    command: python /app/train.py --out /out/container

@@ -1,0 +1,53 @@
+# The programs of tests/compat.py, one name per line, in the order they run.
+# tests/compat_compare.py fails when a run lacks one of them or holds another.
+# After adding or removing a program, from pytorch/:
+#   python3 tests/compat_compare.py --inventory compat > tests/expected/compat.txt
+# (it reads the names from the source; scripts/check.sh fails when this file
+# is not what that command gives).
+tensor_from_python_list
+factories
+like_factories
+from_numpy_and_back
+arithmetic
+broadcasting
+reductions
+indexing_basic
+indexing_with_tensors
+boolean_masks
+assignment_in_place
+reshaping_in_place
+views
+joining
+sorting
+comparisons
+products
+integer_and_boolean_types
+half_precision
+reading_values
+control_flow_on_values
+moving_between_devices
+layers_linear_and_activations
+layers_convolution_2d
+layers_convolution_1d_and_resize
+layers_embedding
+layers_recurrent
+layers_attention
+losses
+gradients
+training_with_sgd
+training_with_adam
+training_a_convolution
+random_numbers_from_a_seed
+random_numbers_shape_only
+memory_and_synchronize_calls
+copying_and_saving_a_model
+inference_mode
+inference_mode_attention_and_lstm
+shapes_that_depend_on_the_values
+saving_a_tensor_with_its_views
+saving_a_view_after_its_base_shrank
+saving_a_view_after_its_base_grew
+saving_a_tensor_given_the_memory_of_another
+saving_views_of_other_types
+model_minilm_sentence_embeddings
+model_gpt2_text_generation

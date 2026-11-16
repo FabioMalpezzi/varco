@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 270 72" width="270" height="72" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="varco-logo-title varco-logo-desc">
+  <title id="varco-logo-title">varco</title>
+  <desc id="varco-logo-desc">The word varco beside its mark: a letter V passing through a gap in a horizontal barrier.</desc>
+  <g transform="translate(4 4)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="6.5">
+    <path d="M5 40H18M46 40H59" stroke="#2d3142"/>
+    <path d="M20 10L32 54L44 10" stroke="#bf4520"/>
+  </g>
+  <g transform="translate(86 13.9) scale(1.3)" fill="none" stroke="#2d3142" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 6L10 28L20 6"/>
+    <circle cx="40" cy="17" r="11"/>
+    <path d="M51 6V28"/>
+    <path d="M63 6V28M63 17A11 11 0 0 1 74 6"/>
+    <path d="M100.8 9.2A11 11 0 1 0 100.8 24.8"/>
+    <circle cx="123" cy="17" r="11"/>
+  </g>
+</svg>

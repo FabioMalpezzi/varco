@@ -1,0 +1,65 @@
+# The tests of the stage "coverage" of mlx/tests/run-all.sh, one name per line.
+# tests/compare.py fails when a result lacks one of them or holds another.
+# After adding or removing a test, on a Mac, from mlx/:
+#   tests/run-all.sh coverage
+#   python3 tests/compare.py --inventory coverage results/coverage-native.json > tests/expected/coverage.txt
+# and read the diff before committing it: a name that goes is a test that no
+# longer runs. (The first of the two fails until the second is done.)
+arith_basic
+arith_unary_math
+arith_power_remainder
+arith_minmax_clip_round
+arith_scalars_python
+arith_logaddexp
+broadcast_shapes
+broadcast_to_and_full
+reduce_basic
+reduce_arg_and_logical
+reduce_cumulative
+index_slices
+index_arrays
+index_updates
+index_where_and_masks
+shape_concat_split_stack
+shape_reshape_transpose
+shape_pad_tile_repeat
+shape_contiguous_and_views
+matmul_basic
+matmul_batched_and_addmm
+matmul_einsum_tensordot
+matmul_large_float16
+softmax_family
+comparisons
+casts
+casts_bfloat16
+bitwise
+bitwise_invert
+sorting
+random_seeded
+random_keys_and_categorical
+nn_linear
+nn_layernorm
+nn_rmsnorm
+nn_embedding
+nn_multihead_attention
+nn_transformer_block
+nn_activations
+nn_conv
+nn_rope_and_sdpa
+nn_losses
+nn_losses_gradient
+transform_grad
+transform_grad_model
+transform_compile
+transform_vmap
+eval_async_then_read
+eval_chain_reuse
+cpu_stream_mix
+cpu_views_to_gpu
+cpu_linalg
+numpy_roundtrip
+save_and_load
+fft_ops
+quantized_matmul
+big_array_roundtrip
+zero_size_and_scalars

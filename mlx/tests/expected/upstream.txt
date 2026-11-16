@@ -1,0 +1,38 @@
+# The tests of the stage "upstream" of mlx/tests/run-all.sh, one name per line.
+# tests/compare.py fails when a result lacks one of them or holds another.
+# After adding or removing a test, on a Mac, from mlx/:
+#   tests/run-all.sh upstream
+#   python3 tests/compare.py --inventory upstream results/upstream-native.json > tests/expected/upstream.txt
+# and read the diff before committing it: a name that goes is a test that no
+# longer runs. (The first of the two fails until the second is done.)
+test_array
+test_ops
+test_reduce
+test_einsum
+test_blas
+test_random
+test_nn
+test_losses
+test_fast
+test_fast_sdpa
+test_autograd
+test_vmap
+test_eval
+test_compile
+test_conv
+test_conv_transpose
+test_upsample
+test_fft
+test_quantized
+test_bf16
+test_double
+test_linalg
+test_load
+test_init
+test_optimizers
+test_tree
+test_constants
+test_device
+test_memory
+test_graph
+test_threads

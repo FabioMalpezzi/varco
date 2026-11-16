@@ -1,0 +1,45 @@
+# The tests of the stage "kernels" of mlx/tests/run-all.sh, one name per line.
+# tests/compare.py fails when a result lacks one of them or holds another.
+# After adding or removing a test, on a Mac, from mlx/:
+#   tests/run-all.sh kernels
+#   python3 tests/compare.py --inventory kernels results/kernels-native.json > tests/expected/kernels.txt
+# and read the diff before committing it: a name that goes is a test that no
+# longer runs. (The first of the two fails until the second is done.)
+basic
+no_inputs
+two_outputs
+template_arguments
+init_value
+atomic_outputs
+row_contiguous
+strides_and_shape
+as_it_lies
+contiguous_first
+scalars
+grid_3d
+threadgroups
+threadgroup_too_large
+math_safe
+math_relaxed
+math_fast
+header
+types
+sizes
+compiled
+chained
+repeated
+made_again
+same_name
+large
+on_the_gpu_stream
+verbose
+syntax_error
+after_syntax_error
+bad_name
+wrong_number_of_inputs
+on_the_cpu
+include_refused
+pragma_refused
+source_too_large
+imported_function
+after_everything

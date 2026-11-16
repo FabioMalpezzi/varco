@@ -1,0 +1,541 @@
+{
+ "info": {
+  "device": "Device(gpu, 0)",
+  "mlx": "0.32.4",
+  "platform": "linux",
+  "machine": "aarch64",
+  "metal.is_available": true
+ },
+ "results": {
+  "basic": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "c44e18d92126b055935b822b0938b7df8f6e941956b24b53e3250d339e15caa2"
+   }
+  ],
+  "no_inputs": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "42db79f1c9d537cdf90aac055824550f47a8e6057ea70cab3db980566f07c8fb"
+   }
+  ],
+  "two_outputs": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     24
+    ],
+    "sha256": "31ea8f2a618bf2f9e355f6ded2a0fc0f67ecd9c0391fb23d505e72cf182f3b12"
+   },
+   {
+    "dtype": "mlx.core.int32",
+    "shape": [
+     2,
+     12
+    ],
+    "sha256": "1de8c6b8c438cd79b3ee2c10491565c5134a8f8586c2b5f8bf1bf1b3b606cf49"
+   }
+  ],
+  "template_arguments": [
+   {
+    "dtype": "mlx.core.float16",
+    "shape": [
+     16
+    ],
+    "sha256": "e1b8c5830a7be7197a4e56d8e57eba491c5e1d75362e11d335cf0f6c348f54fe"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "20ed1f9190d93f2ca1df3151d690868adc85a01414eb92dde3e4c907428a7060"
+   },
+   {
+    "dtype": "mlx.core.float16",
+    "shape": [
+     16
+    ],
+    "sha256": "5f4558ef140eacb57de551c1dedf842ce8506eb7b6752ee3716b4662eac3aeb7"
+   }
+  ],
+  "init_value": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "73667ff3c6e489d938afbc732b7c06a0237589628b125605f260eaa050249a27"
+   },
+   {
+    "dtype": "mlx.core.int32",
+    "shape": [
+     16
+    ],
+    "sha256": "9c2602eaf1851b0139ad502a00b3a1979db553a82d70c8d9eb4b072eac8dc6e2"
+   }
+  ],
+  "atomic_outputs": [
+   {
+    "dtype": "mlx.core.uint32",
+    "shape": [
+     8
+    ],
+    "sha256": "c206c0fd38c679020c77d6739ba225a312ec036d87ca64a9eba666e3d82315c5"
+   }
+  ],
+  "row_contiguous": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     12
+    ],
+    "sha256": "4c87e2d96f201608569fad9c4424ede74d78536e2878e924b972c378f07c25ff"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     6
+    ],
+    "sha256": "64c6375b4e7329245ce8891467dccef6a2e7a1ad34fa2076aa1bdf61558062d1"
+   }
+  ],
+  "strides_and_shape": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     6
+    ],
+    "sha256": "1913b034678775e373cdf0d7ece56f6c7d0ad19e13f75d9842746969323249d6"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     12
+    ],
+    "sha256": "d7ce51af007e9d92aae606f2525c09b658515dce6dd22e7ec24e432f4b490963"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     20
+    ],
+    "sha256": "37044a6cf735a504564485c04d7c36fe1b42d62e1a22744496110756c6548bc8"
+   }
+  ],
+  "as_it_lies": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     12
+    ],
+    "sha256": "9ecc94c517703c1153966ca23b948ab6dd38372d6208e4b7edefc0511460d24a"
+   }
+  ],
+  "contiguous_first": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     12
+    ],
+    "sha256": "4c87e2d96f201608569fad9c4424ede74d78536e2878e924b972c378f07c25ff"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     12
+    ],
+    "sha256": "4c87e2d96f201608569fad9c4424ede74d78536e2878e924b972c378f07c25ff"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     2,
+     3
+    ],
+    "sha256": "f0ba11ca8c03986cd956f92948ead7d134873c6cf06403096275d0a71bf0b9c7"
+   }
+  ],
+  "scalars": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "4b31780462076d25d02c1e901f07482a476083f325280a9b366926a515fd36ad"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "ccb1dcb13b6d423302c6492fe90b35fa01a0dedb1f8a3971b588954143aa7b4b"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "728e7b6eb8eb44d434c483916af153b0e004aec183b0b3f4b469d0fc053b3897"
+   }
+  ],
+  "grid_3d": [
+   {
+    "dtype": "mlx.core.int32",
+    "shape": [
+     2,
+     3,
+     4
+    ],
+    "sha256": "c5b792adf91cceac5c9c658807d816f53b8a256dd7bf58fe04b2e31ed7f3d5b7"
+   }
+  ],
+  "threadgroups": [
+   {
+    "dtype": "mlx.core.int32",
+    "shape": [
+     64
+    ],
+    "sha256": "da03475127a0c2d09ba2d3f39b0f8b965462d7f1533fb8faee986bb9565ac925"
+   },
+   {
+    "dtype": "mlx.core.int32",
+    "shape": [
+     64
+    ],
+    "sha256": "9ac7beaa541cb34e9611c07605f2c3ffbe949b0206a4eee5a5157a09fe770238"
+   },
+   {
+    "dtype": "mlx.core.int32",
+    "shape": [
+     4
+    ],
+    "sha256": "8519b6abab82e498502c683864df0e6ce2b583080973e8b216fa05e017952b9c"
+   }
+  ],
+  "threadgroup_too_large": "RuntimeError: [remote gpu] the Mac reported: Thread group size (2048) is greater than  the maximum allowed threads per threadgroup (1024).",
+  "math_safe": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1024
+    ],
+    "sha256": "ca77c393b8f488d2e468551cf0f9b895b9ad46f3278ae8b3d57c7ba9729420e2"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1024
+    ],
+    "sha256": "cc29b75c55df110704da9f7333d41a59c0cb3e59d7521800dd09520ba8c64a72"
+   }
+  ],
+  "math_relaxed": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1024
+    ],
+    "sha256": "ca77c393b8f488d2e468551cf0f9b895b9ad46f3278ae8b3d57c7ba9729420e2"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1024
+    ],
+    "sha256": "d81de1e49089158c3001e0ce91758eb0b0476dcdfeb70e60c33ae9d0ef7885e9"
+   }
+  ],
+  "math_fast": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1024
+    ],
+    "sha256": "ca77c393b8f488d2e468551cf0f9b895b9ad46f3278ae8b3d57c7ba9729420e2"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1024
+    ],
+    "sha256": "d81de1e49089158c3001e0ce91758eb0b0476dcdfeb70e60c33ae9d0ef7885e9"
+   }
+  ],
+  "header": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "8463bc49d5dec708e960e3b611added9d7fcc6f94487e66673d657cc602d1094"
+   }
+  ],
+  "types": [
+   {
+    "dtype": "mlx.core.float16",
+    "shape": [
+     16
+    ],
+    "sha256": "7f857b1709dbaf5424b7afbdb9f0bfaacc656c6789ff20386cdee64b3c7bcd15"
+   },
+   {
+    "dtype": "mlx.core.bfloat16",
+    "shape": [
+     16
+    ],
+    "sha256": "2564a3e83dfe7d851df2e09e2077a4298fd9a738bf6277e59e71752ce74b0836"
+   },
+   {
+    "dtype": "mlx.core.int8",
+    "shape": [
+     16
+    ],
+    "sha256": "41ea98d189c96dfe86ff5cb67b4be00b1905dfd3eba4cf4a9f8d56f052c098b4"
+   },
+   {
+    "dtype": "mlx.core.uint8",
+    "shape": [
+     16
+    ],
+    "sha256": "41ea98d189c96dfe86ff5cb67b4be00b1905dfd3eba4cf4a9f8d56f052c098b4"
+   },
+   {
+    "dtype": "mlx.core.int16",
+    "shape": [
+     16
+    ],
+    "sha256": "f29d4e00366469bbe7176aefb7153b849213cf6868965c9a5ba49ee8fb40efe1"
+   },
+   {
+    "dtype": "mlx.core.uint16",
+    "shape": [
+     16
+    ],
+    "sha256": "f29d4e00366469bbe7176aefb7153b849213cf6868965c9a5ba49ee8fb40efe1"
+   },
+   {
+    "dtype": "mlx.core.int32",
+    "shape": [
+     16
+    ],
+    "sha256": "3e5c6bfde789c1afe13291a0634e9b489731b8871d4369264a914ac4b5df5f94"
+   },
+   {
+    "dtype": "mlx.core.uint32",
+    "shape": [
+     16
+    ],
+    "sha256": "3e5c6bfde789c1afe13291a0634e9b489731b8871d4369264a914ac4b5df5f94"
+   },
+   {
+    "dtype": "mlx.core.int64",
+    "shape": [
+     16
+    ],
+    "sha256": "1f27b6bc5e522247f12e2d59e8cfac4954d689ba8a7afbdedbb9345eede22ee9"
+   },
+   {
+    "dtype": "mlx.core.uint64",
+    "shape": [
+     16
+    ],
+    "sha256": "1f27b6bc5e522247f12e2d59e8cfac4954d689ba8a7afbdedbb9345eede22ee9"
+   },
+   {
+    "dtype": "mlx.core.bool",
+    "shape": [
+     16
+    ],
+    "sha256": "cc8cd41cef907c4d216069122c4b89936211361f9050a717a1e37ad1862e952f"
+   }
+  ],
+  "sizes": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "6f03cc2001181191ee8eed066a8401a02e92cc18d20e68e7036a79303c8fc3e3"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     4
+    ],
+    "sha256": "2afb518a4a3e6d3e7635f7eb41aba3fd48c68c8bc508eb616a054614e3fdcd22"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1
+    ],
+    "sha256": "17c14f6c2b53896459f7f0f6167bea49494aac807799ddb050d1635d3ba55d96"
+   }
+  ],
+  "compiled": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "2b7ac964452271e5239870c3cc10582f29f836bea565596b786a07d7a4810dc8"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "18c67d37248ce71c8378f9e8c569d7453824e9a7f30cb1089fe8452f1517f960"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "361b8a343e25bf44598220ffcdf050c8fa1f6e621fb5c5dbcee4feb1efad9619"
+   }
+  ],
+  "chained": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     64
+    ],
+    "sha256": "f1a623c71c10f5137594dd05773c464abbf95df2d8d88fe9eb877f889cc8ac09"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     64
+    ],
+    "sha256": "31bf989d3adc23ce92812bbd7d0b995afc8562a42002869a16370ba37eb8b0da"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     64
+    ],
+    "sha256": "04caa3941706988319409ae71d5f9dbc7d382a168fb8d035556f575573e9be6b"
+   }
+  ],
+  "repeated": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     32
+    ],
+    "sha256": "f822c24d7b4c6285cb72f7a85b68ae819f700a44756e33a411baacaa76f2c921"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     32
+    ],
+    "sha256": "f822c24d7b4c6285cb72f7a85b68ae819f700a44756e33a411baacaa76f2c921"
+   }
+  ],
+  "made_again": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "712bb620ab690a75c230cbb1699c56ec1d1a1a12a511415cb998d88ecbbc65e1"
+   }
+  ],
+  "same_name": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "6f03cc2001181191ee8eed066a8401a02e92cc18d20e68e7036a79303c8fc3e3"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "ca3332edc8c4eaff5abb0ca76b183f3d621a714b1966559d3a791ad5bdda408c"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "6f03cc2001181191ee8eed066a8401a02e92cc18d20e68e7036a79303c8fc3e3"
+   }
+  ],
+  "large": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     1048576
+    ],
+    "sha256": "f4cbfd2c01c5c0248c578c6959dfa77633cc86201cc74f0b32a4f3bc0dcbefa5"
+   }
+  ],
+  "on_the_gpu_stream": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "117755e14c8dd6313f2c3106fbc8b336670f61735532663917385fcfb870feac"
+   },
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "117755e14c8dd6313f2c3106fbc8b336670f61735532663917385fcfb870feac"
+   }
+  ],
+  "verbose": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "ca3332edc8c4eaff5abb0ca76b183f3d621a714b1966559d3a791ad5bdda408c"
+   },
+   {
+    "text": "7e06213bbeb38ee78b190c4da73587854276a85d139c2cfea1b21cc5f9a4abaa",
+    "bytes": 581
+   }
+  ],
+  "syntax_error": "RuntimeError: [remote gpu] the Mac reported: [metal::Device] Unable to build metal library from source",
+  "after_syntax_error": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "8b376302aca16de547f9f1339c01a5f0d145f8bc484cd6e0547cdc5c3955ca74"
+   }
+  ],
+  "bad_name": "RuntimeError: [remote gpu] the Mac reported: kernel refused: its name must be an identifier of at most 128 characters",
+  "wrong_number_of_inputs": "ValueError: [metal_kernel] Expected `inputs` to have size 1 but got size 2.",
+  "on_the_cpu": "ValueError: [metal_kernel] Only supports the GPU.",
+  "include_refused": "RuntimeError: [remote gpu] the Mac reported: kernel includes refused: its source has an #include, #import or #pragma (or one of those words somewhere after a '#'), or a _Pragma: a kernel must not make the compiler read files of the Mac",
+  "pragma_refused": "RuntimeError: [remote gpu] the Mac reported: kernel asks refused: its source has an #include, #import or #pragma (or one of those words somewhere after a '#'), or a _Pragma: a kernel must not make the compiler read files of the Mac",
+  "source_too_large": "RuntimeError: [remote gpu] kernel too_long: its source and header are 307248 bytes, the Mac takes at most 262144.",
+  "imported_function": "RuntimeError: [remote gpu] this custom kernel cannot be sent to the Mac: only those that mx.fast.metal_kernel makes in this process are (not one of a function imported from a file).",
+  "after_everything": [
+   {
+    "dtype": "mlx.core.float32",
+    "shape": [
+     16
+    ],
+    "sha256": "e06d86aa2b9d954002e877c083bf714a42affc21f9b3ad80792362dd8644e457"
+   }
+  ]
+ }
+}

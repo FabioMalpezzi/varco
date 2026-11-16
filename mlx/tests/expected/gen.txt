@@ -1,0 +1,15 @@
+# The tests of the stage "gen" of mlx/tests/run-all.sh, one name per line.
+# tests/compare.py fails when a result lacks one of them or holds another.
+# After adding or removing a test, on a Mac, from mlx/:
+#   tests/run-all.sh gen
+#   python3 tests/compare.py --inventory gen results/gen-native.json > tests/expected/gen.txt
+# and read the diff before committing it: a name that goes is a test that no
+# longer runs. (The first of the two fails until the second is done.)
+run 1, the tokens
+run 1, the last logprobs
+run 2, the tokens
+run 2, the last logprobs
+run 3, the tokens
+run 3, the last logprobs
+run 4, the tokens
+run 4, the last logprobs

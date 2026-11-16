@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv-*/
+
+# Built on the Mac
+mlx/server/mlx-remote-server
+pytorch/bridge/_build/
+*.so
+*.dylib
+
+# Fetched, generated or written by the scripts
+mlx/upstream/
+mlx/site/
+mlx/logs/
+mlx/results/*
+!mlx/results/reference/
+pytorch/runs/
+lightning_logs/
+checkpoints/
+out/
+models/
+
+# Editors and macOS
+.DS_Store
+.idea/
+.vscode/
+kiri/kiri-src/

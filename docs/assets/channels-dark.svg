@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 880 604" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="channels-dark-title channels-dark-desc" id="channels-dark-root">
+        <title id="channels-dark-title">The channel: Docker Desktop and Kiri side by side</title>
+        <desc id="channels-dark-desc">Two installations. With Docker Desktop the container end connects over TCP to host.docker.internal:PORT and reaches the server, which listens on 127.0.0.1:PORT on the Mac, 47800 for MLX and 47700 for PyTorch; any other container of the engine reaches the same port. With Kiri and the patches, a container started with --gpus all has a listener at 127.0.0.1:47700 in its own network namespace; Kiri's guest agent relays each connection over vsock, port 1041, framed, to the Kiri daemon on the Mac, which connects it to the Unix socket ~/.kiri/run/gpu.sock where the server listens. A container started without --gpus has no listener and no bridge. There is one socket, so one bridge's server at a time.</desc>
+        <defs>
+      <style>#channels-dark-root { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      #channels-dark-root .t-name { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; }
+      #channels-dark-root .t-part { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; }
+      #channels-dark-root .t-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; }
+      #channels-dark-root .t-sub { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 400; }
+      #channels-dark-root .t-subb { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; }
+      #channels-dark-root .t-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 400; }
+      #channels-dark-root .t-msg { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+      #channels-dark-root .t-eye { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; }
+      #channels-dark-root .t-fig { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 16px; font-weight: 600; }
+      #channels-dark-root .mid { text-anchor: middle; }
+      #channels-dark-root .end { text-anchor: end; }
+      #channels-dark-root .sheet { stroke-width: 1; }
+      #channels-dark-root .zone { stroke-width: 1.2; }
+      #channels-dark-root .zone.vm { stroke-dasharray: 7 5; }
+      #channels-dark-root .ctr { fill: none; stroke-width: 1; }
+      #channels-dark-root .band { stroke-width: 1.2; }
+      #channels-dark-root .n-prog, #channels-dark-root .n-part, #channels-dark-root .n-file, #channels-dark-root .n-none { stroke-width: 1; }
+      #channels-dark-root .n-end { stroke-width: 1.5; }
+      #channels-dark-root .n-gpu { stroke-width: 1; stroke-linejoin: round; }
+      #channels-dark-root .n-none, #channels-dark-root .dashed { stroke-dasharray: 4 3; }
+      #channels-dark-root .n-fold { fill: none; stroke-width: 1; }
+      #channels-dark-root .ln { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+      #channels-dark-root .ln.strong { stroke-width: 2.4; }
+      #channels-dark-root .ln.back { stroke-dasharray: 5 4; }
+      #channels-dark-root .ln.faint { stroke-width: 1.2; stroke-dasharray: 2 4; }
+      #channels-dark-root .rule { fill: none; stroke-width: 1; }
+      #channels-dark-root { color: #f5f5f5; }
+      #channels-dark-root .sheet { fill: #2d3142; stroke: #4d505f; }
+      #channels-dark-root .zone { fill: #353949; stroke: #91939c; }
+      #channels-dark-root .ctr-fill { fill: #3b3f4f; }
+      #channels-dark-root .ctr-head { fill: #494c5b; }
+      #channels-dark-root .ctr { stroke: #9b9da4; }
+      #channels-dark-root .band { fill: #4e4046; stroke: #f08a59; }
+      #channels-dark-root .n-prog { fill: #393e4f; stroke: #aab2c4; }
+      #channels-dark-root .n-end { fill: #474a59; stroke: #f5f5f5; }
+      #channels-dark-root .n-part { fill: #373b4b; stroke: #9b9da4; }
+      #channels-dark-root .n-gpu { fill: #f5f5f5; stroke: #f5f5f5; }
+      #channels-dark-root .n-file { fill: #434756; stroke: #bfc0c0; }
+      #channels-dark-root .n-fold { stroke: #bfc0c0; }
+      #channels-dark-root .n-none { fill: none; stroke: #9b9da4; }
+      #channels-dark-root .cell { fill: #373b4b; stroke: #9b9da4; }
+      #channels-dark-root .cell-full { fill: #a9abb1; stroke: #9b9da4; }
+      #channels-dark-root .bar { fill: #767881; }
+      #channels-dark-root .bar-ink { fill: #f5f5f5; }
+      #channels-dark-root .mask-paper { fill: #2d3142; }
+      #channels-dark-root .mask-zone { fill: #353949; }
+      #channels-dark-root .mask-band { fill: #4e4046; }
+      #channels-dark-root .mask-end { fill: #474a59; }
+      #channels-dark-root .ln { stroke: #bfc0c0; }
+      #channels-dark-root .ln.strong { stroke: #f5f5f5; }
+      #channels-dark-root .ln.faint { stroke: #888a90; }
+      #channels-dark-root .mk { fill: #bfc0c0; }
+      #channels-dark-root .mk-strong { fill: #f5f5f5; }
+      #channels-dark-root .mk-faint { fill: #888a90; }
+      #channels-dark-root .rule { stroke: #515462; }
+      #channels-dark-root .c-ink { fill: #f5f5f5; }
+      #channels-dark-root .c-muted { fill: #bfc0c0; }
+      #channels-dark-root .c-soft { fill: #aab2c4; }
+      #channels-dark-root .c-inv { fill: #2d3142; }
+      #channels-dark-root .c-inv2 { fill: #555866; }</style>
+          <marker id="channels-dark-arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk" points="0 0, 10 4, 0 8"/></marker>
+          <marker id="channels-dark-arrow-strong" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto"><polygon class="mk-strong" points="0 0, 12 5, 0 10"/></marker>
+          <marker id="channels-dark-arrow-faint" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk-faint" points="0 0, 10 4, 0 8"/></marker>
+        </defs>
+        <rect class="sheet" x="0.5" y="0.5" width="879" height="603" rx="10"/>
+        <!-- zones: the virtual machine and macOS -->
+        <g class="l-zones">
+          <rect class="zone vm" x="20" y="48" width="488" height="232" rx="8"/>
+          <text x="34" y="68" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="640" y="48" width="220" height="232" rx="8"/>
+          <text x="654" y="68" class="t-eye c-soft">macOS</text>
+          <rect class="zone vm" x="20" y="328" width="488" height="256" rx="8"/>
+          <text x="34" y="348" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="640" y="328" width="220" height="256" rx="8"/>
+          <text x="654" y="348" class="t-eye c-soft">macOS</text>
+        </g>
+        <!-- containers -->
+        <g class="l-ctrs">
+          <rect class="ctr-fill" x="36" y="80" width="280" height="88" rx="6"/>
+          <path class="ctr-head" d="M 36,104 V 86 Q 36,80 42,80 H 310 Q 316,80 316,86 V 104 Z"/>
+          <rect class="ctr" x="36" y="80" width="280" height="88" rx="6"/>
+          <text x="48" y="96.5" class="t-eye c-muted">CONTAINER</text>
+          <rect class="ctr-fill" x="36" y="180" width="280" height="88" rx="6"/>
+          <path class="ctr-head" d="M 36,204 V 186 Q 36,180 42,180 H 310 Q 316,180 316,186 V 204 Z"/>
+          <rect class="ctr" x="36" y="180" width="280" height="88" rx="6"/>
+          <text x="48" y="196.5" class="t-eye c-muted">CONTAINER</text>
+          <text x="125.3" y="196.5" class="t-sub c-muted">any other one</text>
+          <rect class="ctr-fill" x="36" y="360" width="264" height="112" rx="6"/>
+          <path class="ctr-head" d="M 36,384 V 366 Q 36,360 42,360 H 294 Q 300,360 300,366 V 384 Z"/>
+          <rect class="ctr" x="36" y="360" width="264" height="112" rx="6"/>
+          <text x="48" y="376.5" class="t-eye c-muted">CONTAINER</text>
+          <text x="125.3" y="376.5" class="t-sub c-muted"><tspan class="t-mono">--gpus all</tspan></text>
+          <rect class="ctr-fill" x="36" y="484" width="264" height="88" rx="6"/>
+          <path class="ctr-head" d="M 36,508 V 490 Q 36,484 42,484 H 294 Q 300,484 300,490 V 508 Z"/>
+          <rect class="ctr" x="36" y="484" width="264" height="88" rx="6"/>
+          <text x="48" y="500.5" class="t-eye c-muted">CONTAINER</text>
+          <text x="125.3" y="500.5" class="t-sub c-muted">no <tspan class="t-mono">--gpus</tspan></text>
+        </g>
+        <!-- the channel -->
+        <g class="l-bands">
+          <rect class="band" x="512" y="104" width="124" height="164" rx="6"/>
+          <rect class="band" x="512" y="396" width="124" height="64" rx="6"/>
+        </g>
+        <!-- connectors -->
+        <g class="l-lines">
+          <path class="ln " d="M 304,136 L 656,136" marker-end="url(#channels-dark-arrow)"/>
+          <path class="ln " d="M 304,236 L 656,236" marker-end="url(#channels-dark-arrow)"/>
+          <path class="ln " d="M 288,428 L 320,428" marker-end="url(#channels-dark-arrow)"/>
+          <path class="ln " d="M 496,428 L 656,428" marker-end="url(#channels-dark-arrow)"/>
+          <path class="ln " d="M 684,456 L 684,508" marker-end="url(#channels-dark-arrow)"/>
+        </g>
+        <!-- connector labels -->
+        <g class="l-labels">
+          <text x="574" y="182" class="t-sub c-ink mid">one TCP port</text>
+          <text x="574" y="198" class="t-sub c-ink mid">of the Mac</text>
+          <text x="574" y="417" class="t-sub c-ink mid">vsock, port 1041</text>
+          <text x="574" y="447" class="t-sub c-muted mid">framed</text>
+          <text x="698" y="479" class="t-sub c-muted">Unix socket</text>
+          <text x="698" y="495" class="t-mono c-muted">~/.kiri/run/gpu.sock</text>
+        </g>
+        <!-- nodes -->
+        <g class="l-nodes">
+          <rect class="n-end" x="48" y="112" width="256" height="48" rx="6"/>
+          <text x="176" y="131.8" class="t-sub c-muted mid">the container end connects to</text>
+          <text x="176" y="147.8" class="t-msg c-ink mid">host.docker.internal:PORT</text>
+          <rect class="n-end" x="48" y="212" width="256" height="48" rx="6"/>
+          <text x="176" y="231.8" class="t-sub c-muted mid">reaches the same port</text>
+          <text x="176" y="247.8" class="t-msg c-ink mid">host.docker.internal:PORT</text>
+          <rect class="n-end" x="656" y="104" width="188" height="164" rx="6"/>
+          <text x="750" y="158.8" class="t-name c-ink mid">the server</text>
+          <text x="750" y="175.8" class="t-sub c-muted mid">listens on</text>
+          <text x="750" y="191.8" class="t-msg c-ink mid">127.0.0.1:PORT</text>
+          <text x="750" y="207.8" class="t-sub c-muted mid">47800 for MLX</text>
+          <text x="750" y="223.8" class="t-sub c-muted mid">47700 for PyTorch</text>
+          <rect class="n-end" x="48" y="392" width="240" height="72" rx="6"/>
+          <text x="168" y="407.8" class="t-sub c-muted mid">the container end connects to</text>
+          <text x="168" y="423.8" class="t-msg c-ink mid">127.0.0.1:47700</text>
+          <text x="168" y="439.8" class="t-sub c-muted mid">a listener in the container's</text>
+          <text x="168" y="455.8" class="t-sub c-muted mid">own network namespace</text>
+          <rect class="n-none" x="48" y="516" width="240" height="48" rx="6"/>
+          <text x="168" y="543.8" class="t-sub c-muted mid">no listener, no bridge</text>
+          <rect class="n-part" x="320" y="396" width="176" height="64" rx="6"/>
+          <text x="408" y="424.6" class="t-part c-ink mid">Kiri's guest agent</text>
+          <text x="408" y="441.3" class="t-sub c-muted mid">relays each connection</text>
+          <rect class="n-part" x="656" y="400" width="188" height="56" rx="6"/>
+          <text x="750" y="432.6" class="t-part c-ink mid">Kiri daemon</text>
+          <rect class="n-end" x="656" y="508" width="188" height="64" rx="6"/>
+          <text x="750" y="528.8" class="t-name c-ink mid">the server</text>
+          <text x="750" y="545.8" class="t-sub c-muted mid">one socket: one bridge's</text>
+          <text x="750" y="561.8" class="t-sub c-muted mid">server at a time</text>
+        </g>
+        <!-- notes -->
+        <g class="l-text">
+          <text x="20" y="36" class="t-name c-ink">Docker Desktop</text>
+          <text x="212" y="36" class="t-sub c-muted">nothing else is needed; every container of the engine can reach the port</text>
+          <text x="20" y="316" class="t-name c-ink">Kiri with the patches</text>
+          <text x="212" y="316" class="t-sub c-muted">only a container started with <tspan class="t-mono">--gpus all</tspan> gets a bridge</text>
+        </g>
+      </svg>

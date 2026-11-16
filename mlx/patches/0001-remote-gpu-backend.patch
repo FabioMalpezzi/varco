@@ -1,0 +1,4065 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3f23304..646b818 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -36,6 +36,7 @@ option(MLX_BUILD_PYTHON_BINDINGS "Build python bindings for mlx" OFF)
+ option(MLX_BUILD_METAL "Build metal backend" ON)
+ option(MLX_BUILD_CPU "Build cpu backend" ON)
+ option(MLX_BUILD_CUDA "Build cuda backend" OFF)
++option(MLX_BUILD_REMOTE "Build the remote gpu backend (graphs run on a Mac)" OFF)
+ option(MLX_METAL_DEBUG "Enhance metal debug workflow" OFF)
+ option(MLX_ENABLE_X64_MAC "Enable building for x64 macOS" OFF)
+ option(MLX_BUILD_GGUF "Include support for GGUF format" ON)
+diff --git a/mlx/CMakeLists.txt b/mlx/CMakeLists.txt
+index f6d1a4a..f069708 100644
+--- a/mlx/CMakeLists.txt
++++ b/mlx/CMakeLists.txt
+@@ -111,6 +111,9 @@ endif()
+ 
+ if(MLX_BUILD_METAL OR MLX_BUILD_CUDA)
+   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/backend/gpu)
++elseif(MLX_BUILD_REMOTE)
++  # The gpu device is a server on a Mac: nodes are recorded, not computed.
++  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/backend/remote)
+ else()
+   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/backend/no_gpu)
+ endif()
+diff --git a/mlx/allocator.h b/mlx/allocator.h
+index 6ef8599..7667cb7 100644
+--- a/mlx/allocator.h
++++ b/mlx/allocator.h
+@@ -91,6 +91,15 @@ class Data {
+     return owned_;
+   }
+ 
++  // Remote gpu backend: the buffer now also has a copy elsewhere, so it must
++  // not be written in place any more (see array::is_donatable).
++  void set_shared() {
++    if (owned_) {
++      owned_ = false;
++      deleter_ = [](Buffer buffer) { allocator().free(buffer); };
++    }
++  }
++
+  private:
+   Buffer buffer_;
+   Deleter deleter_;
+diff --git a/mlx/backend/common/metal_kernel.cpp b/mlx/backend/common/metal_kernel.cpp
+index d38a433..6b30bc2 100644
+--- a/mlx/backend/common/metal_kernel.cpp
++++ b/mlx/backend/common/metal_kernel.cpp
+@@ -10,6 +10,23 @@
+ #include "mlx/transforms_impl.h"
+ #include "mlx/utils.h"
+ 
++#ifdef MLX_REMOTE_BACKEND
++#include "mlx/backend/remote/kernel.h"
++#endif
++
++namespace mlx::core::metal {
++
++bool kernels_available() {
++#ifdef MLX_REMOTE_BACKEND
++  // The kernels run on the Mac, if its server takes them.
++  return remote::custom_kernels();
++#else
++  return is_available();
++#endif
++}
++
++} // namespace mlx::core::metal
++
+ namespace mlx::core::fast {
+ 
+ namespace {
+@@ -18,7 +35,7 @@ namespace {
+ constexpr int max_constant_array_size = 8;
+ 
+ Stream resolve_metal_kernel_stream(StreamOrDevice s) {
+-  if (metal::is_available()) {
++  if (metal::kernels_available()) {
+     // Default an unspecified stream to the GPU rather than the global default
+     // device. Other inputs go through to_stream so explicit streams, devices
+     // and ThreadLocalStream are handled as before.
+@@ -31,7 +48,11 @@ Stream resolve_metal_kernel_stream(StreamOrDevice s) {
+     return stream;
+   }
+   if (!detail::in_export_tracing()) {
++#ifdef MLX_REMOTE_BACKEND
++    throw std::runtime_error("[metal_kernel] " + remote::no_custom_kernels());
++#else
+     throw std::runtime_error("[metal_kernel] No Metal back-end.");
++#endif
+   }
+   // Exporting without Metal: the kernel cannot run here but it can still be
+   // recorded in the graph on a placeholder GPU stream. The importing process
+@@ -270,6 +291,19 @@ CustomKernelFunction metal_kernel(
+     }
+   }
+ 
++#ifdef MLX_REMOTE_BACKEND
++  // What the Mac needs to make the same kernel with its own metal_kernel.
++  auto spec = remote::make_kernel_spec(
++      name,
++      input_names,
++      output_names,
++      source,
++      header,
++      ensure_row_contiguous,
++      atomic_outputs,
++      compile_options.serialize());
++#endif
++
+   return [=,
+           shape_infos = std::move(shape_infos),
+           attributes = std::move(attributes)](
+@@ -355,6 +389,24 @@ CustomKernelFunction metal_kernel(
+                 << "```" << std::endl;
+     }
+ 
++#ifdef MLX_REMOTE_BACKEND
++    return array::make_arrays(
++        std::move(output_shapes),
++        std::move(output_dtypes),
++        std::make_shared<remote::Kernel>(
++            spec,
++            template_args,
++            s,
++            std::move(kernel_name),
++            std::move(kernel_source),
++            grid,
++            threadgroup,
++            shape_infos,
++            ensure_row_contiguous,
++            init_value,
++            compile_options.serialize()),
++        std::move(inputs));
++#else
+     return array::make_arrays(
+         std::move(output_shapes),
+         std::move(output_dtypes),
+@@ -372,6 +424,7 @@ CustomKernelFunction metal_kernel(
+             0,
+             compile_options.serialize()),
+         std::move(inputs));
++#endif
+   };
+ }
+ 
+diff --git a/mlx/backend/cpu/compiled.cpp b/mlx/backend/cpu/compiled.cpp
+index d6a53a5..a6cfb32 100644
+--- a/mlx/backend/cpu/compiled.cpp
++++ b/mlx/backend/cpu/compiled.cpp
+@@ -1,5 +1,6 @@
+ // Copyright © 2023-2024 Apple Inc.
+ 
++#include <cstdlib>
+ #include <dlfcn.h>
+ #include <filesystem>
+ #include <fstream>
+@@ -53,7 +54,16 @@ static CompilerCache& cache() {
+ // usable C++ compiler (MSVC or clang-cl on Windows).
+ namespace detail {
+ bool compile_available_for_device(const Device& device) {
++#ifdef MLX_REMOTE_BACKEND
++  // A Compiled primitive on a gpu stream is sent to the Mac with its tape
++  // and made again there (backend/remote/client.cpp), so functions are
++  // compiled as with the Metal backend. MLX_REMOTE_NO_COMPILE makes
++  // mx.compile return the function as it is.
++  static bool no_compile = std::getenv("MLX_REMOTE_NO_COMPILE") != nullptr;
++  return (device == Device::gpu && !no_compile) || JitCompiler::available();
++#else
+   return device == Device::gpu || JitCompiler::available();
++#endif
+ }
+ 
+ } // namespace detail
+diff --git a/mlx/backend/metal/metal.h b/mlx/backend/metal/metal.h
+index d686c29..09b0a55 100644
+--- a/mlx/backend/metal/metal.h
++++ b/mlx/backend/metal/metal.h
+@@ -13,6 +13,14 @@ namespace mlx::core::metal {
+ /* Check if the Metal backend is available. */
+ MLX_API bool is_available();
+ 
++/* Check if custom Metal kernels (fast::metal_kernel) can run: with the Metal
++ * backend, or with the remote gpu backend when the server on the Mac takes
++ * them (see backend/remote/kernel.h). This is what mx.metal.is_available()
++ * answers in python, where libraries ask it to choose between a kernel and
++ * ordinary operations; is_available() above stays false without the Metal
++ * backend, for what needs Metal in this process (DLPack, wrapped buffers). */
++MLX_API bool kernels_available();
++
+ /** Capture a GPU trace, saving it to an absolute file `path` */
+ MLX_API void start_capture(std::string path = "");
+ MLX_API void stop_capture();
+diff --git a/mlx/backend/remote/CMakeLists.txt b/mlx/backend/remote/CMakeLists.txt
+new file mode 100644
+index 0000000..65763b5
+--- /dev/null
++++ b/mlx/backend/remote/CMakeLists.txt
+@@ -0,0 +1,11 @@
++target_sources(
++  mlx
++  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/allocator.cpp
++          ${CMAKE_CURRENT_SOURCE_DIR}/client.cpp
++          ${CMAKE_CURRENT_SOURCE_DIR}/device_info.cpp
++          ${CMAKE_CURRENT_SOURCE_DIR}/event.cpp
++          ${CMAKE_CURRENT_SOURCE_DIR}/fence.cpp
++          ${CMAKE_CURRENT_SOURCE_DIR}/eval.cpp
++          ${CMAKE_CURRENT_SOURCE_DIR}/primitives.cpp)
++
++target_compile_definitions(mlx PRIVATE MLX_REMOTE_BACKEND)
+diff --git a/mlx/backend/remote/allocator.cpp b/mlx/backend/remote/allocator.cpp
+new file mode 100644
+index 0000000..2266e32
+--- /dev/null
++++ b/mlx/backend/remote/allocator.cpp
+@@ -0,0 +1,273 @@
++// Remote gpu backend: one allocator for the buffers made here (cpu results,
++// loaded weights) and for those that stand for an array on the Mac.
++
++#include <algorithm>
++#include <cstdlib>
++#include <mutex>
++
++#include "mlx/allocator.h"
++#include "mlx/backend/common/buffer_cache.h"
++#include "mlx/backend/no_gpu/linux_memory.h"
++#include "mlx/backend/remote/remote.h"
++#include "mlx/memory.h"
++#include "mlx/stream.h"
++
++namespace mlx::core {
++
++namespace {
++
++void synchronize_cpu_streams() {
++  for (const auto& s : get_streams()) {
++    if (s.device == Device::cpu) {
++      synchronize(s);
++    }
++  }
++}
++
++} // namespace
++
++namespace allocator {
++
++using remote::BufHeader;
++
++class RemoteAllocator : public Allocator {
++ public:
++  Buffer malloc(size_t size) override;
++  void free(Buffer buffer) override;
++  size_t size(Buffer buffer) const override;
++
++  Buffer make_remote(size_t size, uint64_t handle);
++  void add_active(size_t size);
++
++  size_t get_active_memory() const {
++    return active_memory_;
++  };
++  size_t get_peak_memory() const {
++    return peak_memory_;
++  };
++  void reset_peak_memory() {
++    std::unique_lock lk(mutex_);
++    peak_memory_ = 0;
++  };
++  size_t get_memory_limit() {
++    return memory_limit_;
++  }
++  size_t set_memory_limit(size_t limit) {
++    std::unique_lock lk(mutex_);
++    std::swap(memory_limit_, limit);
++    return limit;
++  }
++  size_t get_cache_memory() const;
++  size_t set_cache_limit(size_t limit);
++  void clear_cache();
++
++ private:
++  friend RemoteAllocator& remote_allocator();
++  RemoteAllocator();
++
++  static size_t get_buffer_size(void* buf) {
++    return buf ? static_cast<BufHeader*>(buf)->size : 0;
++  }
++  static void free_header(void* buf) {
++    static_cast<BufHeader*>(buf)->~BufHeader();
++    std::free(buf);
++  }
++
++  // Only the memory used in the container is counted and limited: what the
++  // arrays take on the Mac is managed by mlx there.
++  size_t memory_limit_;
++  size_t cache_limit_;
++  size_t active_memory_{0};
++  size_t peak_memory_{0};
++  mutable std::mutex mutex_;
++  mutable BufferCache<void> buffer_cache_;
++};
++
++RemoteAllocator::RemoteAllocator()
++    : memory_limit_(0.8 * get_memory_size()),
++      cache_limit_(32UL << 20),
++      buffer_cache_(/* page_size */ 4096, get_buffer_size, free_header) {
++  if (memory_limit_ == 0) {
++    memory_limit_ = 1ULL << 33;
++  }
++}
++
++Buffer RemoteAllocator::malloc(size_t size) {
++  std::unique_lock lk(mutex_);
++  void* cached = buffer_cache_.reuse_from_cache(size);
++  if (cached) {
++    active_memory_ += get_buffer_size(cached);
++    peak_memory_ = std::max(active_memory_, peak_memory_);
++    return Buffer{cached};
++  }
++  lk.unlock();
++
++  void* ptr = std::malloc(sizeof(BufHeader) + size);
++  if (ptr != nullptr) {
++    auto* h = new (ptr) BufHeader;
++    h->size = size;
++    h->inline_data = true;
++    h->data.store(static_cast<char*>(ptr) + sizeof(BufHeader));
++  }
++  lk.lock();
++  active_memory_ += size;
++  peak_memory_ = std::max(active_memory_, peak_memory_);
++  return Buffer{ptr};
++}
++
++Buffer RemoteAllocator::make_remote(size_t size, uint64_t handle) {
++  auto* h = new (std::malloc(sizeof(BufHeader))) BufHeader;
++  h->size = size;
++  h->remote_nbytes = size;
++  h->handle.store(handle);
++  return Buffer{h};
++}
++
++void RemoteAllocator::add_active(size_t size) {
++  std::unique_lock lk(mutex_);
++  active_memory_ += size;
++  peak_memory_ = std::max(active_memory_, peak_memory_);
++}
++
++void RemoteAllocator::free(Buffer buffer) {
++  auto* h = remote::header(buffer);
++  if (h == nullptr) {
++    return;
++  }
++  if (h->handle.load() != 0) {
++    remote::release(h);
++    h->handle.store(0);
++    h->remote_nbytes = 0;
++  }
++  h->batch = 0;
++  h->leaf_batch = 0;
++  h->unread_large.store(false, std::memory_order_relaxed);
++  auto sz = h->size;
++  std::unique_lock lk(mutex_);
++  if (!h->inline_data) {
++    if (auto* data = h->data.load()) {
++      active_memory_ -= sz;
++      lk.unlock();
++      std::free(data);
++    } else {
++      lk.unlock();
++    }
++    free_header(h);
++    return;
++  }
++  active_memory_ -= sz;
++  if (sz > 0 && buffer_cache_.cache_size() + sz <= cache_limit_) {
++    buffer_cache_.recycle_to_cache(buffer.ptr());
++  } else {
++    lk.unlock();
++    free_header(h);
++  }
++}
++
++size_t RemoteAllocator::size(Buffer buffer) const {
++  return get_buffer_size(buffer.ptr());
++}
++
++size_t RemoteAllocator::get_cache_memory() const {
++  std::unique_lock lk(mutex_);
++  return buffer_cache_.cache_size();
++}
++
++size_t RemoteAllocator::set_cache_limit(size_t limit) {
++  synchronize_cpu_streams();
++  std::unique_lock lk(mutex_);
++  std::swap(cache_limit_, limit);
++  if (buffer_cache_.cache_size() > cache_limit_) {
++    buffer_cache_.release_cached_buffers(
++        buffer_cache_.cache_size() - cache_limit_);
++  }
++  return limit;
++}
++
++void RemoteAllocator::clear_cache() {
++  {
++    std::unique_lock lk(mutex_);
++    if (buffer_cache_.cache_size() == 0) {
++      return;
++    }
++  }
++  synchronize_cpu_streams();
++  std::unique_lock lk(mutex_);
++  buffer_cache_.clear();
++}
++
++RemoteAllocator& remote_allocator() {
++  // Never destroyed: arrays may be freed during static destruction.
++  static RemoteAllocator* allocator_ = new RemoteAllocator;
++  return *allocator_;
++}
++
++Allocator& allocator() {
++  return remote_allocator();
++}
++
++void* Buffer::raw_ptr() {
++  if (!ptr_) {
++    return nullptr;
++  }
++  auto* h = static_cast<BufHeader*>(ptr_);
++  auto* data = h->data.load(std::memory_order_acquire);
++  if (data == nullptr) {
++    // The bytes are on the Mac: wait for them and bring them here.
++    remote::fetch(h);
++    data = h->data.load(std::memory_order_acquire);
++  }
++  if (h->unread_large.load(std::memory_order_relaxed)) {
++    h->unread_large.store(false, std::memory_order_relaxed);
++    remote::note_large_read();
++  }
++  return data;
++}
++
++bool can_reuse_alien_buffer(void*) {
++  return true;
++}
++
++} // namespace allocator
++
++namespace remote {
++
++allocator::Buffer make_remote_buffer(size_t size, uint64_t handle) {
++  return allocator::remote_allocator().make_remote(size, handle);
++}
++
++void account_fetched(size_t size) {
++  allocator::remote_allocator().add_active(size);
++}
++
++} // namespace remote
++
++size_t get_active_memory() {
++  return allocator::remote_allocator().get_active_memory();
++}
++size_t get_peak_memory() {
++  return allocator::remote_allocator().get_peak_memory();
++}
++void reset_peak_memory() {
++  return allocator::remote_allocator().reset_peak_memory();
++}
++size_t set_memory_limit(size_t limit) {
++  return allocator::remote_allocator().set_memory_limit(limit);
++}
++size_t get_memory_limit() {
++  return allocator::remote_allocator().get_memory_limit();
++}
++size_t get_cache_memory() {
++  return allocator::remote_allocator().get_cache_memory();
++}
++size_t set_cache_limit(size_t limit) {
++  return allocator::remote_allocator().set_cache_limit(limit);
++}
++size_t set_wired_limit(size_t) {
++  return 0;
++}
++void clear_cache() {
++  allocator::remote_allocator().clear_cache();
++}
++
++} // namespace mlx::core
+diff --git a/mlx/backend/remote/client.cpp b/mlx/backend/remote/client.cpp
+new file mode 100644
+index 0000000..6c41382
+--- /dev/null
++++ b/mlx/backend/remote/client.cpp
+@@ -0,0 +1,1842 @@
++// Remote gpu backend: the connection to the Mac and the batch of recorded
++// nodes waiting to be sent.
++
++#include <fcntl.h>
++#include <netdb.h>
++#include <netinet/in.h>
++#include <netinet/tcp.h>
++#include <sys/socket.h>
++#include <sys/stat.h>
++#include <sys/uio.h>
++#include <sys/un.h>
++#include <unistd.h>
++
++#include <algorithm>
++#include <cerrno>
++#include <chrono>
++#include <cstdlib>
++#include <cstring>
++#include <deque>
++#include <iostream>
++#include <mutex>
++#include <sstream>
++#include <typeindex>
++#include <unordered_map>
++#include <unordered_set>
++#include <vector>
++
++#include "mlx/backend/remote/kernel.h"
++#include "mlx/backend/remote/protocol.h"
++#include "mlx/backend/remote/remote.h"
++#include "mlx/fast_primitives.h"
++#include "mlx/io/load.h"
++#include "mlx/primitives.h"
++#include "mlx/remote_graph.h"
++#include "mlx/utils.h"
++#include "mlx/version.h"
++
++namespace mlx::core::remote {
++
++namespace {
++
++using namespace mlx_remote;
++
++// Queued frees are sent on their own once they are this many (or this large)
++// and no batch is pending; otherwise they follow the next batch.
++constexpr size_t kMaxQueuedFrees = 64;
++constexpr size_t kMaxQueuedFreeBytes = 16 << 20;
++// Small messages are gathered and written together.
++constexpr size_t kMaxBuffered = 256 << 10;
++// Uploads smaller than this are copied into the gathered messages.
++constexpr size_t kInlineUpload = 16 << 10;
++// The results of an evaluation that the Mac sends back by itself when they
++// are computed: the small ones (an embedding, a token, a loss), which are
++// what a program reads.
++// (Larger ones cost more than they save when they are not read: writing
++// 64 KB to the container takes the Mac about 0.1 ms, measured on the logits
++// of tests/genloop.py, and delays the token that travels with them.)
++constexpr size_t kMaxToldBytes = 32 << 10;
++constexpr size_t kMaxToldTotal = 256 << 10;
++constexpr size_t kMaxTold = 16;
++// The larger ones (a batch of embeddings) come in a second frame, behind the
++// small ones, as long as the program reads them: after this many in a row
++// that were freed without being looked at (the logits of each step of a
++// generation) they are no longer asked for, until one has to be fetched.
++constexpr size_t kMaxLaterBytes = 4 << 20;
++constexpr size_t kMaxLaterTotal = 16 << 20;
++constexpr int kMaxLargeUnread = 3;
++// While a long evaluation is being recorded its nodes are sent in pieces, so
++// that the Mac starts on the first ones at once: after this many nodes, then
++// after kChunkGrowth times as many, and so on (the Mac takes several times
++// longer to run a node than the container to record it).
++constexpr uint32_t kFirstChunk = 32;
++constexpr uint32_t kChunkGrowth = 4;
++// A graph this small, the only one of its evaluation and with small results
++// only, is what a program sends to read a value (an element, a comparison):
++// it is marked urgent, so that a Mac that can answer it at once does (see
++// protocol.h), instead of after the work sent before it.
++constexpr uint32_t kMaxUrgentNodes = 16;
++// In a ticket: it stands for one graph, the urgent one that an evaluation
++// sent, and is done as soon as that graph is, whatever was sent before it.
++// A ticket without it is done once everything up to it is.
++constexpr uint64_t kTicketOwn = 1ull << 63;
++
++std::runtime_error error(const std::string& what) {
++  return std::runtime_error("[remote gpu] " + what);
++}
++
++// The connection ended under a read or a write. An error like the others to
++// whoever catches it; connect() tells it apart, for a connection that ends
++// before the server's greeting was never one to a server.
++struct ConnectionLost : std::runtime_error {
++  explicit ConnectionLost(const std::string& what)
++      : std::runtime_error("[remote gpu] " + what) {}
++};
++
++ArraySpec make_spec(uint64_t handle, const Shape& shape, Dtype dtype) {
++  ArraySpec spec;
++  spec.handle = handle;
++  spec.dtype_val = static_cast<uint32_t>(dtype.val());
++  spec.dtype_size = dtype.size();
++  spec.shape.assign(shape.begin(), shape.end());
++  return spec;
++}
++
++// The elements of an evaluated array in row major order.
++void copy_row_major(const array& a, char* dst) {
++  if (a.size() == 0) {
++    return;
++  }
++  const char* src = a.data<char>();
++  size_t itemsize = a.itemsize();
++  if (a.flags().row_contiguous) {
++    std::memcpy(dst, src, a.nbytes());
++    return;
++  }
++  auto& shape = a.shape();
++  auto& strides = a.strides();
++  int ndim = a.ndim();
++  std::vector<int64_t> index(ndim, 0);
++  int64_t offset = 0;
++  for (size_t n = 0; n < a.size(); ++n) {
++    std::memcpy(dst + n * itemsize, src + offset * itemsize, itemsize);
++    for (int d = ndim - 1; d >= 0; --d) {
++      offset += strides[d];
++      if (++index[d] < shape[d]) {
++        break;
++      }
++      offset -= strides[d] * shape[d];
++      index[d] = 0;
++    }
++  }
++}
++
++// With MLX_REMOTE_STATS set: where the time of this end goes, printed each
++// time bytes are read from the Mac (microseconds since the previous line).
++struct Stats {
++  uint64_t record{0}, serialise{0}, flush{0}, write{0}, sync{0}, read{0};
++  uint64_t nodes{0}, graphs{0}, bytes{0}, writes{0};
++  // When the first node since the last line was recorded.
++  std::chrono::steady_clock::time_point first;
++  bool started{false};
++};
++
++struct Lap {
++  bool on;
++  uint64_t& total;
++  std::chrono::steady_clock::time_point start;
++  Lap(bool on, uint64_t& total) : on(on), total(total) {
++    if (on) {
++      start = std::chrono::steady_clock::now();
++    }
++  }
++  ~Lap() {
++    if (on) {
++      total += std::chrono::duration_cast<std::chrono::nanoseconds>(
++                   std::chrono::steady_clock::now() - start)
++                   .count();
++    }
++  }
++};
++
++class Client {
++ public:
++  static Client& get() {
++    // Never destroyed: buffers are still freed during static destruction.
++    static Client* client = new Client;
++    return *client;
++  }
++
++  void record(array& arr);
++  bool load(array& arr);
++  // Send the recorded nodes. With tell the Mac answers by itself when they
++  // are evaluated (see protocol.h); without, they are a piece of an
++  // evaluation still being recorded. True if they went as an urgent graph.
++  bool flush_batch(bool tell = true);
++  uint64_t commit();
++  // The end of an evaluation.
++  void finalize();
++  bool is_done(uint64_t ticket);
++  void wait(uint64_t ticket);
++  void synchronize();
++  void fetch(BufHeader* h);
++  void release(BufHeader* h);
++  void note_large_read() {
++    large_unread_.store(0, std::memory_order_relaxed);
++  }
++  // Whether the Mac takes custom kernels (see kernel.h), and why not.
++  bool custom_kernels(std::string* why = nullptr);
++
++ private:
++  Client() {
++    trace_ = std::getenv("MLX_REMOTE_TRACE") != nullptr;
++    stats_on_ = std::getenv("MLX_REMOTE_STATS") != nullptr;
++    chunks_ = std::getenv("MLX_REMOTE_NO_CHUNKS") == nullptr;
++    tell_ = std::getenv("MLX_REMOTE_NO_TELL") == nullptr;
++    intern_ = std::getenv("MLX_REMOTE_NO_INTERN") == nullptr;
++    files_on_ = std::getenv("MLX_REMOTE_NO_LOAD") == nullptr;
++    urgent_ = std::getenv("MLX_REMOTE_NO_URGENT") == nullptr;
++    if (auto* spin = std::getenv("MLX_REMOTE_SPIN_US")) {
++      spin_us_ = std::atol(spin);
++    }
++  }
++
++  // Connection
++  void connect();
++  void write_all(const void* p, size_t n);
++  void read_all(void* p, size_t n);
++  void write_out();
++  void frame(Msg type, const std::string& payload);
++  // Send a message that has a reply; returns the reply's length, the payload
++  // is still to be read.
++  uint64_t request(Msg type, const std::string& payload);
++  uint64_t read_reply();
++  std::string read_reply_text();
++  // Read one frame; true if it was a DONE, MORE or EARLY frame (handled
++  // here), false if it is a reply, whose length is returned in len.
++  bool read_frame(uint64_t& len);
++  void read_done(uint64_t len, uint8_t status);
++  // Whether the graphs up to seq are evaluated, or with own that one alone.
++  bool done(uint64_t seq, bool own) const;
++  void print_stats();
++
++  // Batch
++  uint64_t new_handle() {
++    return next_handle_++;
++  }
++  void upload(
++      uint64_t handle,
++      const Shape& shape,
++      Dtype dtype,
++      const char* data,
++      size_t nbytes);
++  bool is_pending(const BufHeader* h) const {
++    return h->batch == batch_;
++  }
++  bool needs_flush_first(const array& in);
++  uint32_t input_value(const array& in);
++  uint32_t leaf(BufHeader* h, uint64_t handle, const array& in);
++  void write_node(
++      const std::shared_ptr<Primitive>& primitive,
++      const std::vector<uint32_t>& inputs,
++      std::vector<array>& outputs);
++  void write_node(
++      const std::string& bytes,
++      uint32_t flags,
++      const std::vector<uint32_t>& inputs,
++      std::vector<array>& outputs);
++  const std::string& compiled_bytes(const std::shared_ptr<Primitive>& p);
++  std::string kernel_call(const Kernel& kernel);
++  allocator::Buffer make_output(array& out);
++  void reset_batch();
++  void send_frees();
++
++  // How a kind of primitive is sent, decided once per C++ type.
++  enum class How {
++    node,
++    skip,
++    copies,
++    op,
++    compiled,
++    attention,
++    contiguous,
++    kernel,
++    cross_entropy,
++    cross_entropy_vjp,
++    unsupported
++  };
++  struct Kind {
++    How how;
++    uint32_t op;
++    std::string name;
++  };
++  const Kind& kind_of(const Primitive& prim);
++
++  std::recursive_mutex mtx_;
++  int fd_{-1};
++  // The Mac has answered the greeting: from then on an error it reports says
++  // of which kind it is (see protocol.h).
++  bool greeted_{false};
++  std::string address_;
++  // What the Mac said of itself in its greeting (kFeature... in protocol.h).
++  uint32_t features_{0};
++  std::string out_;
++  bool trace_{false};
++  long spin_us_{0};
++  bool intern_{true};
++  bool stats_on_{false};
++  Stats stats_;
++
++  uint64_t next_handle_{1};
++  uint64_t sent_seq_{0};
++  uint64_t synced_seq_{0};
++
++  std::unordered_map<std::type_index, Kind> kinds_;
++
++  // Compiled primitives as they are sent, by address (they live in mlx's
++  // compile cache and are used at every call of the function; kept alive
++  // here so that an address is never another primitive).
++  struct CompiledBytes {
++    std::shared_ptr<Primitive> primitive;
++    std::string bytes;
++  };
++  std::unordered_map<const Primitive*, CompiledBytes> compiled_;
++
++  // Custom kernels: whether the Mac takes them (-1 until it is asked), and
++  // those sent so far, by what was sent (a program may make the same kernel
++  // again and again: it is sent once).
++  std::atomic<int> kernels_{-1};
++  std::string kernels_why_;
++  std::unordered_map<std::string, uint32_t> kernel_ids_;
++  uint32_t next_kernel_{1};
++  // The pending batch has a kernel among its nodes.
++  bool batch_kernels_{false};
++
++  // The pending batch: the nodes recorded since the last one was sent.
++  // Values are numbered inside the batch (see protocol.h), and the buffers
++  // remember their number (BufHeader::slot, leaf_slot), so that recording a
++  // node needs no lookup.
++  uint32_t batch_{1};
++  struct Leaf {
++    uint64_t handle;
++    Shape shape;
++    Dtype dtype;
++  };
++  std::vector<Leaf> leaves_;
++  // An output freed before the batch is sent is an intermediate that the Mac
++  // need not keep.
++  struct Output {
++    uint64_t handle;
++    bool live;
++    Shape shape;
++    Dtype dtype;
++    BufHeader* header;
++  };
++  std::vector<Output> outputs_;
++  ByteWriter nodes_;
++  uint32_t n_nodes_{0};
++  // Uploads that only the pending batch uses.
++  std::vector<uint64_t> ephemerals_;
++  bool resolving_{false};
++  uint64_t record_ns_{0};
++
++  // Small constants (python scalars, mostly) are made again at every step of
++  // a model: they are kept on the Mac by value instead of being sent again.
++  struct Interned {
++    uint64_t handle;
++    uint32_t batch;
++    uint32_t slot;
++  };
++  std::unordered_map<std::string, Interned> interned_;
++
++  // Graphs sent with "tell" whose DONE frame has not arrived yet, and the
++  // buffers whose bytes those frames will bring.
++  std::deque<uint64_t> told_;
++  struct Expected {
++    BufHeader* header;
++    uint64_t seq;
++    // In the MORE frame.
++    bool later;
++  };
++  std::unordered_map<uint64_t, Expected> expected_;
++  uint32_t chunk_limit_{kFirstChunk};
++  bool chunks_{true};
++  bool tell_{true};
++  // Urgent graphs (see protocol.h): whether they are marked at all
++  // (MLX_REMOTE_NO_URGENT: never), the graphs, operations and loads sent
++  // since the last evaluation ended, and the graphs the Mac answered ahead
++  // of those sent before them, until these are done too.
++  bool urgent_{true};
++  uint32_t sent_since_finalize_{0};
++  std::unordered_set<uint64_t> early_;
++  // Large results sent unasked and freed unread, in a row.
++  std::atomic<int> large_unread_{0};
++
++  // Handles to free on the Mac, after the pending batch that may use them.
++  std::vector<uint64_t> frees_;
++  size_t free_bytes_{0};
++
++  // Files of weights, by their path here: what the Mac answered when asked
++  // to read them by itself (OPEN in protocol.h). MLX_REMOTE_NO_LOAD: never
++  // asked, every file is read here.
++  struct RemoteFile {
++    // 0: the Mac does not read it.
++    uint32_t id{0};
++    // The file the answer is about (see io::FileLocation).
++    uint64_t size{0}, device{0}, inode{0};
++    int64_t mtime_ns{0};
++  };
++  RemoteFile& remote_file(const io::FileLocation& location);
++  void tell_read_here(const std::string& path, const std::string& why);
++  bool files_on_{true};
++  std::unordered_map<std::string, RemoteFile> files_;
++  uint32_t next_file_{1};
++  std::unordered_set<std::string> told_read_here_;
++};
++
++///////////////////////////////////////////////////////////////////////////////
++// Connection
++///////////////////////////////////////////////////////////////////////////////
++
++void Client::connect() {
++  if (fd_ >= 0) {
++    return;
++  }
++  // Where the server is: MLX_REMOTE when it is set; else KIRI_GPU_BRIDGE,
++  // which Kiri sets in a container started with --gpus to the address of its
++  // channel to the Mac, in that container's own network; else the Mac's
++  // loopback through the engine.
++  const char* env = std::getenv("MLX_REMOTE");
++  const char* kiri = std::getenv("KIRI_GPU_BRIDGE");
++  bool by_kiri = !(env && *env) && kiri && *kiri;
++  if (by_kiri) {
++    env = kiri;
++  }
++  address_ = (env && *env) ? env : "host.docker.internal:47800";
++
++  int fd = -1;
++  std::string why;
++  if (address_.rfind("unix:", 0) == 0) {
++    auto path = address_.substr(5);
++    sockaddr_un addr{};
++    addr.sun_family = AF_UNIX;
++    if (path.size() >= sizeof(addr.sun_path)) {
++      throw error("socket path too long: " + path);
++    }
++    std::strcpy(addr.sun_path, path.c_str());
++    fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
++    if (fd >= 0 &&
++        ::connect(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
++      why = std::strerror(errno);
++      ::close(fd);
++      fd = -1;
++    }
++  } else {
++    auto colon = address_.rfind(':');
++    auto host = colon == std::string::npos ? address_ : address_.substr(0, colon);
++    auto port = colon == std::string::npos ? std::to_string(kDefaultPort)
++                                           : address_.substr(colon + 1);
++    addrinfo hints{};
++    hints.ai_family = AF_UNSPEC;
++    hints.ai_socktype = SOCK_STREAM;
++    addrinfo* res = nullptr;
++    int rc = ::getaddrinfo(host.c_str(), port.c_str(), &hints, &res);
++    if (rc != 0) {
++      why = gai_strerror(rc);
++    } else {
++      for (auto* ai = res; ai != nullptr; ai = ai->ai_next) {
++        fd = ::socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
++        if (fd < 0) {
++          continue;
++        }
++        if (::connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) {
++          break;
++        }
++        why = std::strerror(errno);
++        ::close(fd);
++        fd = -1;
++      }
++      ::freeaddrinfo(res);
++    }
++    if (fd >= 0) {
++      int one = 1;
++      ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
++    }
++  }
++  if (fd < 0) {
++    throw error(
++        "cannot connect to the MLX server on the Mac at " + address_ + " (" +
++        why + "). Start mlx-remote-server there, or set MLX_REMOTE=host:port.");
++  }
++  fd_ = fd;
++  greeted_ = false;
++
++  // The greeting goes out by itself, ahead of anything gathered so far (which
++  // may end with the header of an upload whose bytes are still to be sent).
++  std::string hello(1, static_cast<char>(kHello));
++  // With the version of this protocol and of this MLX: the Mac's must be the
++  // same (see protocol.h), and it says which its own are.
++  std::string ours = version();
++  ByteWriter greeting;
++  greeting.put<uint32_t>(kProtocolVersion);
++  greeting.put_text(ours);
++  uint64_t hello_len = greeting.str().size();
++  hello.append(reinterpret_cast<const char*>(&hello_len), sizeof(hello_len));
++  hello.append(greeting.str());
++  std::string info;
++  try {
++    write_all(hello.data(), hello.size());
++    info = read_reply_text();
++    ByteReader r(info.data(), info.size());
++    features_ = r.get<uint32_t>();
++    auto theirs = r.get_text();
++    if (theirs != ours) {
++      throw error(
++          "the MLX server on the Mac runs MLX " + theirs + ", this container " +
++          ours + ": the two must be the same version.");
++    }
++    info.assign(r.position(), r.remaining());
++    greeted_ = true;
++  } catch (const ConnectionLost&) {
++    // Opened, and closed before the greeting: no MLX server is at the other
++    // end. Kiri accepts a connection to any port of host.docker.internal and
++    // closes it at once when nothing listens there on the Mac, which is all
++    // a container it started without --gpus can reach.
++    ::close(fd_);
++    fd_ = -1;
++    std::string said = "no MLX server answered at " + address_ +
++        ": the connection was closed before the server's greeting arrived. ";
++    if (kiri && *kiri) {
++      throw error(
++          said +
++          "This container was started with --gpus in Kiri (KIRI_GPU_BRIDGE is "
++          "set), and Kiri's channel leads to a socket on the Mac: is the MLX "
++          "server listening there (mlx/server/ctl.sh start --unix "
++          "~/.kiri/run/gpu.sock)?" +
++          (by_kiri ? "" : " MLX_REMOTE is set too, and is the address used."));
++    }
++    throw error(
++        said +
++        "With Kiri, the container must be started with --gpus all (a GPU "
++        "request in Compose): without it the container has no bridge, and "
++        "Kiri accepts the connection and closes it at once. With another "
++        "engine, the server's log on the Mac says why it closed "
++        "(mlx/logs/server.log).");
++  } catch (const std::exception& e) {
++    // Not a server to talk to (one that speaks another version, say): the
++    // next use connects again and gets the same answer.
++    ::close(fd_);
++    fd_ = -1;
++    if (std::string(e.what()).find("truncated payload") != std::string::npos) {
++      throw error("malformed greeting from the Mac.");
++    }
++    throw;
++  }
++  if (trace_) {
++    std::cerr << "[remote gpu] connected to " << address_ << ": " << info
++              << ((features_ & kFeatureKernels) ? ", takes custom kernels" : "")
++              << std::endl;
++  }
++}
++
++bool Client::custom_kernels(std::string* why) {
++  auto known = kernels_.load(std::memory_order_acquire);
++  if (known < 0) {
++    std::lock_guard lk(mtx_);
++    known = kernels_.load(std::memory_order_acquire);
++    if (known < 0) {
++      known = 0;
++      if (std::getenv("MLX_REMOTE_NO_KERNELS") != nullptr) {
++        kernels_why_ = "MLX_REMOTE_NO_KERNELS is set.";
++      } else {
++        try {
++          connect();
++          known = (features_ & kFeatureKernels) != 0;
++          kernels_why_ =
++              "the MLX server on the Mac was started without "
++              "--custom-kernels.";
++        } catch (const std::exception& e) {
++          // Asked for the first time when a library is imported, as a rule:
++          // that must not fail, and the answer cannot change later (see
++          // kernel.h).
++          std::string what = e.what();
++          if (what.rfind("[remote gpu] ", 0) == 0) {
++            what.erase(0, 13);
++          }
++          kernels_why_ =
++              "the Mac could not be asked when they were first needed (" +
++              what + ")";
++          std::cerr << "[remote gpu] custom Metal kernels stay off in this "
++                    << "process, mx.metal.is_available() is False: "
++                    << kernels_why_ << std::endl;
++        }
++      }
++      kernels_.store(known, std::memory_order_release);
++    }
++  }
++  if (why != nullptr && known == 0) {
++    *why = kernels_why_;
++  }
++  return known > 0;
++}
++
++void Client::write_all(const void* p, size_t n) {
++  auto* c = static_cast<const char*>(p);
++  while (n > 0) {
++    auto m = ::send(fd_, c, n, MSG_NOSIGNAL);
++    if (m < 0) {
++      if (errno == EINTR) {
++        continue;
++      }
++      throw ConnectionLost(
++          std::string("connection to the Mac lost while writing: ") +
++          std::strerror(errno));
++    }
++    c += m;
++    n -= m;
++  }
++}
++
++void Client::read_all(void* p, size_t n) {
++  auto* c = static_cast<char*>(p);
++  while (n > 0) {
++    auto m = ::recv(fd_, c, n, 0);
++    if (m < 0 && errno == EINTR) {
++      continue;
++    }
++    if (m <= 0) {
++      throw ConnectionLost(
++          m == 0 ? std::string("the MLX server on the Mac closed the connection")
++                 : std::string("connection to the Mac lost while reading: ") +
++                  std::strerror(errno));
++    }
++    c += m;
++    n -= m;
++  }
++}
++
++void Client::write_out() {
++  if (out_.empty()) {
++    return;
++  }
++  connect();
++  Lap lap(stats_on_, stats_.write);
++  stats_.writes++;
++  stats_.bytes += out_.size();
++  write_all(out_.data(), out_.size());
++  out_.clear();
++}
++
++void Client::frame(Msg type, const std::string& payload) {
++  out_.push_back(static_cast<char>(type));
++  uint64_t len = payload.size();
++  out_.append(reinterpret_cast<const char*>(&len), sizeof(len));
++  out_.append(payload);
++  if (out_.size() > kMaxBuffered) {
++    write_out();
++  }
++}
++
++uint64_t Client::request(Msg type, const std::string& payload) {
++  connect();
++  frame(type, payload);
++  write_out();
++  return read_reply();
++}
++
++bool Client::read_frame(uint64_t& len) {
++  char head[kFrameHeader];
++  if (spin_us_ > 0) {
++    // Stay awake while the Mac works, for up to MLX_REMOTE_SPIN_US: a
++    // thread that sleeps in the virtual machine comes back late, and runs
++    // slowly at first (with tests/bge_phases.py, one sentence: 0.3 ms less
++    // when it does not sleep). Off unless asked for, since it keeps a
++    // processor of the container busy for as long as the GPU works.
++    auto until = std::chrono::steady_clock::now() +
++        std::chrono::microseconds(spin_us_);
++    char c;
++    while (::recv(fd_, &c, 1, MSG_PEEK | MSG_DONTWAIT) < 0 &&
++           (errno == EAGAIN || errno == EWOULDBLOCK) &&
++           std::chrono::steady_clock::now() < until) {
++    }
++  }
++  read_all(head, sizeof(head));
++  std::memcpy(&len, head + 1, sizeof(len));
++  auto status = static_cast<uint8_t>(head[0]);
++  if (status == kReplyDone || status == kReplyMore || status == kReplyEarly) {
++    read_done(len, status);
++    return true;
++  }
++  if (status != kReplyOk) {
++    std::string msg(len, '\0');
++    read_all(msg.data(), len);
++    if (!greeted_) {
++      // (The answer to the greeting is text alone, in every version.)
++      throw error("the Mac reported: " + msg);
++    }
++    raise_error("[remote gpu] the Mac reported: ", msg);
++  }
++  return false;
++}
++
++uint64_t Client::read_reply() {
++  uint64_t len;
++  while (read_frame(len)) {
++  }
++  return len;
++}
++
++void Client::read_done(uint64_t len, uint8_t status) {
++  bool more = status == kReplyMore;
++  bool early = status == kReplyEarly;
++  char head[12];
++  if (len < sizeof(head)) {
++    throw error("malformed frame from the Mac.");
++  }
++  read_all(head, sizeof(head));
++  uint64_t seq;
++  uint32_t error_len;
++  std::memcpy(&seq, head, sizeof(seq));
++  std::memcpy(&error_len, head + 8, sizeof(error_len));
++  std::string msg(error_len, '\0');
++  read_all(msg.data(), error_len);
++  uint32_t count;
++  read_all(&count, sizeof(count));
++  bool more_follows = count & kDoneHasMore;
++  count &= ~kDoneHasMore;
++  for (uint32_t i = 0; i < count; ++i) {
++    uint64_t entry[2];
++    read_all(entry, sizeof(entry));
++    auto nbytes = entry[1];
++    auto it = expected_.find(entry[0]);
++    if (it != expected_.end() && it->second.header->size == nbytes &&
++        it->second.header->data.load() == nullptr) {
++      auto* h = it->second.header;
++      auto* data = static_cast<char*>(std::malloc(std::max<size_t>(nbytes, 1)));
++      read_all(data, nbytes);
++      account_fetched(h->size);
++      h->data.store(data);
++      h->unread_large.store(more, std::memory_order_relaxed);
++    } else {
++      // Freed here in the meantime.
++      std::string ignore(nbytes, '\0');
++      read_all(ignore.data(), nbytes);
++    }
++  }
++  // What the frame did not bring has to be asked for. An EARLY frame is
++  // about its own graph only.
++  for (auto it = expected_.begin(); it != expected_.end();) {
++    if ((early ? it->second.seq == seq : it->second.seq <= seq) &&
++        !(it->second.later && more_follows)) {
++      it->second.header->expected = false;
++      it = expected_.erase(it);
++    } else {
++      ++it;
++    }
++  }
++  if (early) {
++    if (auto it = std::find(told_.begin(), told_.end(), seq);
++        it != told_.end()) {
++      told_.erase(it);
++    }
++    if (seq > synced_seq_) {
++      early_.insert(seq);
++    }
++  } else {
++    while (!told_.empty() && told_.front() <= seq) {
++      told_.pop_front();
++    }
++    synced_seq_ = std::max(synced_seq_, seq);
++    for (auto it = early_.begin(); it != early_.end();) {
++      it = *it <= synced_seq_ ? early_.erase(it) : std::next(it);
++    }
++  }
++  if (trace_) {
++    std::cerr << "[remote gpu] "
++              << (more ? "more of " : early ? "early, " : "done up to ") << seq
++              << ", with " << count << " arrays" << std::endl;
++  }
++  if (!msg.empty()) {
++    raise_error("[remote gpu] the Mac reported: ", msg);
++  }
++}
++
++std::string Client::read_reply_text() {
++  auto len = read_reply();
++  std::string text(len, '\0');
++  read_all(text.data(), len);
++  return text;
++}
++
++///////////////////////////////////////////////////////////////////////////////
++// Batch
++///////////////////////////////////////////////////////////////////////////////
++
++void Client::upload(
++    uint64_t handle,
++    const Shape& shape,
++    Dtype dtype,
++    const char* data,
++    size_t nbytes) {
++  ByteWriter w;
++  w.put_spec(make_spec(handle, shape, dtype));
++  if (trace_) {
++    std::cerr << "[remote gpu] upload #" << handle << " " << shape << " "
++              << dtype << " " << nbytes << " bytes" << std::endl;
++  }
++  if (nbytes <= kInlineUpload) {
++    w.put_bytes(data, nbytes);
++    frame(kUpload, w.str());
++    return;
++  }
++  // Large: write the bytes straight from the buffer.
++  out_.push_back(static_cast<char>(kUpload));
++  uint64_t len = w.str().size() + nbytes;
++  out_.append(reinterpret_cast<const char*>(&len), sizeof(len));
++  out_.append(w.str());
++  write_out();
++  write_all(data, nbytes);
++}
++
++namespace {
++
++bool is_plain(const array& in) {
++  return in.offset() == 0 && in.flags().row_contiguous &&
++      in.data_size() == in.size();
++}
++
++BufHeader* header_of(const array& in) {
++  auto& data = in.data_shared_ptr();
++  return data ? header(data->buffer()) : nullptr;
++}
++
++constexpr size_t kMaxInternedBytes = 32;
++// Each takes a page on the Mac (the server keeps them out of MLX's heap of
++// small buffers).
++constexpr size_t kMaxInterned = 2048;
++
++} // namespace
++
++const Client::Kind& Client::kind_of(const Primitive& prim) {
++  auto it = kinds_.find(std::type_index(typeid(prim)));
++  if (it != kinds_.end()) {
++    return it->second;
++  }
++  Kind kind{How::node, 0, detail::remote_graph_primitive_name(prim)};
++  if (typeid(prim) == typeid(Compiled)) {
++    kind.how = How::compiled;
++  } else if (typeid(prim) == typeid(fast::ScaledDotProductAttention)) {
++    kind.how = How::attention;
++  } else if (typeid(prim) == typeid(fast::CrossEntropy)) {
++    // mlx's fused kernel, and its gradient: the Mac makes the node as mlx
++    // does there, and runs the kernel a program on the Mac gets.
++    kind.how = How::cross_entropy;
++  } else if (typeid(prim) == typeid(fast::CrossEntropyVJP)) {
++    kind.how = How::cross_entropy_vjp;
++  } else if (kind.name == "Synchronize") {
++    // The node eval() adds to wait on: it computes nothing.
++    kind.how = How::skip;
++  } else if (typeid(prim) == typeid(Kernel)) {
++    // What mx.fast.metal_kernel makes here: the Mac runs it, if it takes
++    // custom kernels.
++    kind.how = How::kernel;
++  } else if (kind.name == "CustomKernel") {
++    // One that metal_kernel did not make here (see record).
++    kind.how = How::unsupported;
++  } else if (kind.name == "Contiguous") {
++    // Not a saved primitive: the Mac makes it with mlx's contiguous. Whether
++    // the values are contiguous matters only there, to a custom kernel that
++    // takes its inputs as they lie in memory.
++    kind.how = How::contiguous;
++  } else if (kind.name == "CustomTransforms") {
++    // Its outputs are its last inputs.
++    kind.how = How::copies;
++  } else if (kind.name == "BitwiseInvert") {
++    kind.how = How::op;
++    kind.op = kOpBitwiseInvert;
++  } else if (!detail::remote_graph_supports(prim)) {
++    kind.how = How::unsupported;
++  }
++  return kinds_.emplace(std::type_index(typeid(prim)), std::move(kind))
++      .first->second;
++}
++
++// Resolving an input must not send the batch (values are numbered inside
++// it), so anything that would is done before, for all inputs of the node.
++bool Client::needs_flush_first(const array& in) {
++  auto* h = header_of(in);
++  if (h == nullptr) {
++    return false;
++  }
++  auto handle = h->handle.load();
++  if (is_plain(in)) {
++    if (handle && in.nbytes() == h->remote_nbytes) {
++      if (!is_pending(h)) {
++        return false;
++      }
++      // An output of the batch seen with another shape or type (a view made
++      // on the cpu): the Mac has to know it by handle first.
++      auto& out = outputs_[h->slot];
++      return out.shape != in.shape() || out.dtype != in.dtype();
++    }
++    if (!handle && h->data.load() != nullptr) {
++      return false;
++    }
++  }
++  // The bytes are needed here, and they may still be only on the Mac.
++  return h->data.load() == nullptr;
++}
++
++uint32_t Client::leaf(BufHeader* h, uint64_t handle, const array& in) {
++  if (h != nullptr && h->leaf_batch == batch_) {
++    auto& l = leaves_[h->leaf_slot];
++    if (l.handle == handle && l.shape == in.shape() && l.dtype == in.dtype()) {
++      return kValueIsInput | h->leaf_slot;
++    }
++  }
++  auto slot = static_cast<uint32_t>(leaves_.size());
++  leaves_.push_back({handle, in.shape(), in.dtype()});
++  if (h != nullptr) {
++    h->leaf_batch = batch_;
++    h->leaf_slot = slot;
++  }
++  return kValueIsInput | slot;
++}
++
++uint32_t Client::input_value(const array& in) {
++  auto* h = header_of(in);
++  if (h != nullptr && is_plain(in)) {
++    auto handle = h->handle.load();
++    if (handle && in.nbytes() == h->remote_nbytes) {
++      if (is_pending(h)) {
++        return h->slot;
++      }
++      return leaf(h, handle, in);
++    }
++    auto* data = h->data.load();
++    if (!handle && data != nullptr && in.nbytes() <= h->size) {
++      if (intern_ && in.nbytes() <= kMaxInternedBytes &&
++          interned_.size() < kMaxInterned) {
++        // A small constant: known on the Mac by its value.
++        std::string key;
++        key.push_back(static_cast<char>(in.dtype().val()));
++        key.push_back(static_cast<char>(in.dtype().size()));
++        key.push_back(static_cast<char>(in.ndim()));
++        key.append(
++            reinterpret_cast<const char*>(in.shape().data()),
++            in.ndim() * sizeof(ShapeElem));
++        key.append(data, in.nbytes());
++        auto it = interned_.find(key);
++        if (it == interned_.end()) {
++          auto id = new_handle();
++          upload(id, in.shape(), in.dtype(), data, in.nbytes());
++          it = interned_.emplace(std::move(key), Interned{id, 0, 0}).first;
++        }
++        auto& entry = it->second;
++        if (entry.batch != batch_) {
++          entry.batch = batch_;
++          entry.slot = leaf(nullptr, entry.handle, in) & ~kValueIsInput;
++        }
++        return kValueIsInput | entry.slot;
++      }
++      // Data made here (weights, cpu results): the Mac gets a copy once and
++      // the buffer remembers it.
++      handle = new_handle();
++      upload(handle, in.shape(), in.dtype(), data, in.nbytes());
++      h->remote_nbytes = in.nbytes();
++      h->handle.store(handle);
++      in.data_shared_ptr()->set_shared();
++      return leaf(h, handle, in);
++    }
++  }
++  // A view into a buffer, or a buffer whose copy on the Mac has another
++  // extent: send the elements for this batch only.
++  if (h == nullptr && in.size() != 0) {
++    throw error("an input of a gpu node has no data.");
++  }
++  std::unique_ptr<char[]> tmp(new char[std::max<size_t>(in.nbytes(), 1)]);
++  copy_row_major(in, tmp.get());
++  auto handle = new_handle();
++  upload(handle, in.shape(), in.dtype(), tmp.get(), in.nbytes());
++  ephemerals_.push_back(handle);
++  return leaf(nullptr, handle, in);
++}
++
++allocator::Buffer Client::make_output(array& out) {
++  auto buffer = make_remote_buffer(out.nbytes(), new_handle());
++  out.set_data(
++      allocator::Data(
++          buffer, [](allocator::Buffer b) { allocator::allocator().free(b); }));
++  return buffer;
++}
++
++// A Compiled primitive as protocol.h describes it.
++const std::string& Client::compiled_bytes(const std::shared_ptr<Primitive>& p) {
++  auto it = compiled_.find(p.get());
++  if (it != compiled_.end()) {
++    return it->second.bytes;
++  }
++  auto& c = static_cast<const Compiled&>(*p);
++  ByteWriter w;
++  std::unordered_map<uintptr_t, uint32_t> values;
++  auto put_type = [&w](const array& a) {
++    w.put_type(
++        static_cast<uint32_t>(a.dtype().val()),
++        a.dtype().size(),
++        a.shape().data(),
++        a.ndim());
++  };
++  auto& inputs = c.trace_inputs();
++  w.put<uint32_t>(static_cast<uint32_t>(inputs.size()));
++  for (size_t i = 0; i < inputs.size(); ++i) {
++    auto& x = inputs[i];
++    values[x.id()] = kValueIsInput | static_cast<uint32_t>(i);
++    put_type(x);
++    bool constant = c.is_constant(i);
++    w.put<uint8_t>(constant);
++    if (constant) {
++      // A scalar whose value is written into the kernel.
++      w.put_bytes(x.data<char>(), x.itemsize());
++    }
++  }
++  auto value_of = [&values](const array& a) {
++    auto it = values.find(a.id());
++    if (it == values.end()) {
++      throw error("internal error: unexpected tape of a compiled function.");
++    }
++    return it->second;
++  };
++  auto& tape = c.tape();
++  w.put<uint32_t>(static_cast<uint32_t>(tape.size()));
++  for (size_t i = 0; i < tape.size(); ++i) {
++    auto& a = tape[i];
++    if (kind_of(a.primitive()).how == How::op) {
++      // Not a saved primitive: the Mac makes it with the operation.
++      auto op = kind_of(a.primitive()).op;
++      w.put<uint32_t>(kNodeCall | static_cast<uint32_t>(sizeof(op)));
++      w.put<uint32_t>(op);
++    } else {
++      std::string bytes;
++      try {
++        bytes = detail::remote_graph_primitive_bytes(a.primitive_ptr());
++      } catch (const std::exception&) {
++        throw error(
++            std::string("a compiled function fuses ") + a.primitive().name() +
++            ", which cannot be sent to the Mac. Set MLX_REMOTE_NO_COMPILE=1 "
++            "to run compiled functions as they are written.");
++      }
++      w.put<uint32_t>(static_cast<uint32_t>(bytes.size()));
++      w.put_bytes(bytes.data(), bytes.size());
++    }
++    w.put<uint16_t>(static_cast<uint16_t>(a.inputs().size()));
++    for (auto& in : a.inputs()) {
++      w.put<uint32_t>(value_of(in));
++    }
++    put_type(a);
++    values[a.id()] = static_cast<uint32_t>(i);
++  }
++  auto& outputs = c.trace_outputs();
++  w.put<uint32_t>(static_cast<uint32_t>(outputs.size()));
++  for (auto& o : outputs) {
++    w.put<uint32_t>(value_of(o));
++  }
++  if (compiled_.size() >= 4096) {
++    compiled_.clear();
++  }
++  return compiled_.emplace(p.get(), CompiledBytes{p, std::move(w.str())})
++      .first->second.bytes;
++}
++
++// A node that runs a custom kernel, as protocol.h describes it. The kernel
++// itself is sent the first time: after that only its number travels.
++std::string Client::kernel_call(const Kernel& kernel) {
++  auto& spec = kernel.spec();
++  std::string why;
++  if (!custom_kernels(&why)) {
++    throw error("custom Metal kernels are off: " + why);
++  }
++  auto id = spec.id.load(std::memory_order_relaxed);
++  if (id == 0) {
++    auto it = kernel_ids_.find(spec.wire);
++    if (it == kernel_ids_.end()) {
++      if (!spec.refused.empty()) {
++        throw error("kernel " + spec.name + ": " + spec.refused);
++      }
++      ByteWriter w;
++      w.put<uint32_t>(next_kernel_);
++      w.put_bytes(spec.wire.data(), spec.wire.size());
++      if (trace_) {
++        std::cerr << "[remote gpu] kernel #" << next_kernel_ << " "
++                  << spec.name << ", " << w.str().size() << " bytes"
++                  << std::endl;
++      }
++      frame(kKernel, w.str());
++      it = kernel_ids_.emplace(spec.wire, next_kernel_++).first;
++    }
++    id = it->second;
++    spec.id.store(id, std::memory_order_relaxed);
++  }
++  auto& args = kernel.template_args();
++  if (args.size() > kMaxKernelTemplate) {
++    throw error("kernel " + spec.name + ": too many template arguments.");
++  }
++  ByteWriter w;
++  w.put<uint32_t>(kCallKernel);
++  w.put<uint32_t>(id);
++  for (auto* t : {&kernel.grid(), &kernel.threadgroup()}) {
++    w.put<int32_t>(std::get<0>(*t));
++    w.put<int32_t>(std::get<1>(*t));
++    w.put<int32_t>(std::get<2>(*t));
++  }
++  auto& init = kernel.init_value();
++  w.put<uint8_t>(init.has_value());
++  w.put<float>(init.value_or(0.0f));
++  w.put<uint16_t>(static_cast<uint16_t>(args.size()));
++  for (auto& [name, arg] : args) {
++    if (name.size() > kMaxKernelName) {
++      throw error(
++          "kernel " + spec.name + ": the name of a template argument is too "
++          "long.");
++    }
++    if (std::holds_alternative<int>(arg)) {
++      w.put<uint8_t>(kTemplateInt);
++      w.put_text<uint16_t>(name);
++      w.put<int32_t>(std::get<int>(arg));
++    } else if (std::holds_alternative<bool>(arg)) {
++      w.put<uint8_t>(kTemplateBool);
++      w.put_text<uint16_t>(name);
++      w.put<uint8_t>(std::get<bool>(arg));
++    } else {
++      auto dtype = std::get<Dtype>(arg);
++      w.put<uint8_t>(kTemplateDtype);
++      w.put_text<uint16_t>(name);
++      w.put<uint32_t>(static_cast<uint32_t>(dtype.val()));
++      w.put<uint8_t>(dtype.size());
++    }
++  }
++  return std::move(w.str());
++}
++
++void Client::write_node(
++    const std::shared_ptr<Primitive>& primitive,
++    const std::vector<uint32_t>& inputs,
++    std::vector<array>& outputs) {
++  std::string bytes;
++  {
++    Lap lap(stats_on_, stats_.serialise);
++    bytes = detail::remote_graph_primitive_bytes(primitive);
++  }
++  write_node(bytes, 0, inputs, outputs);
++}
++
++void Client::write_node(
++    const std::string& bytes,
++    uint32_t flags,
++    const std::vector<uint32_t>& inputs,
++    std::vector<array>& outputs) {
++  nodes_.put<uint32_t>(static_cast<uint32_t>(bytes.size()) | flags);
++  nodes_.put_bytes(bytes.data(), bytes.size());
++  nodes_.put<uint16_t>(static_cast<uint16_t>(inputs.size()));
++  nodes_.put_bytes(inputs.data(), inputs.size() * sizeof(uint32_t));
++  nodes_.put<uint16_t>(static_cast<uint16_t>(outputs.size()));
++  for (auto& out : outputs) {
++    nodes_.put_type(
++        static_cast<uint32_t>(out.dtype().val()),
++        out.dtype().size(),
++        out.shape().data(),
++        out.ndim());
++    auto* h = header(make_output(out));
++    h->batch = batch_;
++    h->slot = static_cast<uint32_t>(outputs_.size());
++    outputs_.push_back({h->handle.load(), true, out.shape(), out.dtype(), h});
++  }
++  n_nodes_++;
++}
++
++void Client::record(array& arr) {
++  std::lock_guard lk(mtx_);
++  Lap timer(trace_, record_ns_);
++  Lap lap(stats_on_, stats_.record);
++  if (stats_on_ && !stats_.started) {
++    stats_.started = true;
++    stats_.first = std::chrono::steady_clock::now();
++  }
++
++  auto& prim = arr.primitive();
++  auto& kind = kind_of(prim);
++  if (kind.how == How::skip) {
++    return;
++  }
++  if (kind.how == How::unsupported && kind.name == "CustomKernel") {
++    throw error(
++        "this custom kernel cannot be sent to the Mac: only those that "
++        "mx.fast.metal_kernel makes in this process are (not one of a "
++        "function imported from a file).");
++  }
++  if (kind.how == How::unsupported) {
++    throw error(
++        "primitive " + kind.name +
++        " is not supported by the remote gpu (mlx's import_function on the "
++        "Mac cannot rebuild it). Run it on the cpu stream.");
++  }
++  auto outputs = arr.outputs();
++  auto& inputs = arr.inputs();
++
++  // How a compiled primitive or an operation that the Mac builds is sent
++  // (reading a constant of a compiled function may need the batch sent, so
++  // before anything else).
++  const std::string* special = nullptr;
++  std::string call;
++  if (kind.how == How::kernel) {
++    Lap lap(stats_on_, stats_.serialise);
++    call = kernel_call(static_cast<const Kernel&>(prim));
++    special = &call;
++  } else if (kind.how == How::contiguous) {
++    ByteWriter w;
++    w.put<uint32_t>(kCallContiguous);
++    w.put<uint8_t>(static_cast<const Contiguous&>(prim).allow_col_major());
++    call = std::move(w.str());
++    special = &call;
++  } else if (kind.how == How::compiled) {
++    Lap lap(stats_on_, stats_.serialise);
++    special = &compiled_bytes(arr.primitive_ptr());
++  } else if (kind.how == How::attention) {
++    auto state = static_cast<const fast::ScaledDotProductAttention&>(prim).state();
++    // (fallback, scale, causal, sinks, logsumexp output, force_fused)
++    bool has_sinks = std::get<3>(state);
++    if (std::get<4>(state) || outputs.size() != 1 ||
++        inputs.size() < 3u + has_sinks || inputs.size() > 4u + has_sinks) {
++      throw error("this form of scaled_dot_product_attention is not supported.");
++    }
++    ByteWriter w;
++    w.put<uint32_t>(kCallAttention);
++    w.put<float>(std::get<1>(state));
++    w.put<uint8_t>(std::get<2>(state));
++    w.put<uint8_t>(inputs.size() == 4u + has_sinks);
++    w.put<uint8_t>(has_sinks);
++    w.put<uint8_t>(std::get<5>(state));
++    call = std::move(w.str());
++    special = &call;
++  } else if (kind.how == How::cross_entropy || kind.how == How::cross_entropy_vjp) {
++    ByteWriter w;
++    w.put<uint32_t>(
++        kind.how == How::cross_entropy ? kCallCrossEntropy : kCallCrossEntropyVJP);
++    call = std::move(w.str());
++    special = &call;
++  }
++
++  if (chunks_ && n_nodes_ >= chunk_limit_) {
++    flush_batch(false);
++    write_out();
++    chunk_limit_ *= kChunkGrowth;
++  }
++
++  // Send the batch first if an input requires it.
++  bool flush_first = kind.how == How::op;
++  for (auto& in : inputs) {
++    flush_first = flush_first || needs_flush_first(in);
++  }
++  if (flush_first) {
++    flush_batch();
++    for (auto& in : inputs) {
++      auto* h = header_of(in);
++      if (h != nullptr && h->data.load() == nullptr &&
++          !(is_plain(in) && h->handle.load() &&
++            in.nbytes() == h->remote_nbytes)) {
++        fetch(h);
++      }
++    }
++  }
++
++  resolving_ = true;
++  struct Reset {
++    bool& flag;
++    ~Reset() {
++      flag = false;
++    }
++  } reset{resolving_};
++
++  std::vector<uint32_t> values;
++  if (special != nullptr) {
++    values.reserve(inputs.size());
++    for (auto& in : inputs) {
++      values.push_back(input_value(in));
++    }
++    write_node(
++        *special,
++        kind.how == How::compiled ? kNodeCompiled : kNodeCall,
++        values,
++        outputs);
++    batch_kernels_ = batch_kernels_ || kind.how == How::kernel;
++  } else if (kind.how == How::node) {
++    values.reserve(inputs.size());
++    for (auto& in : inputs) {
++      values.push_back(input_value(in));
++    }
++    write_node(arr.primitive_ptr(), values, outputs);
++  } else if (kind.how == How::copies) {
++    auto from = inputs.size() - outputs.size();
++    for (size_t i = 0; i < outputs.size(); ++i) {
++      values.assign(1, input_value(inputs[from + i]));
++      std::vector<array> one{outputs[i]};
++      write_node(std::make_shared<Copy>(prim.stream()), values, one);
++    }
++  } else {
++    // One operation by itself: the batch is empty here, the inputs become its
++    // leaves and are sent as the operands.
++    for (auto& in : inputs) {
++      input_value(in);
++    }
++    ByteWriter w;
++    w.put<uint32_t>(kind.op);
++    w.put<uint32_t>(static_cast<uint32_t>(leaves_.size()));
++    for (auto& l : leaves_) {
++      w.put_spec(make_spec(l.handle, l.shape, l.dtype));
++    }
++    w.put<uint32_t>(static_cast<uint32_t>(outputs.size()));
++    for (auto& out : outputs) {
++      w.put<uint64_t>(header(make_output(out))->handle.load());
++    }
++    if (trace_) {
++      std::cerr << "[remote gpu] op " << kind.name << std::endl;
++    }
++    frame(kOp, w.str());
++    sent_seq_++;
++    sent_since_finalize_++;
++    reset_batch();
++  }
++}
++
++///////////////////////////////////////////////////////////////////////////////
++// Files that the Mac reads by itself
++///////////////////////////////////////////////////////////////////////////////
++
++// Said once for the files of a directory, not for each array.
++void Client::tell_read_here(const std::string& path, const std::string& why) {
++  auto slash = path.rfind('/');
++  auto dir = slash == std::string::npos ? std::string() : path.substr(0, slash);
++  if (!told_read_here_.insert(dir + "\n" + why).second) {
++    return;
++  }
++  std::cerr << "[remote gpu] the Mac does not read " << path << " itself ("
++            << why << "): the file, and the others of " << dir
++            << " for which that holds, are read here and their arrays "
++            << "uploaded." << std::endl;
++}
++
++Client::RemoteFile& Client::remote_file(const io::FileLocation& location) {
++  auto it = files_.find(location.path);
++  if (it != files_.end()) {
++    auto& f = it->second;
++    if (f.size == location.size && f.device == location.device &&
++        f.inode == location.inode && f.mtime_ns == location.mtime_ns) {
++      return f;
++    }
++    // Another file under the same name since.
++    if (f.id != 0) {
++      ByteWriter w;
++      w.put<uint32_t>(f.id);
++      frame(kClose, w.str());
++    }
++  }
++  RemoteFile f;
++  f.size = location.size;
++  f.device = location.device;
++  f.inode = location.inode;
++  f.mtime_ns = location.mtime_ns;
++  std::string why;
++  // What the file is, for the Mac to check that it finds the same: its
++  // size, when it was last modified, and a digest of parts of it.
++  uint64_t digest = 0;
++  int fd = ::open(location.path.c_str(), O_RDONLY | O_CLOEXEC);
++  struct stat st;
++  if (fd < 0 || fstat(fd, &st) != 0 ||
++      static_cast<uint64_t>(st.st_size) != location.size ||
++      static_cast<uint64_t>(st.st_dev) != location.device ||
++      static_cast<uint64_t>(st.st_ino) != location.inode) {
++    why = "it is no longer the file that was opened here";
++  } else if (!file_digest(
++                 location.size,
++                 [fd](uint64_t offset, char* p, size_t n) {
++                   while (n > 0) {
++                     auto m = ::pread(fd, p, n, offset);
++                     if (m < 0 && errno == EINTR) {
++                       continue;
++                     }
++                     if (m <= 0) {
++                       return false;
++                     }
++                     p += m;
++                     n -= m;
++                     offset += m;
++                   }
++                   return true;
++                 },
++                 digest)) {
++    why = "it cannot be read here";
++  }
++  if (fd >= 0) {
++    ::close(fd);
++  }
++  if (why.empty()) {
++    auto id = next_file_++;
++    ByteWriter w;
++    w.put<uint32_t>(id);
++    w.put<uint64_t>(location.size);
++    w.put<int64_t>(location.mtime_ns);
++    w.put<uint64_t>(digest);
++    w.put_bytes(location.path.data(), location.path.size());
++    auto len = request(kOpen, w.str());
++    std::string answer(len, '\0');
++    read_all(answer.data(), len);
++    if (len > 0 && answer[0] == 1) {
++      f.id = id;
++    } else {
++      why = len > 1 ? answer.substr(1) : std::string("no reason given");
++    }
++    if (trace_) {
++      std::cerr << "[remote gpu] open " << location.path << ": "
++                << (f.id ? "read by the Mac" : why) << std::endl;
++    }
++  }
++  if (f.id == 0) {
++    tell_read_here(location.path, why);
++  }
++  return files_[location.path] = f;
++}
++
++bool Client::load(array& arr) {
++  auto& prim = static_cast<const Load&>(arr.primitive());
++  auto& reader = prim.reader();
++  auto location = reader ? reader->file_location() : nullptr;
++  if (!location) {
++    // Not a file (a python stream): read here.
++    return false;
++  }
++  std::lock_guard lk(mtx_);
++  if (!files_on_) {
++    return false;
++  }
++  if (!location->why_not.empty()) {
++    tell_read_here(location->path, location->why_not);
++    return false;
++  }
++  auto& file = remote_file(*location);
++  if (file.id == 0) {
++    return false;
++  }
++  uint64_t offset = location->base + prim.offset();
++  if (offset > file.size || arr.nbytes() > file.size - offset) {
++    // Past the end of the file: reading it here gives mlx's own error.
++    return false;
++  }
++  auto* h = header(make_output(arr));
++  ByteWriter w;
++  w.put_spec(make_spec(h->handle.load(), arr.shape(), arr.dtype()));
++  w.put<uint32_t>(file.id);
++  w.put<uint64_t>(offset);
++  w.put<uint8_t>(prim.swaps_endianness());
++  if (trace_) {
++    std::cerr << "[remote gpu] load #" << h->handle.load() << " "
++              << arr.shape() << " " << arr.dtype() << " from "
++              << location->path << " at " << offset << std::endl;
++  }
++  frame(kLoad, w.str());
++  sent_seq_++;
++  sent_since_finalize_++;
++  return true;
++}
++
++void Client::send_frees() {
++  if (frees_.empty()) {
++    return;
++  }
++  ByteWriter w;
++  w.put<uint32_t>(static_cast<uint32_t>(frees_.size()));
++  for (auto h : frees_) {
++    w.put<uint64_t>(h);
++  }
++  frees_.clear();
++  free_bytes_ = 0;
++  frame(kFree, w.str());
++}
++
++void Client::reset_batch() {
++  leaves_.clear();
++  outputs_.clear();
++  nodes_.str().clear();
++  n_nodes_ = 0;
++  batch_kernels_ = false;
++  batch_++;
++  frees_.insert(frees_.end(), ephemerals_.begin(), ephemerals_.end());
++  ephemerals_.clear();
++}
++
++bool Client::flush_batch(bool tell) {
++  tell = tell && tell_;
++  if (tell) {
++    chunk_limit_ = kFirstChunk;
++  }
++  if (resolving_) {
++    throw error("internal error: batch sent while a node is being recorded.");
++  }
++  Lap lap(stats_on_, stats_.flush);
++  bool urgent = false;
++  if (n_nodes_ > 0) {
++    stats_.graphs++;
++    stats_.nodes += n_nodes_;
++    ByteWriter keep;
++    uint32_t n_keep = 0;
++    size_t n_told = 0;
++    size_t told_bytes = 0;
++    size_t later_bytes = 0;
++    bool large = large_unread_.load(std::memory_order_relaxed) < kMaxLargeUnread;
++    for (uint32_t slot = 0; slot < outputs_.size(); ++slot) {
++      auto& out = outputs_[slot];
++      if (out.live) {
++        auto value = slot;
++        auto size = out.header->size;
++        if (tell && size <= kMaxToldBytes && n_told < kMaxTold &&
++            told_bytes + size <= kMaxToldTotal) {
++          value |= kKeepWithBytes;
++          n_told++;
++          told_bytes += size;
++          out.header->expected = true;
++          expected_[out.handle] = {out.header, sent_seq_ + 1, false};
++        } else if (
++            tell && large && size > kMaxToldBytes && size <= kMaxLaterBytes &&
++            n_told < kMaxTold && later_bytes + size <= kMaxLaterTotal) {
++          value |= kKeepWithBytesLater;
++          n_told++;
++          later_bytes += size;
++          out.header->expected = true;
++          expected_[out.handle] = {out.header, sent_seq_ + 1, true};
++        }
++        keep.put<uint32_t>(value);
++        keep.put<uint64_t>(out.handle);
++        n_keep++;
++      }
++    }
++    // With no output left nothing can ever read the batch.
++    if (n_keep > 0) {
++      // A whole evaluation of a few nodes whose results all come back with
++      // its answer: a value the program reads now.
++      urgent = tell && urgent_ && sent_since_finalize_ == 0 &&
++          n_nodes_ <= kMaxUrgentNodes && !batch_kernels_ &&
++          n_told == n_keep && later_bytes == 0;
++      ByteWriter w;
++      w.put<uint8_t>(
++          kGraphEval | (tell ? kGraphTell : 0) |
++          (batch_kernels_ ? kGraphKernels : 0) | (urgent ? kGraphUrgent : 0));
++      w.put<uint32_t>(static_cast<uint32_t>(leaves_.size()));
++      for (auto& l : leaves_) {
++        w.put_spec(make_spec(l.handle, l.shape, l.dtype));
++      }
++      w.put<uint32_t>(n_keep);
++      w.put_bytes(keep.str().data(), keep.str().size());
++      w.put<uint32_t>(n_nodes_);
++      w.put_bytes(nodes_.str().data(), nodes_.str().size());
++      if (trace_) {
++        std::cerr << "[remote gpu] graph: " << n_nodes_ << " nodes, "
++                  << leaves_.size() << " inputs, " << n_keep << " outputs, "
++                  << w.str().size() << " bytes (recording "
++                  << record_ns_ / 1000 << " us)" << (urgent ? ", urgent" : "")
++                  << std::endl;
++        record_ns_ = 0;
++      }
++      frame(kGraph, w.str());
++      sent_seq_++;
++      sent_since_finalize_++;
++      if (tell) {
++        told_.push_back(sent_seq_);
++      }
++    }
++  }
++  reset_batch();
++  send_frees();
++  return urgent;
++}
++
++uint64_t Client::commit() {
++  std::lock_guard lk(mtx_);
++  bool urgent = flush_batch();
++  write_out();
++  return sent_seq_ | (urgent ? kTicketOwn : 0);
++}
++
++void Client::finalize() {
++  std::lock_guard lk(mtx_);
++  flush_batch();
++  write_out();
++  sent_since_finalize_ = 0;
++}
++
++bool Client::done(uint64_t seq, bool own) const {
++  if (synced_seq_ >= seq) {
++    return true;
++  }
++  if (own) {
++    return early_.count(seq) > 0;
++  }
++  // What was answered early is done: so is everything, if what came before
++  // it is.
++  while (seq > synced_seq_ && early_.count(seq) > 0) {
++    seq--;
++  }
++  return synced_seq_ >= seq;
++}
++
++bool Client::is_done(uint64_t ticket) {
++  std::lock_guard lk(mtx_);
++  return done(ticket & ~kTicketOwn, ticket & kTicketOwn);
++}
++
++void Client::synchronize() {
++  wait(commit() & ~kTicketOwn);
++}
++
++void Client::wait(uint64_t ticket) {
++  std::lock_guard lk(mtx_);
++  bool own = ticket & kTicketOwn;
++  ticket &= ~kTicketOwn;
++  if (done(ticket, own)) {
++    return;
++  }
++  flush_batch();
++  if (sent_seq_ == 0 && fd_ < 0) {
++    // Nothing was ever sent.
++    return;
++  }
++  // Only up to the ticket: what was sent after it (the next step of a
++  // model, started with async_eval) keeps running.
++  ticket = std::min(ticket, sent_seq_);
++  while (!own && ticket > synced_seq_ && early_.count(ticket) > 0) {
++    ticket--;
++  }
++  if (std::find(told_.begin(), told_.end(), ticket) != told_.end()) {
++    // The Mac says by itself when this one is done.
++    {
++      Lap lap(stats_on_, stats_.sync);
++      write_out();
++      while (!done(ticket, own)) {
++        uint64_t len;
++        if (!read_frame(len)) {
++          throw error("unexpected reply from the Mac.");
++        }
++      }
++    }
++    print_stats();
++    return;
++  }
++  Lap lap(stats_on_, stats_.sync);
++  ByteWriter w;
++  w.put<uint64_t>(ticket);
++  auto len = request(kSync, w.str());
++  std::string ignore(len, '\0');
++  read_all(ignore.data(), len);
++  synced_seq_ = std::max(synced_seq_, ticket);
++}
++
++void Client::fetch(BufHeader* h) {
++  std::lock_guard lk(mtx_);
++  if (h->data.load() != nullptr) {
++    return;
++  }
++  flush_batch();
++  auto lap = std::make_unique<Lap>(stats_on_, stats_.read);
++  if (h->expected) {
++    // The bytes are coming without being asked for.
++    write_out();
++    while (h->expected && h->data.load() == nullptr) {
++      uint64_t len;
++      if (!read_frame(len)) {
++        throw error("unexpected reply from the Mac.");
++      }
++    }
++  }
++  if (h->data.load() == nullptr) {
++    if (h->size > kMaxToldBytes) {
++      // Large results are read after all: have them sent unasked again.
++      large_unread_.store(0, std::memory_order_relaxed);
++    }
++    ByteWriter w;
++    w.put<uint64_t>(h->handle.load());
++    auto len = request(kRead, w.str());
++    auto* data = static_cast<char*>(std::malloc(std::max<size_t>(h->size, 1)));
++    if (len != h->size) {
++      std::string ignore(len, '\0');
++      read_all(ignore.data(), len);
++      std::free(data);
++      std::ostringstream msg;
++      msg << "the Mac sent " << len << " bytes for an array of " << h->size
++          << ".";
++      throw error(msg.str());
++    }
++    read_all(data, len);
++    if (trace_) {
++      std::cerr << "[remote gpu] read #" << h->handle.load() << " " << len
++                << " bytes" << std::endl;
++    }
++    account_fetched(h->size);
++    h->data.store(data);
++  }
++  lap.reset();
++  print_stats();
++}
++
++void Client::print_stats() {
++  if (stats_on_ && stats_.started) {
++    auto us = [](uint64_t ns) { return (ns + 500) / 1000; };
++    auto& t = stats_;
++    std::cerr << "[remote gpu] stats: " << t.graphs << " graphs, " << t.nodes
++              << " nodes, " << t.writes << " writes, " << t.bytes
++              << " B; record " << us(t.record) << " (of which primitives "
++              << us(t.serialise) << "), flush " << us(t.flush) << ", write "
++              << us(t.write) << ", wait for sync " << us(t.sync)
++              << ", read " << us(t.read) << ", since the first node "
++              << us(std::chrono::duration_cast<std::chrono::nanoseconds>(
++                        std::chrono::steady_clock::now() - t.first)
++                        .count())
++              << " us" << std::endl;
++    stats_ = Stats{};
++  }
++}
++
++void Client::release(BufHeader* h) {
++  std::lock_guard lk(mtx_);
++  bool unread = h->unread_large.load(std::memory_order_relaxed);
++  if (h->expected) {
++    if (auto it = expected_.find(h->handle.load()); it != expected_.end()) {
++      // Freed before its frame was even read.
++      unread = unread || it->second.later;
++      expected_.erase(it);
++    }
++    h->expected = false;
++  }
++  if (unread) {
++    large_unread_.fetch_add(1, std::memory_order_relaxed);
++  }
++  if (is_pending(h)) {
++    // Never sent: it stays an intermediate of the batch.
++    outputs_[h->slot].live = false;
++    return;
++  }
++  frees_.push_back(h->handle.load());
++  free_bytes_ += h->remote_nbytes;
++  if (n_nodes_ == 0 && !resolving_ && fd_ >= 0 &&
++      (frees_.size() >= kMaxQueuedFrees || free_bytes_ >= kMaxQueuedFreeBytes)) {
++    try {
++      send_frees();
++      write_out();
++    } catch (...) {
++      // Called from destructors; a lost connection shows up at the next use.
++    }
++  }
++}
++
++} // namespace
++
++void record(array& arr) {
++  Client::get().record(arr);
++}
++
++bool load(array& arr) {
++  return Client::get().load(arr);
++}
++
++void flush() {
++  Client::get().finalize();
++}
++
++uint64_t commit() {
++  return Client::get().commit();
++}
++
++bool is_done(uint64_t ticket) {
++  return Client::get().is_done(ticket);
++}
++
++void wait(uint64_t ticket) {
++  Client::get().wait(ticket);
++}
++
++void synchronize() {
++  Client::get().synchronize();
++}
++
++void fetch(BufHeader* h) {
++  Client::get().fetch(h);
++}
++
++void release(BufHeader* h) {
++  Client::get().release(h);
++}
++
++void note_large_read() {
++  Client::get().note_large_read();
++}
++
++bool custom_kernels() {
++  return Client::get().custom_kernels();
++}
++
++std::string no_custom_kernels() {
++  std::string why;
++  if (Client::get().custom_kernels(&why)) {
++    return "";
++  }
++  return "Custom Metal kernels are off: " + why;
++}
++
++std::shared_ptr<const KernelSpec> make_kernel_spec(
++    const std::string& name,
++    const std::vector<std::string>& input_names,
++    const std::vector<std::string>& output_names,
++    const std::string& source,
++    const std::string& header,
++    bool ensure_row_contiguous,
++    bool atomic_outputs,
++    CompileOptions::Data compile_options) {
++  auto spec = std::make_shared<KernelSpec>();
++  spec->name = name;
++  // What the Mac refuses (it checks again): said here, when the kernel is
++  // first run, rather than by the Mac after the fact.
++  bool long_name = name.size() > kMaxKernelName;
++  for (auto* names : {&input_names, &output_names}) {
++    for (auto& n : *names) {
++      long_name = long_name || n.size() > kMaxKernelName;
++    }
++  }
++  if (long_name) {
++    spec->refused = "its name, or the name of one of its arrays, is longer "
++                    "than " + std::to_string(kMaxKernelName) + " characters.";
++  } else if (
++      input_names.size() > kMaxKernelArrays ||
++      output_names.size() > kMaxKernelArrays) {
++    spec->refused = "it has more than " + std::to_string(kMaxKernelArrays) +
++        " inputs or outputs.";
++  } else if (source.size() + header.size() > kMaxKernelSource) {
++    spec->refused = "its source and header are " +
++        std::to_string(source.size() + header.size()) +
++        " bytes, the Mac takes at most " + std::to_string(kMaxKernelSource) +
++        ".";
++  } else {
++    ByteWriter w;
++    w.put_text(name);
++    for (auto* names : {&input_names, &output_names}) {
++      w.put<uint32_t>(static_cast<uint32_t>(names->size()));
++      for (auto& n : *names) {
++        w.put_text(n);
++      }
++    }
++    w.put_text(source);
++    w.put_text(header);
++    w.put<uint8_t>(ensure_row_contiguous);
++    w.put<uint8_t>(atomic_outputs);
++    w.put<int32_t>(compile_options);
++    spec->wire = std::move(w.str());
++  }
++  return spec;
++}
++
++} // namespace mlx::core::remote
+diff --git a/mlx/backend/remote/device_info.cpp b/mlx/backend/remote/device_info.cpp
+new file mode 100644
+index 0000000..8526ccd
+--- /dev/null
++++ b/mlx/backend/remote/device_info.cpp
+@@ -0,0 +1,24 @@
++// Remote gpu backend: the gpu device is the Mac behind the connection.
++
++#include "mlx/backend/gpu/device_info.h"
++
++namespace mlx::core::gpu {
++
++bool is_available() {
++  return true;
++}
++
++int device_count() {
++  return 1;
++}
++
++const std::unordered_map<std::string, std::variant<std::string, size_t>>&
++device_info(int /* device_index */) {
++  static std::unordered_map<std::string, std::variant<std::string, size_t>>
++      info{
++          {"device_name", std::string("MLX remote gpu (Apple GPU on the host)")},
++          {"architecture", std::string("remote")}};
++  return info;
++}
++
++} // namespace mlx::core::gpu
+diff --git a/mlx/backend/remote/eval.cpp b/mlx/backend/remote/eval.cpp
+new file mode 100644
+index 0000000..522186d
+--- /dev/null
++++ b/mlx/backend/remote/eval.cpp
+@@ -0,0 +1,55 @@
++// Remote gpu backend: a node on a gpu stream is recorded for the Mac instead
++// of being computed.
++
++#include <future>
++
++#include "mlx/backend/gpu/eval.h"
++#include "mlx/backend/remote/remote.h"
++#include "mlx/primitives.h"
++#include "mlx/scheduler.h"
++
++namespace mlx::core::gpu {
++
++void init() {}
++
++// All gpu streams share the one ordered connection to the Mac.
++void new_stream(Stream) {}
++
++void new_thread_unsafe_stream(Stream) {}
++
++void eval(array& arr) {
++  auto& prim = arr.primitive();
++  if (typeid(prim) == typeid(Load)) {
++    if (static_cast<const Load&>(prim).asked_for_gpu()) {
++      // What mlx says on a Mac, where it says it (backend/metal/primitives.cpp).
++      throw std::runtime_error("[Load::eval_gpu] Not implemented.");
++    }
++    // The weights of a model: the Mac reads them from the file itself when
++    // it can, and they never come here.
++    if (remote::load(arr)) {
++      return;
++    }
++    // Otherwise the file is read here, also when asked on a gpu stream; the
++    // bytes are uploaded when a node first uses them.
++    auto outputs = arr.outputs();
++    prim.eval_cpu(arr.inputs(), outputs);
++    auto p = std::make_shared<std::promise<void>>();
++    auto f = p->get_future();
++    scheduler::enqueue(prim.stream(), [p = std::move(p)]() { p->set_value(); });
++    f.wait();
++    return;
++  }
++  remote::record(arr);
++}
++
++void finalize(Stream) {
++  remote::flush();
++}
++
++void synchronize(Stream) {
++  remote::synchronize();
++}
++
++void clear_streams() {}
++
++} // namespace mlx::core::gpu
+diff --git a/mlx/backend/remote/event.cpp b/mlx/backend/remote/event.cpp
+new file mode 100644
+index 0000000..b253fc7
+--- /dev/null
++++ b/mlx/backend/remote/event.cpp
+@@ -0,0 +1,99 @@
++// Remote gpu backend: events. An event signaled in a cpu stream is a counter
++// as in the cpu-only build. An event signaled in a gpu stream holds a ticket:
++// it is done once the Mac has evaluated everything sent up to that point.
++
++#include "mlx/event.h"
++#include "mlx/backend/remote/remote.h"
++#include "mlx/scheduler.h"
++
++#include <condition_variable>
++#include <mutex>
++
++namespace mlx::core {
++
++struct EventCounter {
++  uint64_t value{0};
++  // Set together with value by a signal in a gpu stream.
++  uint64_t ticket{0};
++  std::mutex mtx;
++  std::condition_variable cv;
++  std::atomic<Error*> error;
++
++  void wait(uint64_t val) {
++    uint64_t t;
++    {
++      std::unique_lock<std::mutex> lk(mtx);
++      cv.wait(lk, [this, val] { return value >= val; });
++      t = ticket;
++    }
++    if (t != 0) {
++      remote::wait(t);
++    }
++  }
++};
++
++Event::Event(Stream stream) : stream_(stream) {
++  event_ = std::make_shared<EventCounter>();
++}
++
++void Event::wait() {
++  check_error();
++  cast<EventCounter>().wait(value());
++  check_error();
++}
++
++void Event::wait(Stream stream) {
++  if (stream.device == Device::gpu) {
++    // Work for the Mac is ordered by the connection, so it needs no wait on
++    // an event of a gpu stream. For a cpu event the data must be complete
++    // here before a gpu node can send it.
++    if (stream_.device == Device::cpu) {
++      wait();
++    }
++    return;
++  }
++  scheduler::wait_event(stream, *this, [value = value()](Event& self) {
++    self.cast<EventCounter>().wait(value);
++  });
++}
++
++void Event::signal(Stream stream) {
++  if (stream.device == Device::gpu) {
++    auto& ec = cast<EventCounter>();
++    auto ticket = remote::commit();
++    {
++      std::lock_guard lk(ec.mtx);
++      ec.ticket = ticket;
++      ec.value = value();
++    }
++    ec.cv.notify_all();
++    return;
++  }
++  scheduler::signal_event(stream, *this, [value = value()](Event& self) {
++    auto& ec = self.cast<EventCounter>();
++    {
++      std::lock_guard lk(ec.mtx);
++      ec.value = value;
++    }
++    ec.cv.notify_all();
++  });
++}
++
++bool Event::is_signaled() const {
++  auto& ec = cast<EventCounter>();
++  uint64_t ticket;
++  {
++    std::lock_guard lk(ec.mtx);
++    if (ec.value < value()) {
++      return false;
++    }
++    ticket = ec.ticket;
++  }
++  return ticket == 0 || remote::is_done(ticket);
++}
++
++std::atomic<Error*>& Event::error() {
++  return cast<EventCounter>().error;
++}
++
++} // namespace mlx::core
+diff --git a/mlx/backend/remote/fence.cpp b/mlx/backend/remote/fence.cpp
+new file mode 100644
+index 0000000..d74eb86
+--- /dev/null
++++ b/mlx/backend/remote/fence.cpp
+@@ -0,0 +1,64 @@
++// Remote gpu backend: fences order work between streams inside one eval.
++
++#include "mlx/fence.h"
++#include "mlx/backend/remote/remote.h"
++#include "mlx/event.h"
++#include "mlx/scheduler.h"
++
++#include <vector>
++
++namespace mlx::core {
++
++struct FenceImpl {
++  uint32_t count;
++  Stream stream;
++  Event event;
++  // For a gpu stream: the ticket of each update.
++  std::vector<uint64_t> tickets;
++
++  FenceImpl(uint32_t count, Stream s) : count(count), stream(s), event(s) {}
++};
++
++Fence::Fence(Stream s) {
++  fence_ = std::make_shared<FenceImpl>(0, s);
++}
++
++void Fence::wait(Stream s, const array&, uint32_t value) {
++  auto& f = cast<FenceImpl>();
++  if (f.stream.device == Device::gpu) {
++    // Made on the Mac. A gpu consumer comes later on the same connection. A
++    // cpu consumer gets the bytes when it asks for them (Buffer::raw_ptr),
++    // but its stream is also what an eval() waits on: order it after the
++    // Mac's work.
++    if (s.device == Device::cpu && value > 0) {
++      auto ticket = f.tickets.at(value - 1);
++      scheduler::enqueue(s, [ticket]() { remote::wait(ticket); });
++    }
++    return;
++  }
++  auto event = f.event;
++  event.set_value(value);
++  if (s.device == Device::gpu) {
++    // The bytes are uploaded when the consumer is recorded: they must be
++    // complete by then.
++    event.wait();
++  } else {
++    event.wait(s);
++  }
++}
++
++uint32_t Fence::update(Stream s, const array&, bool) {
++  auto& f = cast<FenceImpl>();
++  f.count++;
++  if (s.device == Device::cpu) {
++    f.event.set_value(f.count);
++    f.event.signal(s);
++  } else {
++    // What was recorded so far goes to the Mac, and the ticket says when it
++    // is done.
++    f.tickets.push_back(remote::commit());
++  }
++  return f.count;
++}
++
++} // namespace mlx::core
+diff --git a/mlx/backend/remote/kernel.h b/mlx/backend/remote/kernel.h
+new file mode 100644
+index 0000000..dcc6c96
+--- /dev/null
++++ b/mlx/backend/remote/kernel.h
+@@ -0,0 +1,114 @@
++// Remote gpu backend: custom Metal kernels (mx.fast.metal_kernel). The Mac
++// compiles and runs their source, if its server was started to take them.
++
++#pragma once
++
++#include <atomic>
++#include <memory>
++#include <optional>
++#include <string>
++#include <tuple>
++#include <utility>
++#include <vector>
++
++#include "mlx/fast.h"
++#include "mlx/fast_primitives.h"
++
++namespace mlx::core::remote {
++
++// A kernel as it was given to metal_kernel: the Mac makes its own from the
++// same arguments, so the source it compiles is the one mlx generates there.
++struct KernelSpec {
++  std::string name;
++  // The KERNEL message of protocol.h, after the number.
++  std::string wire;
++  // Why the Mac would not take it (see the limits in protocol.h), if so.
++  std::string refused;
++  // Its number on the connection, 0 until it is sent.
++  mutable std::atomic<uint32_t> id{0};
++};
++
++std::shared_ptr<const KernelSpec> make_kernel_spec(
++    const std::string& name,
++    const std::vector<std::string>& input_names,
++    const std::vector<std::string>& output_names,
++    const std::string& source,
++    const std::string& header,
++    bool ensure_row_contiguous,
++    bool atomic_outputs,
++    CompileOptions::Data compile_options);
++
++using TemplateArgs = std::vector<std::pair<std::string, fast::TemplateArg>>;
++
++// The node metal_kernel makes in this build: mlx's own primitive, with what
++// the call was made of. (A CustomKernel from elsewhere, e.g. in a function
++// imported from a file, holds only the generated source and is not sent.)
++class Kernel : public fast::CustomKernel {
++ public:
++  Kernel(
++      std::shared_ptr<const KernelSpec> spec,
++      TemplateArgs template_args,
++      Stream stream,
++      std::string name,
++      std::string source,
++      std::tuple<int, int, int> grid,
++      std::tuple<int, int, int> threadgroup,
++      std::vector<std::tuple<bool, bool, bool>> shape_infos,
++      bool ensure_row_contiguous,
++      std::optional<float> init_value,
++      CompileOptions::Data compile_options)
++      : fast::CustomKernel(
++            stream,
++            std::move(name),
++            std::move(source),
++            grid,
++            threadgroup,
++            std::move(shape_infos),
++            ensure_row_contiguous,
++            init_value,
++            std::vector<fast::ScalarArg>{},
++            false,
++            0,
++            compile_options),
++        spec_(std::move(spec)),
++        template_args_(std::move(template_args)),
++        grid_(grid),
++        threadgroup_(threadgroup),
++        init_value_(init_value) {}
++
++  const KernelSpec& spec() const {
++    return *spec_;
++  }
++  const TemplateArgs& template_args() const {
++    return template_args_;
++  }
++  const std::tuple<int, int, int>& grid() const {
++    return grid_;
++  }
++  const std::tuple<int, int, int>& threadgroup() const {
++    return threadgroup_;
++  }
++  const std::optional<float>& init_value() const {
++    return init_value_;
++  }
++
++ private:
++  std::shared_ptr<const KernelSpec> spec_;
++  TemplateArgs template_args_;
++  std::tuple<int, int, int> grid_;
++  std::tuple<int, int, int> threadgroup_;
++  std::optional<float> init_value_;
++};
++
++// True if the Mac takes custom kernels: its server says so when the
++// connection opens. The first call opens the connection to ask (python
++// libraries call mx.metal.is_available() when they are imported, before any
++// computation), and the answer then holds for the life of the process: a
++// library that was told no has not made its kernels. If the Mac cannot be
++// reached at that moment the answer is no, said once on stderr.
++// MLX_REMOTE_NO_KERNELS: no, without asking.
++bool custom_kernels();
++// Why not, for an error.
++std::string no_custom_kernels();
++
++} // namespace mlx::core::remote
+diff --git a/mlx/backend/remote/primitives.cpp b/mlx/backend/remote/primitives.cpp
+new file mode 100644
+index 0000000..22fc01d
+--- /dev/null
++++ b/mlx/backend/remote/primitives.cpp
+@@ -0,0 +1,239 @@
++// Remote gpu backend: no primitive is computed here on a gpu stream (see
++// eval.cpp), so eval_gpu is never called. What matters is which fused
++// primitives are built: those the Mac can rebuild and run with its kernels.
++
++#include <cstdlib>
++
++#include "mlx/primitives.h"
++#include "mlx/distributed/primitives.h"
++#include "mlx/fast_primitives.h"
++
++#define NO_GPU_MULTI(func)                                             \
++  void func::eval_gpu(                                                 \
++      const std::vector<array>& inputs, std::vector<array>& outputs) { \
++    throw std::runtime_error(#func " is not computed in the container with the remote gpu.");     \
++  }
++
++#define NO_GPU_USE_FALLBACK(func)     \
++  bool func::use_fallback(Stream s) { \
++    return true;                      \
++  }                                   \
++  NO_GPU_MULTI(func)
++
++// Fused on the Mac, as with the Metal backend.
++#define REMOTE_FUSED(func)            \
++  bool func::use_fallback(Stream s) { \
++    return s.device == Device::cpu;   \
++  }                                   \
++  NO_GPU_MULTI(func)
++
++#define NO_GPU(func)                                                  \
++  void func::eval_gpu(const std::vector<array>& inputs, array& out) { \
++    throw std::runtime_error(#func " is not computed in the container with the remote gpu.");    \
++  }
++
++namespace mlx::core {
++
++bool fast::ScaledDotProductAttention::use_fallback(
++    const array& q,
++    const array& k,
++    const array& v,
++    bool has_mask,
++    bool has_arr_mask,
++    bool do_causal,
++    bool has_sinks,
++    bool is_training,
++    bool output_logsumexp,
++    bool force_fused,
++    Stream s) {
++  if (s.device == Device::gpu && !is_training) {
++    // One node: whether it runs as the fused kernel or as its fallback
++    // depends on the Mac's GPU, and is decided there as natively (the server
++    // calls mlx's scaled_dot_product_attention for it).
++    static bool fallback = std::getenv("MLX_REMOTE_NO_SDPA") != nullptr;
++    if (!fallback) {
++      return false;
++    }
++  }
++  if (force_fused) {
++    throw std::invalid_argument(
++        "[scaled_dot_product_attention] force_fused=True but no fused "
++        "kernel is available in CPU backend.");
++  }
++  return true;
++}
++
++bool fast::ScaledDotProductAttentionVJP::use_fallback(
++    const array& q,
++    Stream s) {
++  return true;
++}
++
++bool fast::ScaledDotProductAttention::supports_bool_mask() {
++  // As Metal: the mask reaches the Mac as it was given.
++  return true;
++}
++
++bool fast::GatedDeltaUpdate::use_fallback(
++    const int Hk,
++    const int Dk,
++    const int Hv,
++    const int Dv,
++    const bool has_mask,
++    Stream s) {
++  return true;
++}
++
++bool fast::GatedDeltaUpdateVJP::use_fallback(
++    const int Hk,
++    const int Dk,
++    const int Hv,
++    const int Dv,
++    Stream s) {
++  return true;
++}
++
++NO_GPU(Abs)
++NO_GPU(Add)
++NO_GPU(AddMM)
++NO_GPU(Arange)
++NO_GPU(ArcCos)
++NO_GPU(ArcCosh)
++NO_GPU(ArcSin)
++NO_GPU(ArcSinh)
++NO_GPU(ArcTan)
++NO_GPU(ArcTan2)
++NO_GPU(ArcTanh)
++NO_GPU(ArgPartition)
++NO_GPU(ArgReduce)
++NO_GPU(ArgSort)
++NO_GPU(AsType)
++NO_GPU(AsStrided)
++NO_GPU(BitwiseBinary)
++NO_GPU(BitwiseInvert)
++NO_GPU(BlockMaskedMM)
++NO_GPU(Broadcast)
++NO_GPU(BroadcastAxes)
++NO_GPU(Ceil)
++NO_GPU_MULTI(Compiled)
++NO_GPU(Concatenate)
++NO_GPU(Conjugate)
++NO_GPU(Contiguous)
++NO_GPU(Convolution)
++NO_GPU(Copy)
++NO_GPU(Cos)
++NO_GPU(Cosh)
++NO_GPU_MULTI(CustomTransforms)
++NO_GPU_MULTI(Depends)
++NO_GPU(Divide)
++NO_GPU_MULTI(DivMod)
++NO_GPU(DynamicSlice)
++NO_GPU(DynamicSliceUpdate)
++NO_GPU(NumberOfElements)
++NO_GPU(Remainder)
++NO_GPU(Equal)
++NO_GPU(Erf)
++NO_GPU(ErfInv)
++NO_GPU(Exp)
++NO_GPU(ExpandDims)
++NO_GPU(Expm1)
++NO_GPU(FFT)
++NO_GPU(Flatten)
++NO_GPU(Floor)
++NO_GPU(FloorDivide)
++NO_GPU(Full)
++NO_GPU(Gather)
++NO_GPU(GatherAxis)
++NO_GPU(GatherMM)
++NO_GPU(GatherQMM)
++NO_GPU(GatherQQMM)
++NO_GPU(Greater)
++NO_GPU(GreaterEqual)
++NO_GPU(Hadamard)
++NO_GPU(Imag)
++NO_GPU(Less)
++NO_GPU(LessEqual)
++NO_GPU(Load)
++NO_GPU(Log)
++NO_GPU(Log1p)
++NO_GPU(LogicalNot)
++NO_GPU(LogicalAnd)
++NO_GPU(LogicalOr)
++NO_GPU(LogAddExp)
++NO_GPU(LogSumExp)
++NO_GPU_MULTI(LUF)
++NO_GPU(Matmul)
++NO_GPU(Maximum)
++NO_GPU(Minimum)
++NO_GPU(Multiply)
++NO_GPU(Negative)
++NO_GPU(NotEqual)
++NO_GPU(Pad)
++NO_GPU(Partition)
++NO_GPU(Power)
++NO_GPU_MULTI(QRF)
++NO_GPU(QuantizedMatmul)
++NO_GPU(QQMatmul)
++NO_GPU(RandomBits)
++NO_GPU(Real)
++NO_GPU(Reduce)
++NO_GPU(Reshape)
++NO_GPU(Round)
++NO_GPU(Scan)
++NO_GPU(Scatter)
++NO_GPU(ScatterAxis)
++NO_GPU(SearchSorted)
++NO_GPU(Select)
++NO_GPU(SegmentedMM)
++NO_GPU(Sigmoid)
++NO_GPU(Sign)
++NO_GPU(Sin)
++NO_GPU(Sinh)
++NO_GPU(Slice)
++NO_GPU(SliceUpdate)
++NO_GPU(Softmax)
++NO_GPU(Sort)
++NO_GPU_MULTI(Split)
++NO_GPU(Square)
++NO_GPU(Squeeze)
++NO_GPU(Sqrt)
++NO_GPU(StopGradient)
++NO_GPU(Subtract)
++NO_GPU_MULTI(SVD)
++NO_GPU(Tan)
++NO_GPU(Tanh)
++NO_GPU(Transpose)
++NO_GPU(Unflatten)
++NO_GPU(Inverse)
++NO_GPU(Cholesky)
++NO_GPU_MULTI(Eigh)
++NO_GPU_MULTI(Eig)
++NO_GPU(View)
++NO_GPU(MaskedScatter)
++
++namespace fast {
++REMOTE_FUSED(CrossEntropy)
++NO_GPU_MULTI(CrossEntropyVJP)
++REMOTE_FUSED(LayerNorm)
++NO_GPU_MULTI(LayerNormVJP)
++REMOTE_FUSED(RMSNorm)
++NO_GPU_MULTI(RMSNormVJP)
++REMOTE_FUSED(RoPE)
++NO_GPU_MULTI(ScaledDotProductAttention)
++NO_GPU_MULTI(ScaledDotProductAttentionVJP)
++NO_GPU_MULTI(GatedDeltaUpdate)
++NO_GPU_MULTI(GatedDeltaUpdateVJP)
++NO_GPU_MULTI(ConvertFP8)
++NO_GPU_MULTI(Quantize)
++NO_GPU_MULTI(CustomKernel)
++} // namespace fast
++
++namespace distributed {
++NO_GPU_MULTI(AllReduce)
++NO_GPU_MULTI(AllGather)
++NO_GPU_MULTI(Send)
++NO_GPU_MULTI(Recv)
++NO_GPU_MULTI(ReduceScatter)
++} // namespace distributed
++
++} // namespace mlx::core
+diff --git a/mlx/backend/remote/protocol.h b/mlx/backend/remote/protocol.h
+new file mode 100644
+index 0000000..4f94a14
+--- /dev/null
++++ b/mlx/backend/remote/protocol.h
+@@ -0,0 +1,454 @@
++// Wire protocol between the remote gpu backend (in a Linux container) and the
++// server on the Mac. This header is shared by both ends and depends on
++// nothing but the standard library.
++//
++// Every message is a frame: u8 type, u64 payload length, payload (little
++// endian). Only HELLO, READ, SYNC, STATS and OPEN are answered, with a reply frame:
++// u8 status (0 ok, 1 error), u64 length, payload (the error on error).
++// The other messages are one way, so that the container never waits for the
++// Mac while it builds graphs; an error they cause is kept by the server and
++// returned by the next message that has a reply.
++//
++// An error is one byte for its kind (ErrorKind below: which exception mlx
++// raised on the Mac, so that the container raises the same and a program
++// catches there what it would catch on the Mac) followed by its text. Not
++// the error of a HELLO, which is text alone: ends of two versions must be
++// able to tell each other so.
++//
++// The Mac also sends frames nobody asked for, with status 2 (DONE): one for
++// each GRAPH that has the "tell" flag, in their order, as soon as the GPU has
++// finished it. It carries the bytes of the outputs the container marked, so
++// that waiting for a result and reading it need no question at all:
++//   u64 n (the GRAPH and OP messages evaluated so far), u32 length of an
++//   error and the error (its kind and text; nothing if none), u32 count,
++//   count x (handle, u64 nbytes, bytes in row major order)
++// The container meets them while it reads the reply to something else, or
++// reads them on purpose when it waits for that graph.
++// The large outputs the container marked travel in a frame of their own, with
++// status 3 (MORE) and the same layout, right after the DONE frame of their
++// graph (which says so in bit 31 of its count): they do not hold back the
++// small ones, and the container reads them only when it reads again.
++//
++// A GRAPH with the "urgent" flag is a small one whose results the program is
++// about to read (the value of one element, a comparison). When all its inputs
++// are already computed and its nodes only select, move or compare elements,
++// which gives the same bytes on any device, the Mac runs it at once on its
++// cpu, ahead of the messages queued before it and without waiting for the GPU
++// work in flight, and answers with a frame of status 4 (EARLY), laid out as
++// a DONE frame: it says that this graph alone is done, nothing about the
++// earlier ones, whose DONE frames follow in their order. Otherwise the graph
++// takes its turn and gets a DONE frame like any other. An EARLY frame never
++// carries an error, and is never sent while one is owed: not while a failure
++// of an earlier message waits to be told, and not ahead of a message that
++// could still fail without a reply (a kernel, an upload that is not the
++// graph's own operand). A container may then take a run of graphs that were
++// all answered early for done, as it does (Client::done).
++//
++// Arrays on the Mac are named by handles (u64, chosen by the container,
++// never 0). A dtype travels as (u32 Dtype::Val, u8 size), a shape as u32 ndim
++// and i32 dims.
++//
++//   HELLO   u32 protocol version, u32 length and text of the MLX version of
++//           the container's end              -> u32 features of the server
++//           (bit 0: it takes custom Metal kernels), u32 length and text of
++//           the Mac's MLX version, then text describing it
++//           Both versions must be the Mac's own, or the reply is an error:
++//           nodes travel in the bytes MLX's export_function writes, and what
++//           a primitive is, and how it is saved, changes with MLX. The
++//           container checks the Mac's answer in its turn.
++//   UPLOAD  handle, dtype, shape, raw bytes
++//   GRAPH   u8 flags (bit 0: start evaluating, bit 1: tell when done, bit 2:
++//           some node is a custom kernel, bit 3: urgent),
++//           u32 n_inputs, n_inputs x (handle, dtype, shape),
++//           u32 n_keep, n_keep x (u32 value, handle); bit 31 of the value
++//           asks for the bytes in the DONE frame, bit 30 in the MORE frame,
++//           u32 n_nodes, then for each node, in topological order:
++//             u32 length and the primitive (stream, name and state in the
++//             bytes mlx's export_function writes and import_function reads),
++//             u16 n_in, n_in x u32 value,
++//             u16 n_out, n_out x (dtype, shape)
++//           Two kinds of node are not a saved primitive, and say so in the
++//           top bits of the length:
++//           - bit 31, a Compiled primitive (what mx.compile fuses), sent as
++//             what its constructor takes:
++//               u32 n_inputs, n_inputs x (dtype, shape, u8 constant, and
++//                 the element if constant),
++//               u32 n_tape, n_tape x (u32 length and primitive, u16 n_in,
++//                 n_in x u32 value, dtype, shape); with bit 30 in the
++//                 length the primitive is the u32 op of an OP message,
++//               u32 n_outputs, n_outputs x u32 value
++//             where a value is an input of the primitive (bit 31 set) or an
++//             array of the tape;
++//           - bit 30, an operation the Mac builds by calling mlx, since how
++//             it is computed depends on the GPU:
++//               u32 call, then for kCallAttention (mlx's
++//               scaled_dot_product_attention): f32 scale, u8 causal,
++//               u8 has a mask, u8 has sinks, u8 force_fused;
++//               for kCallContiguous (mlx's contiguous): u8 allow_col_major;
++//               for kCallKernel (a kernel of mx.fast.metal_kernel, sent
++//               before with KERNEL): u32 kernel, 3 x i32 grid, 3 x i32
++//               threadgroup, u8 has an init_value, f32 init_value,
++//               u16 n_template, n_template x (u8 kind, u16 length and name,
++//               then i32 for kTemplateInt, u8 for kTemplateBool, a dtype
++//               for kTemplateDtype);
++//               for kCallCrossEntropy (mlx's fast::cross_entropy, of logits
++//               and targets) and kCallCrossEntropyVJP (its gradient, of
++//               logits, targets, the loss and its cotangent): nothing more
++//           A value is an input of the message (bit 31 set, its index in the
++//           other bits) or an output of a node (numbered in order over all
++//           nodes). The values listed in "keep" get a handle; the others are
++//           intermediates.
++//   OP      u32 op, u32 n_inputs, n_inputs x (handle, dtype, shape),
++//           u32 n_outputs, n_outputs x handle
++//           One public mlx operation, for primitives the blob cannot hold.
++//   FREE    u32 n, n x handle
++//   READ    handle                              -> the array's bytes, row major
++//   SYNC    u64 n                               -> empty, once the first n
++//           GRAPH and OP messages of the connection are evaluated (0: all
++//           of them). Waiting for a step of a model must not wait for the
++//           next step, already sent.
++//   STATS                                       -> text with the counters
++//
++// Weights are not sent at all when the Mac can read their file by itself:
++//   OPEN    u32 file (chosen by the container, never 0), u64 size of the
++//           file, i64 time it was last modified (nanoseconds), u64 digest of
++//           parts of it (file_digest below), then its path as the container
++//           sees it                              -> u8 1, or u8 0 and why not
++//           The Mac opens the file, read only, if the path is under one of
++//           the directories its server was started with (after their
++//           mapping, and with symlinks and ".." resolved) and the file it
++//           finds has that size, was last modified at that time and has
++//           those bytes where the digest looks. Otherwise the container
++//           reads the file and uploads, as for any other data.
++//           This tells apart two files that are not the same one, short of
++//           reading them whole, which is what the Mac reading the file is
++//           there to spare the container: a file of the same size, modified
++//           at the same instant and equal in the parts looked at is taken
++//           for the container's.
++//   LOAD    handle, dtype, shape, u32 file, u64 offset, u8 swap byte order
++//           The array is those bytes of the file, which the Mac reads when
++//           the message arrives. Counts as a GRAPH for SYNC and DONE. A
++//           file that changed since its OPEN is not read: the LOAD fails.
++//   CLOSE   u32 file
++//
++// A custom Metal kernel (mx.fast.metal_kernel) is sent once per connection,
++// and only to a server that says in its HELLO that it takes them (it is
++// started with --custom-kernels): the Mac compiles and runs its source.
++//   KERNEL  u32 kernel (chosen by the container, never 0), then what
++//           mlx's metal_kernel takes: u32 length and name, u32 n_inputs and
++//           their names (u32 length and text each), u32 n_outputs and their
++//           names, u32 length and source, u32 length and header,
++//           u8 ensure_row_contiguous, u8 atomic_outputs, i32 compile options
++//           (what CompileOptions::serialize gives: the math mode)
++//           The nodes that run it name it by that number (kCallKernel).
++
++#pragma once
++
++#include <cstdint>
++#include <cstring>
++#include <stdexcept>
++#include <string>
++#include <vector>
++
++namespace mlx_remote {
++
++// 10: the MLX version in HELLO and in its reply; the time of last modification
++// in OPEN, and a digest of more of the file than its first bytes.
++// 11: an error carries its kind; mlx's fused cross entropy and its gradient
++// are operations the Mac builds (kCallCrossEntropy, kCallCrossEntropyVJP).
++constexpr uint32_t kProtocolVersion = 11;
++constexpr int kDefaultPort = 47800;
++
++enum Msg : uint8_t {
++  kHello = 1,
++  kUpload = 2,
++  kGraph = 3,
++  kOp = 4,
++  kFree = 5,
++  kRead = 6,
++  kSync = 7,
++  kStats = 8,
++  kOpen = 9,
++  kLoad = 10,
++  kClose = 11,
++  kKernel = 12,
++  kLastMsg = kKernel,
++};
++
++// In the reply to HELLO.
++constexpr uint32_t kFeatureKernels = 1;
++
++enum Op : uint32_t {
++  kOpBitwiseInvert = 1,
++};
++
++enum Call : uint32_t {
++  kCallAttention = 1,
++  kCallContiguous = 2,
++  kCallKernel = 3,
++  kCallCrossEntropy = 4,
++  kCallCrossEntropyVJP = 5,
++};
++
++// The kind of an error the Mac reports: the exception that was raised there.
++// (Python sees std::invalid_argument as ValueError, std::out_of_range as
++// IndexError, std::overflow_error as OverflowError, the others of these as
++// ValueError, anything else as RuntimeError.)
++enum ErrorKind : uint8_t {
++  kErrorRuntime = 0,
++  kErrorInvalidArgument = 1,
++  kErrorOutOfRange = 2,
++  kErrorLength = 3,
++  kErrorDomain = 4,
++  kErrorRange = 5,
++  kErrorOverflow = 6,
++};
++
++// An error as it travels: the kind of the exception, then its text.
++inline std::string encode_error(const std::exception& e) {
++  uint8_t kind = kErrorRuntime;
++  if (dynamic_cast<const std::invalid_argument*>(&e)) {
++    kind = kErrorInvalidArgument;
++  } else if (dynamic_cast<const std::out_of_range*>(&e)) {
++    kind = kErrorOutOfRange;
++  } else if (dynamic_cast<const std::length_error*>(&e)) {
++    kind = kErrorLength;
++  } else if (dynamic_cast<const std::domain_error*>(&e)) {
++    kind = kErrorDomain;
++  } else if (dynamic_cast<const std::overflow_error*>(&e)) {
++    kind = kErrorOverflow;
++  } else if (dynamic_cast<const std::range_error*>(&e)) {
++    kind = kErrorRange;
++  }
++  return std::string(1, static_cast<char>(kind)) + e.what();
++}
++
++// Raises it again where it arrives, as what it was, with `prefix` before its
++// text.
++[[noreturn]] inline void raise_error(const std::string& prefix, const std::string& encoded) {
++  auto kind = encoded.empty() ? uint8_t(kErrorRuntime) : static_cast<uint8_t>(encoded[0]);
++  auto text = prefix + (encoded.empty() ? std::string() : encoded.substr(1));
++  switch (kind) {
++    case kErrorInvalidArgument:
++      throw std::invalid_argument(text);
++    case kErrorOutOfRange:
++      throw std::out_of_range(text);
++    case kErrorLength:
++      throw std::length_error(text);
++    case kErrorDomain:
++      throw std::domain_error(text);
++    case kErrorRange:
++      throw std::range_error(text);
++    case kErrorOverflow:
++      throw std::overflow_error(text);
++    default:
++      throw std::runtime_error(text);
++  }
++}
++
++enum TemplateKind : uint8_t {
++  kTemplateInt = 0,
++  kTemplateBool = 1,
++  kTemplateDtype = 2,
++};
++
++// What a server accepts of custom kernels.
++constexpr size_t kMaxKernelSource = 256 << 10; // source and header together
++constexpr size_t kMaxKernelName = 128; // of a kernel, an array, a template argument
++constexpr size_t kMaxKernelArrays = 64; // inputs, and outputs
++constexpr size_t kMaxKernelTemplate = 64;
++constexpr size_t kMaxKernels = 256; // per connection
++
++constexpr uint32_t kNodeCompiled = 0x80000000u;
++constexpr uint32_t kNodeCall = 0x40000000u;
++constexpr uint32_t kNodeFlags = kNodeCompiled | kNodeCall;
++
++constexpr uint8_t kGraphEval = 1;
++constexpr uint8_t kGraphTell = 2;
++constexpr uint8_t kGraphKernels = 4;
++constexpr uint8_t kGraphUrgent = 8;
++constexpr uint32_t kValueIsInput = 0x80000000u;
++constexpr uint32_t kKeepWithBytes = 0x80000000u;
++constexpr uint32_t kKeepWithBytesLater = 0x40000000u;
++constexpr uint32_t kKeepFlags = kKeepWithBytes | kKeepWithBytesLater;
++// In the count of a DONE frame: a MORE frame follows.
++constexpr uint32_t kDoneHasMore = 0x80000000u;
++// Reply status.
++constexpr uint8_t kReplyOk = 0;
++constexpr uint8_t kReplyError = 1;
++constexpr uint8_t kReplyDone = 2;
++constexpr uint8_t kReplyMore = 3;
++constexpr uint8_t kReplyEarly = 4;
++constexpr size_t kFrameHeader = 9;
++
++// What OPEN says of the contents of a file: FNV-1a of its first bytes (for
++// safetensors, the names and offsets of the tensors), of its last ones, and
++// of kFileSamples pieces at even distances in between; of all of it when it
++// is no longer than its first and last bytes together. Weights that differ
++// throughout (the same model trained further) differ in every piece.
++// read(offset, buffer, n) fills the buffer or returns false.
++constexpr size_t kFileHeadBytes = 64 << 10;
++constexpr size_t kFileSampleBytes = 4 << 10;
++constexpr uint64_t kFileSamples = 16;
++template <typename Read>
++bool file_digest(uint64_t size, Read&& read, uint64_t& digest) {
++  uint64_t h = 0xcbf29ce484222325ull;
++  std::vector<char> buffer(kFileHeadBytes);
++  auto part = [&](uint64_t offset, uint64_t n) {
++    if (n > 0 && !read(offset, buffer.data(), static_cast<size_t>(n))) {
++      return false;
++    }
++    for (uint64_t i = 0; i < n; ++i) {
++      h = (h ^ static_cast<uint8_t>(buffer[i])) * 0x100000001b3ull;
++    }
++    return true;
++  };
++  if (size <= 2 * kFileHeadBytes) {
++    uint64_t head = size < kFileHeadBytes ? size : kFileHeadBytes;
++    if (!part(0, head) || !part(head, size - head)) {
++      return false;
++    }
++  } else {
++    if (!part(0, kFileHeadBytes)) {
++      return false;
++    }
++    uint64_t between = size - 2 * kFileHeadBytes;
++    for (uint64_t k = 1; k <= kFileSamples; ++k) {
++      if (!part(kFileHeadBytes + between / (kFileSamples + 1) * k, kFileSampleBytes)) {
++        return false;
++      }
++    }
++    if (!part(size - kFileHeadBytes, kFileHeadBytes)) {
++      return false;
++    }
++  }
++  digest = h;
++  return true;
++}
++
++// Whether two ends see the same time of last modification, in nanoseconds: a
++// file system between them may keep fewer digits (microseconds, seconds).
++inline bool same_file_time(int64_t a, int64_t b) {
++  for (int64_t unit : {int64_t(1), int64_t(1000), int64_t(1000000), int64_t(1000000000)}) {
++    if (a / unit * unit == b || b / unit * unit == a) {
++      return true;
++    }
++  }
++  return false;
++}
++
++struct ArraySpec {
++  uint64_t handle{0};
++  uint32_t dtype_val{0};
++  uint8_t dtype_size{0};
++  std::vector<int32_t> shape;
++};
++
++class ByteWriter {
++ public:
++  template <typename T>
++  void put(T v) {
++    buf_.append(reinterpret_cast<const char*>(&v), sizeof(T));
++  }
++  void put_bytes(const void* p, size_t n) {
++    buf_.append(static_cast<const char*>(p), n);
++  }
++  void put_type(uint32_t dtype_val, uint8_t dtype_size, const int32_t* dims, size_t ndim) {
++    put<uint32_t>(dtype_val);
++    put<uint8_t>(dtype_size);
++    put<uint32_t>(static_cast<uint32_t>(ndim));
++    put_bytes(dims, ndim * sizeof(int32_t));
++  }
++  // A text with its length, as u32 (kernels) or u16 (their template names).
++  template <typename L = uint32_t>
++  void put_text(const std::string& text) {
++    put<L>(static_cast<L>(text.size()));
++    put_bytes(text.data(), text.size());
++  }
++  void put_spec(const ArraySpec& s) {
++    put<uint64_t>(s.handle);
++    put<uint32_t>(s.dtype_val);
++    put<uint8_t>(s.dtype_size);
++    put<uint32_t>(static_cast<uint32_t>(s.shape.size()));
++    for (auto d : s.shape) {
++      put<int32_t>(d);
++    }
++  }
++  std::string& str() {
++    return buf_;
++  }
++
++ private:
++  std::string buf_;
++};
++
++class ByteReader {
++ public:
++  ByteReader(const char* p, size_t n) : p_(p), end_(p + n) {}
++  template <typename T>
++  T get() {
++    need(sizeof(T));
++    T v;
++    std::memcpy(&v, p_, sizeof(T));
++    p_ += sizeof(T);
++    return v;
++  }
++  const char* get_bytes(size_t n) {
++    need(n);
++    auto* r = p_;
++    p_ += n;
++    return r;
++  }
++  // A dtype and a shape, without a handle.
++  ArraySpec get_type() {
++    ArraySpec s;
++    s.dtype_val = get<uint32_t>();
++    s.dtype_size = get<uint8_t>();
++    auto ndim = get<uint32_t>();
++    if (ndim > 64) {
++      throw std::runtime_error("malformed message: too many dimensions");
++    }
++    s.shape.resize(ndim);
++    for (auto& d : s.shape) {
++      d = get<int32_t>();
++    }
++    return s;
++  }
++  template <typename L = uint32_t>
++  std::string get_text() {
++    auto n = get<L>();
++    return std::string(get_bytes(n), n);
++  }
++  const char* position() const {
++    return p_;
++  }
++  ArraySpec get_spec() {
++    ArraySpec s;
++    s.handle = get<uint64_t>();
++    s.dtype_val = get<uint32_t>();
++    s.dtype_size = get<uint8_t>();
++    auto ndim = get<uint32_t>();
++    if (ndim > 64) {
++      throw std::runtime_error("malformed message: too many dimensions");
++    }
++    s.shape.resize(ndim);
++    for (auto& d : s.shape) {
++      d = get<int32_t>();
++    }
++    return s;
++  }
++  size_t remaining() const {
++    return end_ - p_;
++  }
++
++ private:
++  void need(size_t n) const {
++    if (static_cast<size_t>(end_ - p_) < n) {
++      throw std::runtime_error("malformed message: truncated payload");
++    }
++  }
++  const char* p_;
++  const char* end_;
++};
++
++} // namespace mlx_remote
+diff --git a/mlx/backend/remote/remote.h b/mlx/backend/remote/remote.h
+new file mode 100644
+index 0000000..57d019d
+--- /dev/null
++++ b/mlx/backend/remote/remote.h
+@@ -0,0 +1,74 @@
++// Remote gpu backend: the gpu device of this build is a server on a Mac
++// (see protocol.h). Nodes on a gpu stream are recorded here and sent there.
++
++#pragma once
++
++#include <atomic>
++#include <cstdint>
++#include <string>
++
++#include "mlx/allocator.h"
++#include "mlx/array.h"
++
++namespace mlx::core::remote {
++
++// What every allocator::Buffer of this backend points to.
++struct BufHeader {
++  // Bytes the buffer stands for.
++  size_t size{0};
++  // The array on the Mac holding the same bytes, 0 if there is none.
++  std::atomic<uint64_t> handle{0};
++  // How many bytes that array holds, from the start of the buffer.
++  size_t remote_nbytes{0};
++  // The bytes here, null as long as they exist only on the Mac.
++  std::atomic<char*> data{nullptr};
++  // The bytes follow the header in the same allocation.
++  bool inline_data{false};
++  // Bookkeeping of the client (client.cpp), valid for the batch of nodes
++  // with the same number: the buffer is the output `slot` of a recorded node,
++  // or the input `leaf_slot` of the batch.
++  uint32_t batch{0};
++  uint32_t slot{0};
++  uint32_t leaf_batch{0};
++  uint32_t leaf_slot{0};
++  // The Mac will send the bytes by itself once they are computed.
++  bool expected{false};
++  // Large bytes the Mac sent by itself, not looked at yet (see
++  // note_large_read in client.cpp).
++  std::atomic<bool> unread_large{false};
++};
++
++inline BufHeader* header(allocator::Buffer buffer) {
++  return static_cast<BufHeader*>(buffer.ptr());
++}
++
++// allocator.cpp
++allocator::Buffer make_remote_buffer(size_t size, uint64_t handle);
++void account_fetched(size_t size);
++
++// client.cpp
++
++// Record the node of an unscheduled array and give its outputs remote buffers.
++void record(array& arr);
++// For the array of a Load primitive: have the Mac read the bytes from the
++// file itself. False if it cannot, and the file has to be read here.
++bool load(array& arr);
++// The end of an evaluation: send the recorded nodes; the Mac starts
++// evaluating them.
++void flush();
++// Send the recorded nodes and return a ticket that is done once the Mac has
++// evaluated all that was sent so far; or, when they went as an urgent graph
++// (see protocol.h), once it has evaluated that graph.
++uint64_t commit();
++bool is_done(uint64_t ticket);
++void wait(uint64_t ticket);
++// Wait for everything sent so far.
++void synchronize();
++// Bring the bytes of a remote buffer here.
++void fetch(BufHeader* h);
++// A buffer with a handle is being freed here.
++void release(BufHeader* h);
++// The program looked at large bytes that the Mac had sent by itself.
++void note_large_read();
++
++} // namespace mlx::core::remote
+diff --git a/mlx/compile.cpp b/mlx/compile.cpp
+index e6bb295..60879cb 100644
+--- a/mlx/compile.cpp
++++ b/mlx/compile.cpp
+@@ -911,7 +911,10 @@ void compile_fuse(
+     //   a) to not be already computed ie have a primitive
+     //   b) that primitive to not be a broadcast since it will unnecessarily
+     //      cast to a contiguous array potentially blowing up memory
+-    if (arr.has_primitive() && !is_broadcast(arr.primitive())) {
++    // (Remote gpu backend: nor on a device that cannot run a fused kernel,
++    // as the cpu of a container without a C++ compiler.)
++    if (arr.has_primitive() && !is_broadcast(arr.primitive()) &&
++        compile_available_for_device(arr.primitive().stream().device)) {
+       Stream s = arr.primitive().stream();
+       recurse(arr, 0, s, arr.shape());
+     }
+diff --git a/mlx/export.cpp b/mlx/export.cpp
+index c10934d..b1524d0 100644
+--- a/mlx/export.cpp
++++ b/mlx/export.cpp
+@@ -5,6 +5,7 @@
+ #include "mlx/fast_primitives.h"
+ #include "mlx/graph_utils.h"
+ #include "mlx/primitives.h"
++#include "mlx/remote_graph.h"
+ #include "mlx/transforms_impl.h"
+ #include "mlx/utils.h"
+ #include "mlx/version.h"
+@@ -31,7 +32,9 @@ namespace mlx::core {
+ using namespace mlx::core::fast;
+ 
+ using Reader = io::ParallelFileReader;
+-using Writer = io::FileWriter;
++// The abstract writer, so that a graph can also be written to memory (remote
++// gpu backend).
++using Writer = io::Writer;
+ 
+ struct PrimitiveSerializer {
+   using Serializer = std::function<void(Writer&, const Primitive&)>;
+@@ -428,7 +431,10 @@ struct PrimitiveFactory {
+           "CumProd",
+           "CumMin",
+           "CumMax",
+-          "CumLogaddexp"),
++          "CumLogaddexp",
++          // The name Scan::name() really gives (upstream lists only the
++          // spelling above, so a cumulative logaddexp could not be saved).
++          "CumLogAddExp"),
+       SERIALIZE_PRIMITIVE(Scatter),
+       SERIALIZE_PRIMITIVE(ScatterAxis),
+       SERIALIZE_PRIMITIVE(SearchSorted),
+@@ -694,6 +700,85 @@ FunctionTable::Function* FunctionTable::find(
+   return nullptr;
+ }
+ 
++namespace detail {
++
++namespace {
++
++class MemoryWriter : public io::Writer {
++ public:
++  bool is_open() const override {
++    return true;
++  }
++  bool good() const override {
++    return true;
++  }
++  size_t tell() override {
++    return pos_;
++  }
++  void seek(int64_t off, std::ios_base::seekdir way = std::ios_base::beg)
++      override {
++    if (way == std::ios_base::beg) {
++      pos_ = off;
++    } else if (way == std::ios_base::end) {
++      pos_ = buf_.size() + off;
++    } else {
++      pos_ += off;
++    }
++  }
++  void write(const char* data, size_t n) override {
++    if (pos_ + n > buf_.size()) {
++      buf_.resize(pos_ + n);
++    }
++    std::copy(data, data + n, buf_.data() + pos_);
++    pos_ += n;
++  }
++  std::string label() const override {
++    return "memory";
++  }
++  std::string take() {
++    return std::move(buf_);
++  }
++
++ private:
++  std::string buf_;
++  size_t pos_{0};
++};
++
++PrimitiveFactory& remote_graph_factory() {
++  static PrimitiveFactory factory;
++  return factory;
++}
++
++} // namespace
++
++std::string remote_graph_primitive_name(const Primitive& p) {
++  auto& factory = remote_graph_factory();
++  std::string name = p.name();
++  name = name.substr(0, name.find(' '));
++  if (auto it = factory.name_remap.find(name);
++      it != factory.name_remap.end()) {
++    name = it->second;
++  }
++  return name;
++}
++
++bool remote_graph_supports(const Primitive& p) {
++  auto& factory = remote_graph_factory();
++  return factory.factory.find(remote_graph_primitive_name(p)) !=
++      factory.factory.end();
++}
++
++std::string remote_graph_primitive_bytes(
++    const std::shared_ptr<Primitive>& p) {
++  // What FunctionExporter::export_function writes for the primitive of a
++  // node and PrimitiveFactory::load reads back: stream, name, state.
++  MemoryWriter os;
++  remote_graph_factory().save(os, p);
++  return os.take();
++}
++
++} // namespace detail
++
+ FunctionExporter::FunctionExporter(
+     const std::string& file,
+     std::function<std::vector<array>(const Args&, const Kwargs&)> fun,
+diff --git a/mlx/fast_primitives.h b/mlx/fast_primitives.h
+index 8117a7a..7d33725 100644
+--- a/mlx/fast_primitives.h
++++ b/mlx/fast_primitives.h
+@@ -1,5 +1,9 @@
+ // Copyright © 2024-2026 Apple Inc.
+ 
++// (Upstream has no include guard here; backend/remote/kernel.h includes this
++// header too.)
++#pragma once
++
+ #include <optional>
+ #include <variant>
+ 
+diff --git a/mlx/io/load.cpp b/mlx/io/load.cpp
+index f5472b5..a593163 100644
+--- a/mlx/io/load.cpp
++++ b/mlx/io/load.cpp
+@@ -1,6 +1,7 @@
+ // Copyright © 2023-2026 Apple Inc.
+ #include <algorithm>
+ #include <cerrno>
++#include <cstdlib>
+ #include <cstring>
+ #include <fstream>
+ #include <limits>
+@@ -239,7 +240,18 @@ array load(std::shared_ptr<io::Reader> in_stream, StreamOrDevice s) {
+     throw std::runtime_error("[load] Failed to open " + in_stream->label());
+   }
+ 
++#ifdef MLX_REMOTE_BACKEND
++  // As with cuda: on the default device, which is the Mac's GPU. A Load on a
++  // gpu stream is read by the Mac from the file itself, when it can
++  // (backend/remote/eval.cpp). Unless the program named a gpu stream itself:
++  // see Load::asked_for_gpu.
++  auto stream = to_stream(s);
++  bool asked_for_gpu =
++      !std::holds_alternative<std::monostate>(s) && stream.device == Device::gpu;
++#else
++  bool asked_for_gpu = false;
+   auto stream = cu::is_available() ? to_stream(s) : to_stream(s, Device::cpu);
++#endif
+ 
+   ////////////////////////////////////////////////////////
+   // Read header and prepare array details
+@@ -334,11 +346,11 @@ array load(std::shared_ptr<io::Reader> in_stream, StreamOrDevice s) {
+   if (col_contiguous) {
+     std::reverse(shape.begin(), shape.end());
+   }
+-  auto loaded_array = array(
+-      shape,
+-      dtype,
+-      std::make_shared<Load>(stream, in_stream, offset, swap_endianness),
+-      std::vector<array>{});
++  auto primitive =
++      std::make_shared<Load>(stream, in_stream, offset, swap_endianness);
++  primitive->set_asked_for_gpu(asked_for_gpu);
++  auto loaded_array =
++      array(shape, dtype, std::move(primitive), std::vector<array>{});
+   if (col_contiguous) {
+     loaded_array = transpose(loaded_array, s);
+   }
+@@ -393,6 +405,44 @@ ThreadPool& thread_pool() {
+   return *pool_;
+ }
+ 
++std::shared_ptr<FileLocation> file_location(const std::string& path, int fd) {
++#ifdef _WIN32
++  return nullptr;
++#else
++  struct stat st;
++  if ((fd >= 0 ? fstat(fd, &st) : stat(path.c_str(), &st)) != 0 ||
++      !S_ISREG(st.st_mode)) {
++    return nullptr;
++  }
++  char* resolved = realpath(path.c_str(), nullptr);
++  if (resolved == nullptr) {
++    return nullptr;
++  }
++  auto location = std::make_shared<FileLocation>();
++  location->path = resolved;
++  std::free(resolved);
++  location->size = st.st_size;
++  location->device = st.st_dev;
++  location->inode = st.st_ino;
++#ifdef __APPLE__
++  location->mtime_ns =
++      st.st_mtimespec.tv_sec * 1000000000LL + st.st_mtimespec.tv_nsec;
++#else
++  location->mtime_ns = st.st_mtim.tv_sec * 1000000000LL + st.st_mtim.tv_nsec;
++#endif
++  return location;
++#endif
++}
++
++std::shared_ptr<const FileLocation> ParallelFileReader::file_location() {
++  std::call_once(location_once_, [this]() {
++    if (is_open()) {
++      location_ = io::file_location(label_, fd_);
++    }
++  });
++  return location_;
++}
++
+ ThreadPool& ParallelFileReader::thread_pool() {
+   std::call_once(pool_once_, [this]() { pool_ = acquire_batch_pool(); });
+   return *pool_;
+diff --git a/mlx/io/load.h b/mlx/io/load.h
+index 6b9c9f4..692c20f 100644
+--- a/mlx/io/load.h
++++ b/mlx/io/load.h
+@@ -2,9 +2,11 @@
+ 
+ #pragma once
+ 
++#include <cstdint>
+ #include <memory>
+ #include <mutex>
+ #include <sstream>
++#include <string>
+ #include <utility>
+ 
+ #include <fcntl.h>
+@@ -15,6 +17,7 @@
+ #include <unistd.h>
+ #endif
+ 
++#include "mlx/api.h"
+ #include "mlx/threadpool.h"
+ 
+ // Strictly we need to operate on files in binary mode (to avoid \r getting
+@@ -31,6 +34,29 @@ namespace io {
+ 
+ ThreadPool& thread_pool();
+ 
++// Remote gpu backend: where the bytes of a reader are, when they are those of
++// a regular file, so that the Mac can read them from the file itself instead
++// of having them read here and uploaded (backend/remote/client.cpp).
++struct FileLocation {
++  // Absolute, with symlinks resolved, as this machine sees it.
++  std::string path;
++  // Offset 0 of the reader is this offset of the file.
++  size_t base{0};
++  // The file when the reader opened it.
++  uint64_t size{0};
++  uint64_t device{0};
++  uint64_t inode{0};
++  int64_t mtime_ns{0};
++  // Not empty: why the bytes cannot be taken from the file as they are
++  // stored (a compressed member of an archive).
++  std::string why_not;
++};
++
++// The location of an open regular file, null if it is not one.
++MLX_API std::shared_ptr<FileLocation> file_location(
++    const std::string& path,
++    int fd = -1);
++
+ class Reader {
+  public:
+   virtual bool is_open() const = 0;
+@@ -42,6 +68,10 @@ class Reader {
+   virtual void read(char* data, size_t n) = 0;
+   virtual void read(char* data, size_t n, size_t offset) = 0;
+   virtual std::string label() const = 0;
++  // Remote gpu backend: null unless the reader reads a regular file.
++  virtual std::shared_ptr<const FileLocation> file_location() {
++    return nullptr;
++  }
+   virtual ~Reader() = default;
+ };
+ 
+@@ -115,6 +145,8 @@ class ParallelFileReader : public Reader {
+     return "file " + label_;
+   }
+ 
++  std::shared_ptr<const FileLocation> file_location() override;
++
+  private:
+   // Reads larger than this are split in batches and read in parallel.
+   static constexpr size_t batch_size_ = 1 << 25;
+@@ -128,6 +160,8 @@ class ParallelFileReader : public Reader {
+   std::string label_;
+   std::once_flag pool_once_;
+   std::shared_ptr<ThreadPool> pool_;
++  std::once_flag location_once_;
++  std::shared_ptr<const FileLocation> location_;
+ };
+ 
+ class FileWriter : public Writer {
+diff --git a/mlx/io/safetensors.cpp b/mlx/io/safetensors.cpp
+index 319579c..e2ab0ed 100644
+--- a/mlx/io/safetensors.cpp
++++ b/mlx/io/safetensors.cpp
+@@ -119,7 +119,15 @@ SafetensorsLoad load_safetensors(
+     throw std::runtime_error(msg.str());
+   }
+ 
++#ifdef MLX_REMOTE_BACKEND
++  // As with cuda: on the default device, which is the Mac's GPU (see load.cpp).
++  auto stream = to_stream(s);
++  bool asked_for_gpu =
++      !std::holds_alternative<std::monostate>(s) && stream.device == Device::gpu;
++#else
++  bool asked_for_gpu = false;
+   auto stream = cu::is_available() ? to_stream(s) : to_stream(s, Device::cpu);
++#endif
+ 
+   uint64_t jsonHeaderLength = 0;
+   // This is the same limit as in the original Rust Safetensors code.
+@@ -206,8 +214,12 @@ SafetensorsLoad load_safetensors(
+          array(
+              shape,
+              type,
+-             std::make_shared<Load>(
+-                 stream, in_stream, offset + data_offsets.at(0), false),
++             [&]() {
++               auto primitive = std::make_shared<Load>(
++                   stream, in_stream, offset + data_offsets.at(0), false);
++               primitive->set_asked_for_gpu(asked_for_gpu);
++               return primitive;
++             }(),
+              std::vector<array>{})});
+   }
+   return {res, metadata_map};
+diff --git a/mlx/primitives.h b/mlx/primitives.h
+index 3ec8be2..55778cf 100644
+--- a/mlx/primitives.h
++++ b/mlx/primitives.h
+@@ -659,6 +659,20 @@ class MLX_API Compiled : public Primitive {
+     return kernel_lib_;
+   }
+ 
++  // Remote gpu backend: what the Mac needs to make the same primitive.
++  const std::vector<array>& trace_inputs() const {
++    return inputs_;
++  }
++  const std::vector<array>& trace_outputs() const {
++    return outputs_;
++  }
++  const std::vector<array>& tape() const {
++    return tape_;
++  }
++  bool is_constant(size_t i) const {
++    return is_constant_(i);
++  }
++
+  private:
+   const std::vector<array> inputs_;
+   const std::vector<array> outputs_;
+@@ -720,6 +734,11 @@ class Contiguous : public UnaryPrimitive {
+ 
+   bool is_equivalent(const Primitive& other) const override;
+ 
++  // Remote gpu backend: what the Mac needs to make the same primitive.
++  bool allow_col_major() const {
++    return allow_col_major_;
++  }
++
+  private:
+   bool allow_col_major_;
+ };
+@@ -1329,10 +1348,33 @@ class Load : public UnaryPrimitive {
+ 
+   DEFINE_NAME(Load)
+ 
++  // Remote gpu backend: what the Mac needs to read the same bytes.
++  const std::shared_ptr<io::Reader>& reader() const {
++    return reader_;
++  }
++  size_t offset() const {
++    return offset_;
++  }
++  bool swaps_endianness() const {
++    return swap_endianness_;
++  }
++  // The program asked for a gpu stream by name. mlx on a Mac reads a file on
++  // the cpu only, and a load put on a gpu stream fails there when it is
++  // evaluated: so it does here (backend/remote/eval.cpp). With no stream
++  // named the load is on the gpu stream of this backend, where the Mac
++  // reads the file, and that is not the program's doing.
++  void set_asked_for_gpu(bool asked) {
++    asked_for_gpu_ = asked;
++  }
++  bool asked_for_gpu() const {
++    return asked_for_gpu_;
++  }
++
+  private:
+   std::shared_ptr<io::Reader> reader_;
+   size_t offset_;
+   bool swap_endianness_;
++  bool asked_for_gpu_{false};
+ };
+ 
+ class Log : public UnaryPrimitive {
+diff --git a/mlx/remote_graph.h b/mlx/remote_graph.h
+new file mode 100644
+index 0000000..8545b77
+--- /dev/null
++++ b/mlx/remote_graph.h
+@@ -0,0 +1,23 @@
++// Remote gpu backend: access to the writer of export.cpp, so that a recorded
++// primitive can be sent in the bytes that import_function reads.
++
++#pragma once
++
++#include <memory>
++#include <string>
++
++#include "mlx/primitives.h"
++
++namespace mlx::core::detail {
++
++// The name under which a primitive is saved, e.g. "Reduce" for "Sum".
++std::string remote_graph_primitive_name(const Primitive& p);
++
++// True if import_function can rebuild the primitive.
++bool remote_graph_supports(const Primitive& p);
++
++// The primitive as export_function writes it inside a node: stream, name and
++// state. Throws if the primitive cannot be saved.
++std::string remote_graph_primitive_bytes(const std::shared_ptr<Primitive>& p);
++
++} // namespace mlx::core::detail
+diff --git a/python/src/load.cpp b/python/src/load.cpp
+index 6050498..31c1cf8 100644
+--- a/python/src/load.cpp
++++ b/python/src/load.cpp
+@@ -73,6 +73,37 @@ class ZipFileWrapper {
+     return nb::cast<std::vector<std::string>>(files_list_);
+   }
+ 
++  // Remote gpu backend: where a member of the archive at `path` is in that
++  // file (see mx::io::FileLocation), null if that cannot be told.
++  std::shared_ptr<const mx::io::FileLocation> location(
++      const std::string& path,
++      const std::string& key) {
++    auto location = mx::io::file_location(path);
++    if (!location) {
++      return nullptr;
++    }
++    nb::object info = zipfile_object_.attr("getinfo")(key);
++    if (nb::cast<int>(info.attr("compress_type")) != 0 ||
++        (nb::cast<int>(info.attr("flag_bits")) & 1)) {
++      location->why_not = "it is compressed";
++      return location;
++    }
++    // The member's bytes follow its local header, whose length is written
++    // in the header itself.
++    auto header = nb::cast<size_t>(info.attr("header_offset"));
++    unsigned char head[30];
++    std::ifstream in(path, std::ios::binary);
++    in.seekg(header);
++    in.read(reinterpret_cast<char*>(head), sizeof(head));
++    if (!in || head[0] != 'P' || head[1] != 'K' || head[2] != 3 ||
++        head[3] != 4) {
++      return nullptr;
++    }
++    location->base = header + sizeof(head) + (head[26] | (head[27] << 8)) +
++        (head[28] | (head[29] << 8));
++    return location;
++  }
++
+   nb::object open(const std::string& key, char mode = 'r') {
+     // Following numpy :
+     // https://github.com/numpy/numpy/blob/db4f43983cb938f12c311e1f5b7165e270c393b4/numpy/lib/npyio.py#L742C36-L742C47
+@@ -160,6 +191,14 @@ class PyFileReader : public mx::io::Reader {
+     return "python file object";
+   }
+ 
++  std::shared_ptr<const mx::io::FileLocation> file_location() override {
++    return location_;
++  }
++
++  void set_file_location(std::shared_ptr<const mx::io::FileLocation> location) {
++    location_ = std::move(location);
++  }
++
+  private:
+   void _read(char* data, size_t n) {
+     nb::object memview =
+@@ -178,6 +217,7 @@ class PyFileReader : public mx::io::Reader {
+   nb::object readinto_func_;
+   nb::object seek_func_;
+   nb::object tell_func_;
++  std::shared_ptr<const mx::io::FileLocation> location_;
+ };
+ 
+ std::pair<
+@@ -233,7 +273,12 @@ std::unordered_map<std::string, mx::array> mlx_load_npz_helper(
+     nb::object sub_file = zipfile_object.open(st);
+ 
+     // Create array from python file stream
+-    auto arr = mx::load(std::make_shared<PyFileReader>(sub_file), s);
++    auto reader = std::make_shared<PyFileReader>(sub_file);
++    if (own_file) {
++      reader->set_file_location(
++          zipfile_object.location(nb::cast<std::string>(nb::str(file)), st));
++    }
++    auto arr = mx::load(reader, s);
+ 
+     // Remove .npy from file if it is there
+     auto key = st;
+diff --git a/python/src/metal.cpp b/python/src/metal.cpp
+index 8d0d424..074bfd0 100644
+--- a/python/src/metal.cpp
++++ b/python/src/metal.cpp
+@@ -29,7 +29,8 @@ void init_metal(nb::module_& m) {
+   nb::module_ metal = m.def_submodule("metal", "mlx.metal");
+   metal.def(
+       "is_available",
+-      &mx::metal::is_available,
++      // With the remote gpu backend: true if the Mac takes custom kernels.
++      &mx::metal::kernels_available,
+       R"pbdoc(
+       Check if the Metal back-end is available.
+       )pbdoc");

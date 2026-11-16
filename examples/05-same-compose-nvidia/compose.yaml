@@ -1,0 +1,15 @@
+# One service, one program, for a Mac and for an NVIDIA server. Only the
+# image differs: set IMAGE to a CUDA build of PyTorch on the NVIDIA server.
+#   docker compose up                                   Docker Desktop on a Mac: no GPU request,
+#                                                       the bridge is reached on a TCP port
+#   docker compose -f compose.yaml -f compose.gpu.yaml up
+#                                                       Kiri on a Mac, or an NVIDIA server: the
+#                                                       same GPU request, as --gpus all
+services:
+  job:
+    # The default bridge network: no network of the project's own is left behind.
+    network_mode: bridge
+    image: ${IMAGE:-varco-torch:2.15.0}
+    volumes:
+      - ./:/app:ro
+    command: python /app/job.py

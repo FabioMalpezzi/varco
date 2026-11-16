@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 880 716" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="several-containers-dark-title several-containers-dark-desc" id="several-containers-dark-root">
+        <title id="several-containers-dark-title">Several containers on the same server</title>
+        <desc id="several-containers-dark-desc">With MLX, two containers connect to one mlx-remote-server. Each connection has a thread that only queues work and its own copy of the weights; one executor thread runs the queued jobs one at a time on the Apple GPU, so the containers share one stream of work evenly and their total is what one gets alone. With PyTorch, bridge.server hands each connection to a bridge.session process of its own, so PyTorch containers share the GPU as separate programs on a Mac do. Measured with Qwen3.6-35B, tokens per second in total, one run each: one copy 122, two containers on one MLX server 129, two processes on the Mac directly 176.</desc>
+        <defs>
+      <style>#several-containers-dark-root { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      #several-containers-dark-root .t-name { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; }
+      #several-containers-dark-root .t-part { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; }
+      #several-containers-dark-root .t-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; }
+      #several-containers-dark-root .t-sub { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 400; }
+      #several-containers-dark-root .t-subb { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; }
+      #several-containers-dark-root .t-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 400; }
+      #several-containers-dark-root .t-msg { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+      #several-containers-dark-root .t-eye { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; }
+      #several-containers-dark-root .t-fig { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 16px; font-weight: 600; }
+      #several-containers-dark-root .mid { text-anchor: middle; }
+      #several-containers-dark-root .end { text-anchor: end; }
+      #several-containers-dark-root .sheet { stroke-width: 1; }
+      #several-containers-dark-root .zone { stroke-width: 1.2; }
+      #several-containers-dark-root .zone.vm { stroke-dasharray: 7 5; }
+      #several-containers-dark-root .ctr { fill: none; stroke-width: 1; }
+      #several-containers-dark-root .band { stroke-width: 1.2; }
+      #several-containers-dark-root .n-prog, #several-containers-dark-root .n-part, #several-containers-dark-root .n-file, #several-containers-dark-root .n-none { stroke-width: 1; }
+      #several-containers-dark-root .n-end { stroke-width: 1.5; }
+      #several-containers-dark-root .n-gpu { stroke-width: 1; stroke-linejoin: round; }
+      #several-containers-dark-root .n-none, #several-containers-dark-root .dashed { stroke-dasharray: 4 3; }
+      #several-containers-dark-root .n-fold { fill: none; stroke-width: 1; }
+      #several-containers-dark-root .ln { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+      #several-containers-dark-root .ln.strong { stroke-width: 2.4; }
+      #several-containers-dark-root .ln.back { stroke-dasharray: 5 4; }
+      #several-containers-dark-root .ln.faint { stroke-width: 1.2; stroke-dasharray: 2 4; }
+      #several-containers-dark-root .rule { fill: none; stroke-width: 1; }
+      #several-containers-dark-root { color: #f5f5f5; }
+      #several-containers-dark-root .sheet { fill: #2d3142; stroke: #4d505f; }
+      #several-containers-dark-root .zone { fill: #353949; stroke: #91939c; }
+      #several-containers-dark-root .ctr-fill { fill: #3b3f4f; }
+      #several-containers-dark-root .ctr-head { fill: #494c5b; }
+      #several-containers-dark-root .ctr { stroke: #9b9da4; }
+      #several-containers-dark-root .band { fill: #4e4046; stroke: #f08a59; }
+      #several-containers-dark-root .n-prog { fill: #393e4f; stroke: #aab2c4; }
+      #several-containers-dark-root .n-end { fill: #474a59; stroke: #f5f5f5; }
+      #several-containers-dark-root .n-part { fill: #373b4b; stroke: #9b9da4; }
+      #several-containers-dark-root .n-gpu { fill: #f5f5f5; stroke: #f5f5f5; }
+      #several-containers-dark-root .n-file { fill: #434756; stroke: #bfc0c0; }
+      #several-containers-dark-root .n-fold { stroke: #bfc0c0; }
+      #several-containers-dark-root .n-none { fill: none; stroke: #9b9da4; }
+      #several-containers-dark-root .cell { fill: #373b4b; stroke: #9b9da4; }
+      #several-containers-dark-root .cell-full { fill: #a9abb1; stroke: #9b9da4; }
+      #several-containers-dark-root .bar { fill: #767881; }
+      #several-containers-dark-root .bar-ink { fill: #f5f5f5; }
+      #several-containers-dark-root .mask-paper { fill: #2d3142; }
+      #several-containers-dark-root .mask-zone { fill: #353949; }
+      #several-containers-dark-root .mask-band { fill: #4e4046; }
+      #several-containers-dark-root .mask-end { fill: #474a59; }
+      #several-containers-dark-root .ln { stroke: #bfc0c0; }
+      #several-containers-dark-root .ln.strong { stroke: #f5f5f5; }
+      #several-containers-dark-root .ln.faint { stroke: #888a90; }
+      #several-containers-dark-root .mk { fill: #bfc0c0; }
+      #several-containers-dark-root .mk-strong { fill: #f5f5f5; }
+      #several-containers-dark-root .mk-faint { fill: #888a90; }
+      #several-containers-dark-root .rule { stroke: #515462; }
+      #several-containers-dark-root .c-ink { fill: #f5f5f5; }
+      #several-containers-dark-root .c-muted { fill: #bfc0c0; }
+      #several-containers-dark-root .c-soft { fill: #aab2c4; }
+      #several-containers-dark-root .c-inv { fill: #2d3142; }
+      #several-containers-dark-root .c-inv2 { fill: #555866; }</style>
+          <marker id="several-containers-dark-arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk" points="0 0, 10 4, 0 8"/></marker>
+          <marker id="several-containers-dark-arrow-strong" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto"><polygon class="mk-strong" points="0 0, 12 5, 0 10"/></marker>
+          <marker id="several-containers-dark-arrow-faint" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk-faint" points="0 0, 10 4, 0 8"/></marker>
+        </defs>
+        <rect class="sheet" x="0.5" y="0.5" width="879" height="715" rx="10"/>
+        <!-- zones: the virtual machine and macOS -->
+        <g class="l-zones">
+          <rect class="zone vm" x="20" y="48" width="228" height="264" rx="8"/>
+          <text x="34" y="68" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="340" y="48" width="520" height="264" rx="8"/>
+          <text x="354" y="68" class="t-eye c-soft">macOS</text>
+          <rect class="zone vm" x="20" y="360" width="228" height="232" rx="8"/>
+          <text x="34" y="380" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="340" y="360" width="520" height="232" rx="8"/>
+          <text x="354" y="380" class="t-eye c-soft">macOS</text>
+        </g>
+        <!-- containers -->
+        <g class="l-ctrs">
+          <rect class="ctr-fill" x="32" y="96" width="204" height="88" rx="6"/>
+          <path class="ctr-head" d="M 32,120 V 102 Q 32,96 38,96 H 230 Q 236,96 236,102 V 120 Z"/>
+          <rect class="ctr" x="32" y="96" width="204" height="88" rx="6"/>
+          <text x="44" y="112.5" class="t-eye c-muted">CONTAINER A</text>
+          <rect class="ctr-fill" x="32" y="200" width="204" height="88" rx="6"/>
+          <path class="ctr-head" d="M 32,224 V 206 Q 32,200 38,200 H 230 Q 236,200 236,206 V 224 Z"/>
+          <rect class="ctr" x="32" y="200" width="204" height="88" rx="6"/>
+          <text x="44" y="216.5" class="t-eye c-muted">CONTAINER B</text>
+          <rect class="n-end" x="356" y="80" width="352" height="220" rx="6"/>
+          <text x="370" y="104" class="t-code c-ink">mlx-remote-server</text>
+          <rect class="ctr-fill" x="32" y="392" width="204" height="88" rx="6"/>
+          <path class="ctr-head" d="M 32,416 V 398 Q 32,392 38,392 H 230 Q 236,392 236,398 V 416 Z"/>
+          <rect class="ctr" x="32" y="392" width="204" height="88" rx="6"/>
+          <text x="44" y="408.5" class="t-eye c-muted">CONTAINER A</text>
+          <rect class="ctr-fill" x="32" y="492" width="204" height="88" rx="6"/>
+          <path class="ctr-head" d="M 32,516 V 498 Q 32,492 38,492 H 230 Q 236,492 236,498 V 516 Z"/>
+          <rect class="ctr" x="32" y="492" width="204" height="88" rx="6"/>
+          <text x="44" y="508.5" class="t-eye c-muted">CONTAINER B</text>
+        </g>
+        <!-- the channel -->
+        <g class="l-bands">
+          <rect class="band" x="252" y="120" width="84" height="168" rx="6"/>
+          <rect class="band" x="252" y="416" width="84" height="164" rx="6"/>
+        </g>
+        <!-- connectors -->
+        <g class="l-lines">
+          <path class="ln " d="M 224,152 L 368,152" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 532,152 L 552,152" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 224,256 L 368,256" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 532,256 L 552,256" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 588,204 L 608,204" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 696,204 L 732,204" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 224,448 L 356,448" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 532,448 L 560,448" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 704,448 L 732,448" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 224,548 L 356,548" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 532,548 L 560,548" marker-end="url(#several-containers-dark-arrow)"/>
+          <path class="ln " d="M 704,548 L 732,548" marker-end="url(#several-containers-dark-arrow)"/>
+        </g>
+        <!-- connector labels -->
+        <g class="l-labels">
+          <text x="294" y="208" class="t-eye c-muted mid">CHANNEL</text>
+          <text x="294" y="502" class="t-eye c-muted mid">CHANNEL</text>
+        </g>
+        <!-- nodes -->
+        <g class="l-nodes">
+          <rect class="n-prog" x="44" y="128" width="180" height="48" rx="6"/>
+          <text x="134" y="148.8" class="t-name c-ink mid">program</text>
+          <text x="134" y="165.8" class="t-sub c-muted mid">MLX</text>
+          <rect class="n-prog" x="44" y="232" width="180" height="48" rx="6"/>
+          <text x="134" y="252.8" class="t-name c-ink mid">program</text>
+          <text x="134" y="269.8" class="t-sub c-muted mid">MLX</text>
+          <rect class="n-part" x="368" y="120" width="164" height="64" rx="6"/>
+          <text x="450" y="139.8" class="t-subb c-ink mid">connection thread</text>
+          <text x="450" y="155.8" class="t-sub c-muted mid">only queues work</text>
+          <text x="450" y="171.8" class="t-sub c-muted mid">a copy of the weights</text>
+          <rect class="n-part" x="368" y="224" width="164" height="64" rx="6"/>
+          <text x="450" y="243.8" class="t-subb c-ink mid">connection thread</text>
+          <text x="450" y="259.8" class="t-sub c-muted mid">only queues work</text>
+          <text x="450" y="275.8" class="t-sub c-muted mid">a copy of the weights</text>
+          <rect class="cell" x="552" y="132" width="36" height="24"/>
+          <text x="570" y="148.5" class="t-mono c-muted mid">A</text>
+          <rect class="cell" x="552" y="156" width="36" height="24"/>
+          <text x="570" y="172.5" class="t-mono c-muted mid">B</text>
+          <rect class="cell" x="552" y="180" width="36" height="24"/>
+          <text x="570" y="196.5" class="t-mono c-muted mid">A</text>
+          <rect class="cell" x="552" y="204" width="36" height="24"/>
+          <text x="570" y="220.5" class="t-mono c-muted mid">B</text>
+          <rect class="cell" x="552" y="228" width="36" height="24"/>
+          <text x="570" y="244.5" class="t-mono c-muted mid">A</text>
+          <rect class="cell" x="552" y="252" width="36" height="24"/>
+          <text x="570" y="268.5" class="t-mono c-muted mid">B</text>
+          <text x="570" y="124" class="t-sub c-muted mid">queue</text>
+          <rect class="n-part" x="608" y="168" width="88" height="72" rx="6"/>
+          <text x="652" y="199.1" class="t-part c-ink mid">executor</text>
+          <text x="652" y="218.1" class="t-part c-ink mid">thread</text>
+          <text x="652" y="258" class="t-sub c-muted mid">one job</text>
+          <text x="652" y="274" class="t-sub c-muted mid">at a time</text>
+          <polygon class="n-gpu" points="742,172 834,172 844,182 844,226 834,236 742,236 732,226 732,182"/>
+          <text x="788" y="208.8" class="t-name c-inv mid">Apple GPU</text>
+          <rect class="n-prog" x="44" y="424" width="180" height="48" rx="6"/>
+          <text x="134" y="444.8" class="t-name c-ink mid">program</text>
+          <text x="134" y="461.8" class="t-sub c-muted mid">PyTorch</text>
+          <rect class="n-prog" x="44" y="524" width="180" height="48" rx="6"/>
+          <text x="134" y="544.8" class="t-name c-ink mid">program</text>
+          <text x="134" y="561.8" class="t-sub c-muted mid">PyTorch</text>
+          <rect class="n-end" x="356" y="416" width="176" height="164" rx="6"/>
+          <text x="444" y="478.8" class="t-code c-ink mid">bridge.server</text>
+          <text x="444" y="495.8" class="t-sub c-muted mid">the door:</text>
+          <text x="444" y="511.8" class="t-sub c-muted mid">hands each connection</text>
+          <text x="444" y="527.8" class="t-sub c-muted mid">to a session</text>
+          <rect class="n-end" x="560" y="416" width="144" height="64" rx="6"/>
+          <text x="632" y="444.8" class="t-code c-ink mid">bridge.session</text>
+          <text x="632" y="461.8" class="t-sub c-muted mid">its own process</text>
+          <rect class="n-end" x="560" y="516" width="144" height="64" rx="6"/>
+          <text x="632" y="544.8" class="t-code c-ink mid">bridge.session</text>
+          <text x="632" y="561.8" class="t-sub c-muted mid">its own process</text>
+          <polygon class="n-gpu" points="742,416 834,416 844,426 844,570 834,580 742,580 732,570 732,426"/>
+          <text x="788" y="502.8" class="t-name c-inv mid">Apple GPU</text>
+        </g>
+        <!-- notes -->
+        <g class="l-text">
+          <text x="20" y="36" class="t-name c-ink">MLX bridge</text>
+          <text x="164" y="36" class="t-sub c-muted">containers on one server share one stream of work, evenly; their total is what one gets alone</text>
+          <text x="20" y="348" class="t-name c-ink">PyTorch bridge</text>
+          <text x="164" y="348" class="t-sub c-muted">each program has a session; they share the GPU as separate programs on a Mac do</text>
+          <path class="rule" d="M 20,608 H 860"/>
+          <text x="20" y="632" class="t-eye c-soft">MEASURED</text>
+          <text x="91.6" y="632" class="t-sub c-muted">Qwen3.6-35B, tokens per second in total, one run each</text>
+          <text x="252" y="656" class="t-sub c-ink end">one copy</text>
+          <rect class="bar" x="264" y="644" width="317" height="12" rx="2"/>
+          <text x="589" y="655" class="t-msg c-ink">122</text>
+          <text x="252" y="676" class="t-sub c-ink end">two containers on one MLX server</text>
+          <rect class="bar" x="264" y="664" width="335" height="12" rx="2"/>
+          <text x="607" y="675" class="t-msg c-ink">129</text>
+          <text x="252" y="696" class="t-sub c-ink end">two processes on the Mac directly</text>
+          <rect class="bar" x="264" y="684" width="458" height="12" rx="2"/>
+          <text x="730" y="695" class="t-msg c-ink">176</text>
+        </g>
+      </svg>

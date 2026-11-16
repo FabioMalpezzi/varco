@@ -1,0 +1,42 @@
+varco
+Copyright (c) 2026 Fabio Malpezzi
+
+This repository is licensed under the MIT License (see LICENSE), with one
+exception: the files under kiri/patches/ are licensed under the Apache
+License, Version 2.0 (see kiri/LICENSE-APACHE-2.0), as the project they
+modify.
+
+It contains changes to, and builds against, the following projects. None of
+them endorses this work.
+
+MLX
+  https://github.com/ml-explore/mlx
+  Copyright (c) 2023 Apple Inc. MIT License.
+  mlx/patches/ is a patch against the tag v0.32.4 (commit 36969c0). The
+  patch modifies files of MLX and adds new ones; the modified files remain
+  under MLX's copyright and licence, and the additions are offered under the
+  same MIT License. The container images are built from MLX's source with
+  that patch applied. The server under mlx/server/ links the unmodified MLX
+  library. mlx/tests/upstream.py runs MLX's own tests, which are not copied
+  here.
+
+PyTorch
+  https://github.com/pytorch/pytorch
+  Copyright (c) 2016- Facebook, Inc (Adam Paszke), and other contributors.
+  BSD 3-Clause License.
+  pytorch/bridge/ is built against PyTorch's public and internal C++ headers
+  and loaded into an unmodified PyTorch; no PyTorch source is copied here.
+  pytorch/bridge/ops/ lists, by name, the operators for which a given PyTorch
+  release has an MPS kernel.
+
+Kiri
+  https://github.com/libracoder/kiri
+  Apache License, Version 2.0.
+  kiri/patches/ are patches against the commit baa2d41. They are derivative
+  works of Kiri and are licensed under the Apache License, Version 2.0; the
+  changes they make are described in kiri/README.md.
+
+The test programs and the examples download or read models published by
+their own authors under their own licences (BAAI/bge-m3 and its MLX
+conversion, Qwen models, openai-community/gpt2,
+sentence-transformers/all-MiniLM-L6-v2). No model is included here.

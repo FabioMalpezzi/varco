@@ -1,0 +1,15 @@
+# The GPU request, what `docker run --gpus all` sends. On an NVIDIA server
+# the NVIDIA container toolkit gives the container the GPU. In Kiri on an
+# Apple-silicon Mac (with the patch of kiri/patches) the container gets its
+# end of the bridge at 127.0.0.1:47700, and the variable KIRI_GPU_BRIDGE
+# says so. Docker Desktop on a Mac refuses this request: use compose.yaml
+# alone there.
+services:
+  job:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

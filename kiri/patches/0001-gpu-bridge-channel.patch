@@ -1,0 +1,687 @@
+diff --git a/crates/kiri-init/src/linux/agent.rs b/crates/kiri-init/src/linux/agent.rs
+index c7c8774..f6d5398 100644
+--- a/crates/kiri-init/src/linux/agent.rs
++++ b/crates/kiri-init/src/linux/agent.rs
+@@ -125,6 +125,9 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
+         }
+         let mut hung = false;
+         for p in procs.values() {
++            if let Some(l) = &p.run.gpu_bridge {
++                fds.push(libc::pollfd { fd: l.as_raw_fd(), events: libc::POLLIN, revents: 0 });
++            }
+             // A hung-up pty polls as ready all the time; skip it a moment.
+             if p.tty_hup.is_some_and(|t| t.elapsed() < TTY_HUP_WAIT) {
+                 hung = true;
+@@ -253,6 +256,13 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
+                 }
+                 continue;
+             }
++            // A `--gpus` container's connection to its end of the GPU bridge.
++            if let Some(l) = procs.values().filter_map(|p| p.run.gpu_bridge.as_ref()).find(|l| l.as_raw_fd() == pfd.fd) {
++                while let Some(r) = super::relay::accept_gpu_bridge(l) {
++                    relays.push(r);
++                }
++                continue;
++            }
+             if let Some(r) = relays.iter_mut().find(|r| r.owns(pfd.fd)) {
+                 r.step();
+                 continue;
+@@ -370,10 +380,12 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
+                         wait_for_lease(&mut dhcp, std::time::Duration::from_secs(3));
+                     }
+                     let join_pid = kiri_proto::net_opts::values(spec.net.opts, kiri_proto::net_opts::NETNS).next().and_then(|t| running_pid(&procs, t));
++                    // Every one whose listener is still open, exited or not.
++                    let gpu_netns: Vec<u64> = procs.values().filter(|p| p.run.gpu_bridge.is_some()).map(|p| p.run.netns).collect();
+                     container::spawn(
+                     &spec,
+                     paths,
+-                    NetCtx { bridges: &mut bridges, dns: &mut dns, upstream_dns: dhcp.as_ref().and_then(|d| d.lease.as_ref()).map_or(&host_dns[..], |l| &l.dns), join_pid },
++                    NetCtx { bridges: &mut bridges, dns: &mut dns, upstream_dns: dhcp.as_ref().and_then(|d| d.lease.as_ref()).map_or(&host_dns[..], |l| &l.dns), join_pid, gpu_netns: &gpu_netns },
+                 )
+                 } {
+                     Ok(run) => {
+diff --git a/crates/kiri-init/src/linux/container.rs b/crates/kiri-init/src/linux/container.rs
+index f4fed65..9007559 100644
+--- a/crates/kiri-init/src/linux/container.rs
++++ b/crates/kiri-init/src/linux/container.rs
+@@ -49,6 +49,9 @@ pub struct NetCtx<'a> {
+     pub upstream_dns: &'a [[u8; 4]],
+     /// For `--network container:<id>`: that container's PID 1, if running.
+     pub join_pid: Option<libc::pid_t>,
++    /// The network namespaces (by inode, as [`Process::netns`]) of the
++    /// `--gpus` containers there are: no other container joins one.
++    pub gpu_netns: &'a [u64],
+ }
+ 
+ /// Where containers live under the data directory.
+@@ -84,6 +87,9 @@ pub struct Process {
+     /// the host's and for execs. Says whether a namespace outlives this
+     /// container (see `teardown`).
+     pub netns: u64,
++    /// `--gpus`: its end of the GPU bridge, a listener in its network
++    /// namespace that closes with it. None for execs.
++    pub gpu_bridge: Option<OwnedFd>,
+     /// What to undo when a container exits; None for execs.
+     teardown: Option<Teardown>,
+ }
+@@ -274,8 +280,21 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
+         let pid = net.join_pid.ok_or_else(|| cleanup(io::Error::other(format!("cannot join network of a non running container: {target}"))))?;
+         let joined = fs::File::open(format!("/proc/{pid}/ns/net")).map_err(cleanup)?;
+         netns = netns_inode(&joined);
++        // A `--gpus` container's listener is on this namespace's loopback:
++        // joining it would give the GPU bridge to a container that was not
++        // given it. By the namespace, not by the target: the target may
++        // itself have joined it. The daemon refuses this first.
++        if net.gpu_netns.contains(&netns) {
++            return Err(cleanup(io::Error::new(io::ErrorKind::InvalidInput, format!("cannot join network of container {target}: that network namespace has the GPU bridge of a --gpus container"))));
++        }
+         prepared.net_join = Some(joined);
+     }
++    // The GPU bridge listens in the container's own network namespace: in
++    // a shared one, containers that were not given it would reach it too.
++    // The daemon refuses this first.
++    if host.gpu && (spec.flags & run_flags::NET_HOST != 0 || prepared.net_join.is_some()) {
++        return Err(cleanup(io::Error::new(io::ErrorKind::InvalidInput, "the GPU bridge needs a network namespace of the container's own")));
++    }
+     prepared.host = HostApplied { rlimits: host.rlimits.clone(), groups: host.groups.clone(), nodes };
+     // Small, short-lived files: kept in memory (/run is tmpfs), not on the data disk.
+     let etc_dir = PathBuf::from("/run/kiri").join(spec.id);
+@@ -292,8 +311,8 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
+     let bridged = !spec.net.bridge.is_empty() && spec.flags & (run_flags::NET_HOST | run_flags::NET_NONE) == 0 && prepared.net_join.is_none();
+     let mut go = None;
+     // Sysctls are written from here once the namespaces exist: the child
+-    // waits for that as it does for its network.
+-    if bridged || !host.sysctls.is_empty() {
++    // waits for that as it does for its network, and for the GPU bridge.
++    if bridged || !host.sysctls.is_empty() || host.gpu {
+         let (r, w) = sys::pipe().map_err(cleanup)?;
+         prepared.net_ready = Some(r);
+         go = Some(w);
+@@ -336,6 +355,15 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
+             None => e,
+         }
+     };
++    // The GPU bridge listens before the program starts, so that its first
++    // connection is not refused. Loopback is brought up here: the child, or
++    // the network setup below, would only do it later.
++    let gpu_bridge = if host.gpu {
++        let listen = || super::netlink::in_netns(&fs::File::open(format!("/proc/{pid}/ns/net"))?, || sys::loopback_up().and_then(|()| super::relay::listen_gpu_bridge()));
++        Some(listen().map_err(|e| kill_child(io::Error::new(e.kind(), format!("GPU bridge: {e}"))))?)
++    } else {
++        None
++    };
+     let mut veths = Vec::new();
+     // Not bridged, but with sysctls to write: no network to wait for.
+     if let Some(go) = go.take_if(|_| !bridged) {
+@@ -397,6 +425,7 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
+         dns_entries: (bridged && embedded_dns).then(|| (spec.net.bridge.to_owned(), spec.net.ip)).into_iter().collect(),
+         veths,
+         netns,
++        gpu_bridge,
+         teardown: Some(Teardown { base, rootfs, cgroup, remove }),
+     })
+ }
+@@ -514,6 +543,7 @@ pub fn exec(spec: &ExecSpec<'_>, target_pid: libc::pid_t, paths: &Paths) -> io::
+         dns_entries: Vec::new(),
+         veths: Vec::new(),
+         netns: 0,
++        gpu_bridge: None,
+         teardown: None,
+     })
+ }
+diff --git a/crates/kiri-init/src/linux/hostopts.rs b/crates/kiri-init/src/linux/hostopts.rs
+index ce140bc..a1b1a30 100644
+--- a/crates/kiri-init/src/linux/hostopts.rs
++++ b/crates/kiri-init/src/linux/hostopts.rs
+@@ -1,8 +1,8 @@
+ //! HostConfig settings applied when a container starts, from the `opts`
+ //! lines of `Run` and `Exec`: resource limits (`--ulimit`), sysctls,
+-//! devices and device rules, and supplementary groups (`--group-add`). The
+-//! daemon has checked them already; this side refuses anything malformed
+-//! rather than trusting it.
++//! devices and device rules, supplementary groups (`--group-add`), and the
++//! GPU bridge (`--gpus`). The daemon has checked them already; this side
++//! refuses anything malformed rather than trusting it.
+ 
+ use std::ffi::CString;
+ use std::fs;
+@@ -62,6 +62,8 @@ pub struct HostOpts {
+     pub rules: Vec<Rule>,
+     /// `--group-add`: names (looked up in the container's /etc/group) or ids.
+     pub groups: Vec<String>,
++    /// `--gpus`: the container gets its end of the GPU bridge.
++    pub gpu: bool,
+ }
+ 
+ fn bad(line: &str) -> io::Error {
+@@ -110,6 +112,7 @@ pub fn parse(list: StrList<'_>) -> io::Result<HostOpts> {
+             }
+             ["devrule", kind, major, minor, perms] => o.rules.push(devices::parse_rule(kind, major, minor, perms).ok_or_else(|| bad(line))?),
+             ["group", g] if !g.is_empty() => o.groups.push((*g).to_owned()),
++            ["gpu"] => o.gpu = true,
+             _ => return Err(bad(line)),
+         }
+     }
+@@ -334,6 +337,9 @@ mod tests {
+     #[test]
+     fn parses_and_refuses() {
+         let buf = list(&["rlimit\t7\t65536\t65536", "sysctl\tnet\tnet/core/somaxconn\t1024", "device\t/dev/fuse\t/dev/fuse\trwm", "devrule\tc\t10\t229\trwm", "group\tvideo"]);
++        let with_gpu = list(&["rlimit\t7\t65536\t65536", "gpu"]);
++        let kiri_proto::Msg::Retain(l) = kiri_proto::decode(&with_gpu).unwrap() else { panic!() };
++        assert!(parse(l).unwrap().gpu);
+         let kiri_proto::Msg::Retain(l) = kiri_proto::decode(&buf).unwrap() else { panic!() };
+         let o = parse(l).unwrap();
+         assert_eq!(o.rlimits, [(7, 65536, 65536)]);
+@@ -341,7 +347,8 @@ mod tests {
+         assert_eq!(o.devices[0].container, "/dev/fuse");
+         assert_eq!(o.rules.len(), 1);
+         assert_eq!(o.groups, ["video"]);
+-        for bad in ["sysctl\tnet\tkernel/core_pattern\t|x", "sysctl\tipc\tkernel/../x\t1", "sysctl\tuts\tkernel/hostname\tx", "rlimit\t99\t1\t1", "device\tdev\t/x\trwm", "nope"] {
++        assert!(!o.gpu);
++        for bad in ["gpu\t1", "sysctl\tnet\tkernel/core_pattern\t|x", "sysctl\tipc\tkernel/../x\t1", "sysctl\tuts\tkernel/hostname\tx", "rlimit\t99\t1\t1", "device\tdev\t/x\trwm", "nope"] {
+             let buf = list(&[bad]);
+             let kiri_proto::Msg::Retain(l) = kiri_proto::decode(&buf).unwrap() else { panic!() };
+             assert!(parse(l).is_err(), "{bad}");
+diff --git a/crates/kiri-init/src/linux/relay.rs b/crates/kiri-init/src/linux/relay.rs
+index 12576ec..f376019 100644
+--- a/crates/kiri-init/src/linux/relay.rs
++++ b/crates/kiri-init/src/linux/relay.rs
+@@ -517,6 +517,49 @@ pub fn accept_engine(listener: &OwnedFd) -> Option<Relay> {
+     Some(Relay { host, target: Some(client), connected: true, header: Vec::new(), up: Pipe::new(), down: Pipe::new(), dead: false, udp: false, framed: false })
+ }
+ 
++/// The GPU bridge, a `--gpus` container's end: a listener on 127.0.0.1 in
++/// that container's network namespace (the caller is in it, with loopback
++/// up), so no other container can reach it: none may join that namespace
++/// (see `container::spawn`). Each connection is relayed over vsock to the
++/// executor on the Mac: a container cannot open vsock itself.
++pub fn listen_gpu_bridge() -> io::Result<OwnedFd> {
++    // SAFETY: plain socket setup; the fd is owned immediately.
++    unsafe {
++        let fd = sys::check(libc::socket(libc::AF_INET, libc::SOCK_STREAM | libc::SOCK_CLOEXEC | libc::SOCK_NONBLOCK, 0) as _, "socket")?;
++        let sock = OwnedFd::from_raw_fd(fd as RawFd);
++        // Accepted connections inherit it: requests and replies are small
++        // and must not wait for each other's acknowledgements.
++        let one: libc::c_int = 1;
++        libc::setsockopt(sock.as_raw_fd(), libc::IPPROTO_TCP, libc::TCP_NODELAY, (&one as *const libc::c_int).cast(), 4);
++        let mut a: libc::sockaddr_in = std::mem::zeroed();
++        a.sin_family = libc::AF_INET as libc::sa_family_t;
++        a.sin_port = kiri_proto::GPU_BRIDGE_TCP_PORT.to_be();
++        a.sin_addr.s_addr = u32::from_ne_bytes([127, 0, 0, 1]);
++        sys::check(libc::bind(sock.as_raw_fd(), (&a as *const libc::sockaddr_in).cast(), std::mem::size_of::<libc::sockaddr_in>() as u32) as _, "bind")?;
++        sys::check(libc::listen(sock.as_raw_fd(), 64) as _, "listen")?;
++        Ok(sock)
++    }
++}
++
++/// One connection to the GPU bridge, with the relay that carries it. What
++/// the container sends goes to the host framed, as on `FRAMED_PORT` and for
++/// its reason: after a write of 64 KiB or more the Mac never saw the
++/// stream's half-close, and the executor kept the connection for ever.
++pub fn accept_gpu_bridge(listener: &OwnedFd) -> Option<Relay> {
++    // SAFETY: accept4 on a listening socket we own; the fd is owned immediately.
++    let fd = unsafe { libc::accept4(listener.as_raw_fd(), std::ptr::null_mut(), std::ptr::null_mut(), libc::SOCK_NONBLOCK | libc::SOCK_CLOEXEC) };
++    if fd < 0 {
++        return None;
++    }
++    // SAFETY: fresh descriptor.
++    let client = unsafe { OwnedFd::from_raw_fd(fd) };
++    let Ok(host) = dial_host(kiri_proto::GPU_BRIDGE_PORT) else { return Some(Relay::dead_one(client)) };
++    if sys::set_nonblocking(host.as_raw_fd()).is_err() {
++        return Some(Relay::dead_one(client));
++    }
++    Some(Relay { host, target: Some(client), connected: true, header: Vec::new(), up: Pipe::new(), down: Pipe::new(), dead: false, udp: false, framed: true })
++}
++
+ #[cfg(test)]
+ mod tests {
+     use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
+diff --git a/crates/kiri-proto/src/lib.rs b/crates/kiri-proto/src/lib.rs
+index 670ef71..97f322e 100644
+--- a/crates/kiri-proto/src/lib.rs
++++ b/crates/kiri-proto/src/lib.rs
+@@ -192,6 +192,17 @@ pub const DNS_RELAY_PORT: u32 = 1037;
+ /// `speed u32 | devid u32` then USB/IP (crates/kiri-init/src/linux/usb.rs).
+ pub const USB_PORT: u32 = 1040;
+ 
++/// vsock port of the host's GPU bridge (VM only): one connection for each
++/// one a `--gpus` container makes to [`GPU_BRIDGE_TCP_PORT`], relayed to the
++/// executor's socket on the Mac. The container's bytes come framed as
++/// `u32 len | bytes` (big-endian) with an empty frame for their end; the
++/// executor's go back as they are.
++pub const GPU_BRIDGE_PORT: u32 = 1041;
++
++/// TCP port the agent listens on at 127.0.0.1 inside a `--gpus` container's
++/// network namespace, and only there: the container's end of the GPU bridge.
++pub const GPU_BRIDGE_TCP_PORT: u16 = 47700;
++
+ pub mod copy_op {
+     pub const IN: u8 = 1;
+     pub const OUT: u8 = 2;
+@@ -453,8 +464,9 @@ pub struct RunSpec<'a> {
+     pub caps: u64,
+     /// HostConfig settings applied at start, one per line, tab-separated:
+     /// `rlimit res soft hard`, `sysctl ns path value`, `device host
+-    /// container perms`, `devrule type major minor perms`, `group name`.
+-    /// Empty from an older daemon.
++    /// container perms`, `devrule type major minor perms`, `group name`,
++    /// `gpu` (the container gets the GPU bridge; an older agent refuses the
++    /// start). Empty from an older daemon.
+     pub opts: StrList<'a>,
+ }
+ 
+diff --git a/crates/kiri/src/daemon/api.rs b/crates/kiri/src/daemon/api.rs
+index d1c2c2a..939e150 100644
+--- a/crates/kiri/src/daemon/api.rs
++++ b/crates/kiri/src/daemon/api.rs
+@@ -1440,7 +1440,7 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
+     // refused now with Docker's error rather than at start.
+     let host_opts = super::hostopts::from_host(host);
+     super::hostopts::guest_lines(&host_opts, network_mode == "host").map_err(Error::BadRequest)?;
+-    super::hostopts::check_device_requests(host).map_err(Error::BadRequest)?;
++    super::hostopts::check_device_requests(host, &network_mode).map_err(Error::BadRequest)?;
+     if let Some(s) = body["StopSignal"].as_str().filter(|s| !s.is_empty()) {
+         parse_signal(s)?;
+     }
+@@ -1479,6 +1479,10 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
+             env.push(p);
+         }
+     }
++    // `--gpus`: where the container's end of the GPU bridge listens, unless set here.
++    if super::hostopts::gpu_bridge(&host_opts) && !given.iter().chain(&env).any(|e| e.split('=').next() == Some("KIRI_GPU_BRIDGE")) {
++        env.push(format!("KIRI_GPU_BRIDGE=127.0.0.1:{}", kiri_proto::GPU_BRIDGE_TCP_PORT));
++    }
+     for e in given {
+         let key = e.split('=').next().unwrap_or_default().to_owned();
+         env.retain(|x| x.split('=').next() != Some(key.as_str()));
+@@ -1557,10 +1561,11 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
+ }
+ 
+ /// `--network container:<target>`: Docker's checks, then the mode as it is
+-/// kept, `container:<full id>`. The target must exist now and run at start.
++/// kept, `container:<full id>`. The target must exist now and run at start,
++/// and its network namespace must not be one with the GPU bridge.
+ fn container_network_mode(body: &Value, engine: &Engine, target: &str) -> Result<String, Error> {
+     container_mode_allowed(body, target)?;
+-    let id = engine.resolve(target)?;
++    let id = engine.network_target(target)?;
+     Ok(format!("container:{id}"))
+ }
+ 
+@@ -1913,6 +1918,7 @@ fn inspect(c: &Container, nets: &[super::network::Network]) -> Value {
+             "Devices": super::hostopts::inspect(&c.spec.host_opts, "Devices"),
+             "DeviceCgroupRules": super::hostopts::inspect(&c.spec.host_opts, "DeviceCgroupRules"),
+             "GroupAdd": super::hostopts::inspect(&c.spec.host_opts, "GroupAdd"),
++            "DeviceRequests": super::hostopts::inspect(&c.spec.host_opts, "DeviceRequests"),
+         },
+         "NetworkSettings": network_settings(c, nets),
+         "Mounts": c.spec.mount_info,
+diff --git a/crates/kiri/src/daemon/engine.rs b/crates/kiri/src/daemon/engine.rs
+index 542762a..ac42326 100644
+--- a/crates/kiri/src/daemon/engine.rs
++++ b/crates/kiri/src/daemon/engine.rs
+@@ -245,8 +245,8 @@ pub struct Spec {
+     /// `--link` / Compose `links`: /etc/hosts entries for these containers.
+     #[serde(default)]
+     pub links: Vec<Link>,
+-    /// HostConfig's Ulimits, Sysctls, Devices, DeviceCgroupRules and
+-    /// GroupAdd as given; see [`super::hostopts`].
++    /// HostConfig's Ulimits, Sysctls, Devices, DeviceCgroupRules, GroupAdd
++    /// and DeviceRequests (`--gpus`) as given; see [`super::hostopts`].
+     #[serde(default)]
+     pub host_opts: serde_json::Value,
+ }
+@@ -681,6 +681,10 @@ impl Engine {
+         if cfg!(target_os = "macos") {
+             vm.listen(kiri_proto::DNS_RELAY_PORT, Box::new(super::dns::serve_relay))?;
+         }
++        // The GPU bridge: connections `--gpus` containers make, to the executor.
++        if cfg!(target_os = "macos") {
++            vm.listen(kiri_proto::GPU_BRIDGE_PORT, Box::new(super::ports::serve_gpu_bridge))?;
++        }
+         // Everything else on the guest's disk belongs to containers that are gone.
+         let keep: Vec<String> = self.lock().containers.keys().cloned().collect();
+         vm.retain(&keep)?;
+@@ -1940,10 +1944,21 @@ impl Engine {
+         out
+     }
+ 
++    /// For `--network container:<target>` at create: the target's id, unless
++    /// its network namespace is one no other container may join (see
++    /// [`joined_network_mode`]).
++    pub fn network_target(&self, target: &str) -> Result<String, Error> {
++        let st = self.lock();
++        let target = resolve(&st, target)?;
++        joined_network_mode(&st, &target)?;
++        Ok(target)
++    }
++
+     /// For `--network container:<target>`: the target's id, hostname and
+     /// domain name. It has to be running, as with Docker.
+     /// Also the network mode the namespace finally belongs to (following
+     /// `container:` chains), so the caller can tell a host-network one.
++    /// Refused, as at create, when that namespace has the GPU bridge.
+     fn network_container(&self, id: &str, target: &str) -> Result<(String, String, String, String), Error> {
+         let st = self.lock();
+         let target = resolve(&st, target)?;
+@@ -1955,11 +1970,7 @@ impl Engine {
+             return Err(Error::Conflict(format!("cannot join network of a non running container: {target}")));
+         }
+         let hostname = if c.spec.hostname.is_empty() { c.short_id().to_owned() } else { c.spec.hostname.clone() };
+-        let mut mode = c.spec.network_mode.clone();
+-        for _ in 0..8 {
+-            let Some(next) = mode.strip_prefix("container:").and_then(|t| resolve(&st, t).ok()).and_then(|t| st.containers.get(&t)) else { break };
+-            mode = next.spec.network_mode.clone();
+-        }
++        let mode = joined_network_mode(&st, &target)?;
+         Ok((target, hostname, c.spec.domainname.clone(), mode))
+     }
+ 
+@@ -3125,6 +3136,127 @@ fn resolve(st: &State, key: &str) -> Result<String, Error> {
+     }
+ }
+ 
++/// What `--network container:<target>` joins: the network mode of the
++/// container the namespace finally belongs to. A container that joined
++/// another's has no namespace of its own, so `container:` chains are
++/// followed to their end. Refused when a container on the way has the GPU
++/// bridge: its listener is on that namespace's loopback, and whoever joins
++/// the namespace would reach the bridge without having been given it.
++/// Asked at create and again at every start: a record saved before this
++/// was refused still names its target.
++fn joined_network_mode(st: &State, target: &str) -> Result<String, Error> {
++    let joined = st.containers.get(target).map_or(target, |c| c.name.as_str());
++    let mut mode = format!("container:{target}");
++    // No chain is longer than the containers there are: a loop ends here too.
++    for _ in 0..st.containers.len() {
++        let Some(c) = mode.strip_prefix("container:").and_then(|t| resolve(st, t).ok()).and_then(|t| st.containers.get(&t)) else { break };
++        if super::hostopts::gpu_bridge(&c.spec.host_opts) {
++            return Err(Error::BadRequest(format!(
++                "conflicting options: --network container:{joined} and the --gpus of {0}: the GPU bridge listens in that network namespace, for {0} alone",
++                c.name
++            )));
++        }
++        mode = c.spec.network_mode.clone();
++    }
++    Ok(mode)
++}
++
++#[cfg(test)]
++mod joined_network_tests {
++    use super::*;
++
++    const GPU: &str = r#"{"DeviceRequests": [{"Driver": "", "Count": -1, "Capabilities": [["gpu"]]}]}"#;
++
++    fn container(name: &str, network_mode: &str, host_opts: &str) -> Container {
++        let spec: Spec = serde_json::from_value(serde_json::json!({
++            "image": "alpine", "image_id": "sha256:x", "entrypoint": [], "cmd": ["sh"], "env": [], "cwd": "", "user": "",
++            "auto_remove": false, "network_mode": network_mode, "labels": {},
++            "host_opts": serde_json::from_str::<serde_json::Value>(host_opts).unwrap(),
++        }))
++        .unwrap();
++        Container {
++            // Sixty-four characters, as real ids are: `short_id` takes twelve.
++            id: format!("{name:f<64}"),
++            name: name.to_owned(),
++            log: Arc::new(Mutex::new(super::super::logfile::Log::new(std::path::PathBuf::new(), &spec.log_config))),
++            spec,
++            layers: Vec::new(),
++            created: SystemTime::now(),
++            status: Status::Running,
++            started: None,
++            finished: None,
++            exit_code: 0,
++            oom_killed: false,
++            vm_stopped: false,
++            stopped_by_user: false,
++            restart_count: 0,
++            restart_pending: false,
++            exits: 0,
++            size: None,
++            ip: None,
++            pid: 0,
++            forwards: None,
++            paused: false,
++            extra_ips: Vec::new(),
++            ip6: None,
++            extra_ip6s: Vec::new(),
++            live: false,
++            early_input: Vec::new(),
++            early_close: false,
++            attached: Vec::new(),
++        }
++    }
++
++    fn state(containers: Vec<Container>) -> State {
++        State { containers: containers.into_iter().map(|c| (c.id.clone(), c)).collect(), ..State::default() }
++    }
++
++    #[test]
++    fn a_gpu_containers_network_namespace_is_not_joined() {
++        let st = state(vec![container("train", "bridge", GPU), container("web", "bridge", "{}")]);
++        let join = |target: &str| joined_network_mode(&st, &resolve(&st, target).unwrap());
++        // Without `--gpus` the namespace is joined as before.
++        assert_eq!(join("web").unwrap(), "bridge");
++        // The container that joins did not ask for a GPU: nothing in its own
++        // request says no. By name, by id and by the start of one.
++        let train = format!("{:f<64}", "train");
++        for target in ["train", "/train", &train, &train[..12]] {
++            assert_eq!(
++                format!("{:?}", join(target).unwrap_err()),
++                format!("{:?}", Error::BadRequest("conflicting options: --network container:train and the --gpus of train: the GPU bridge listens in that network namespace, for train alone".into()))
++            );
++        }
++    }
++
++    #[test]
++    fn a_joined_namespace_is_followed_to_the_container_it_belongs_to() {
++        let joins = |name: &str| format!("container:{name:f<64}");
++        // A chain longer than any that is likely, with and without a GPU
++        // at its end. The second link could not be made any more; a record
++        // saved earlier may still hold it.
++        for (opts, mode) in [("{}", "host"), (GPU, "bridge")] {
++            let mut containers = vec![container("c0", mode, opts)];
++            for n in 1..12 {
++                containers.push(container(&format!("c{n}"), &joins(&format!("c{}", n - 1)), "{}"));
++            }
++            let st = state(containers);
++            for n in [0, 1, 2, 11] {
++                let found = joined_network_mode(&st, &resolve(&st, &format!("c{n}")).unwrap());
++                if opts == GPU {
++                    assert!(format!("{found:?}").contains(&format!("--network container:c{n} and the --gpus of c0:")), "{found:?}");
++                } else {
++                    assert_eq!(found.unwrap(), "host");
++                }
++            }
++        }
++        // A target that is gone, and two that name each other, end the walk.
++        let st = state(vec![container("a", &joins("b"), "{}"), container("b", &joins("a"), "{}"), container("c", &joins("gone"), "{}")]);
++        for name in ["a", "b", "c"] {
++            assert!(joined_network_mode(&st, &resolve(&st, name).unwrap()).unwrap().starts_with("container:"));
++        }
++    }
++}
++
+ pub fn random_hex(bytes: usize) -> String {
+     let mut b = vec![0u8; bytes];
+     if std::fs::File::open("/dev/urandom").and_then(|mut f| io::Read::read_exact(&mut f, &mut b)).is_err() {
+diff --git a/crates/kiri/src/daemon/hostopts.rs b/crates/kiri/src/daemon/hostopts.rs
+index 51babef..c5874f7 100644
+--- a/crates/kiri/src/daemon/hostopts.rs
++++ b/crates/kiri/src/daemon/hostopts.rs
+@@ -1,13 +1,17 @@
+ //! HostConfig settings the guest applies when a container starts:
+-//! `--ulimit`, `--sysctl`, `--device`, `--device-cgroup-rule` and
+-//! `--group-add`. They are kept as the API gave them (for inspect), checked
++//! `--ulimit`, `--sysctl`, `--device`, `--device-cgroup-rule`, `--group-add`
++//! and `--gpus`. They are kept as the API gave them (for inspect), checked
+ //! at create with Docker's errors, and handed to the guest at every start as
+ //! the `opts` lines of `Run` and `Exec` (see [`kiri_proto::RunSpec::opts`]).
+ 
+ use serde_json::{Value, json};
+ 
+ /// The HostConfig keys kept with a container.
+-const KEYS: [&str; 5] = ["Ulimits", "Sysctls", "Devices", "DeviceCgroupRules", "GroupAdd"];
++const KEYS: [&str; 6] = ["Ulimits", "Sysctls", "Devices", "DeviceCgroupRules", "GroupAdd", "DeviceRequests"];
++
++/// Where a container can be given the GPU bridge: an Apple-silicon Mac,
++/// the only host whose GPU the executor runs on.
++const GPU_BRIDGE: bool = cfg!(all(target_os = "macos", target_arch = "aarch64"));
+ 
+ /// `nofile` when the run sets none: what containers get on Docker Desktop
+ /// and on Docker Engine under containerd's `LimitNOFILE=infinity`. Without
+@@ -59,15 +63,39 @@ pub fn inspect(opts: &Value, key: &str) -> Value {
+ }
+ 
+ /// `--gpus` and Compose `deploy.resources.reservations.devices` arrive as
+-/// DeviceRequests. Kiri has no GPU to give, and saying so beats a container
+-/// that silently runs on the CPU.
+-pub fn check_device_requests(host: &Value) -> Result<(), String> {
+-    let Some(r) = host["DeviceRequests"].as_array().and_then(|a| a.first()) else { return Ok(()) };
+-    let caps = r["Capabilities"].as_array().map(|c| c.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(" ")).unwrap_or_default();
+-    Err(format!(
+-        "could not select device driver {:?} with capabilities: [{caps}]: Kiri does not support GPUs or other device requests",
+-        r["Driver"].as_str().unwrap_or("")
+-    ))
++/// DeviceRequests. On an Apple-silicon Mac a request for a GPU gives the
++/// container the GPU bridge. Kiri has nothing else to give, nor a GPU on any
++/// other host, and saying so beats a container that silently runs on the CPU.
++/// `network_mode`: the bridge listens in the container's own network
++/// namespace, which `host` and `container:` do not give it.
++pub fn check_device_requests(host: &Value, network_mode: &str) -> Result<(), String> {
++    device_requests(host, network_mode, GPU_BRIDGE)
++}
++
++fn device_requests(host: &Value, network_mode: &str, gpu_bridge: bool) -> Result<(), String> {
++    let requests = host["DeviceRequests"].as_array().map_or(&[][..], Vec::as_slice);
++    if let Some(r) = requests.iter().find(|r| !(gpu_bridge && asks_for_gpu(r))) {
++        let caps = r["Capabilities"].as_array().map(|c| c.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(" ")).unwrap_or_default();
++        let why = if gpu_bridge { "Kiri supports no device request but one for a GPU" } else { "Kiri does not support GPUs or other device requests" };
++        return Err(format!("could not select device driver {:?} with capabilities: [{caps}]: {why}", r["Driver"].as_str().unwrap_or("")));
++    }
++    if !requests.is_empty() && (network_mode == "host" || network_mode.starts_with("container:")) {
++        let mode = network_mode.split(':').next().unwrap_or_default();
++        return Err(format!("conflicting options: --gpus and --network {mode}: the GPU bridge needs a network namespace of the container's own"));
++    }
++    Ok(())
++}
++
++/// One DeviceRequest whose capabilities name `gpu`, as `--gpus` and
++/// Compose's `capabilities: [gpu]` send it (`[["gpu"]]`).
++fn asks_for_gpu(request: &Value) -> bool {
++    request["Capabilities"].as_array().into_iter().flatten().any(|all| all.as_array().is_some_and(|a| a.iter().any(|c| c == "gpu")))
++}
++
++/// Whether the container gets the GPU bridge: it was created with `--gpus`
++/// ([`check_device_requests`] let nothing else through).
++pub fn gpu_bridge(opts: &Value) -> bool {
++    opts["DeviceRequests"].as_array().is_some_and(|a| a.iter().any(asks_for_gpu))
+ }
+ 
+ /// The guest's lines for `opts` (from [`from_host`]), or Docker's error for
+@@ -131,6 +159,9 @@ pub fn guest_lines(opts: &Value, net_host: bool) -> Result<Vec<String>, String>
+         }
+         out.push(format!("group\t{g}"));
+     }
++    if gpu_bridge(opts) {
++        out.push("gpu".to_owned());
++    }
+     Ok(out)
+ }
+ 
+@@ -291,11 +322,42 @@ mod tests {
+     }
+ 
+     #[test]
+-    fn device_requests_are_refused() {
+-        assert!(check_device_requests(&json!({})).is_ok());
+-        assert!(check_device_requests(&json!({"DeviceRequests": []})).is_ok());
+-        let e = check_device_requests(&json!({"DeviceRequests": [{"Driver": "", "Count": -1, "Capabilities": [["gpu"]]}]})).unwrap_err();
+-        assert!(e.starts_with("could not select device driver \"\" with capabilities: [[\"gpu\"]]"), "{e}");
++    fn device_requests_are_refused_but_a_gpu_on_apple_silicon() {
++        let gpu = json!({"DeviceRequests": [{"Driver": "", "Count": -1, "Capabilities": [["gpu"]]}]});
++        for bridge in [false, true] {
++            assert!(device_requests(&json!({}), "bridge", bridge).is_ok());
++            assert!(device_requests(&json!({"DeviceRequests": []}), "host", bridge).is_ok());
++        }
++        // No GPU to give: an Intel Mac, a Linux host, Windows.
++        let e = device_requests(&gpu, "bridge", false).unwrap_err();
++        assert_eq!(e, "could not select device driver \"\" with capabilities: [[\"gpu\"]]: Kiri does not support GPUs or other device requests");
++        // Apple silicon: `--gpus all`, and Compose's reservation.
++        assert!(device_requests(&gpu, "bridge", true).is_ok());
++        assert!(device_requests(&gpu, "none", true).is_ok());
++        assert!(device_requests(&json!({"DeviceRequests": [{"Driver": "nvidia", "Count": 1, "Capabilities": [["gpu", "compute"]]}]}), "mynet", true).is_ok());
++        // Anything that is not a GPU is still refused, beside a GPU too.
++        for other in [json!([{"Driver": "", "Capabilities": [["fpga"]]}]), json!([{"Driver": "cdi", "DeviceIDs": ["vendor.com/device=x"]}]), json!([gpu["DeviceRequests"][0], {"Capabilities": [["tpu"]]}])] {
++            let e = device_requests(&json!({"DeviceRequests": other}), "bridge", true).unwrap_err();
++            assert!(e.starts_with("could not select device driver") && e.ends_with("Kiri supports no device request but one for a GPU"), "{e}");
++        }
++        // No network namespace of its own to listen in.
++        assert_eq!(
++            device_requests(&gpu, "host", true).unwrap_err(),
++            "conflicting options: --gpus and --network host: the GPU bridge needs a network namespace of the container's own"
++        );
++        assert!(device_requests(&gpu, "container:0123abcd", true).unwrap_err().starts_with("conflicting options: --gpus and --network container:"));
++        assert_eq!(check_device_requests(&gpu, "bridge").is_ok(), GPU_BRIDGE);
++    }
++
++    #[test]
++    fn a_gpu_request_tells_the_guest() {
++        let gpu = from_host(&json!({"DeviceRequests": [{"Driver": "", "Count": -1, "Capabilities": [["gpu"]]}]}));
++        assert!(gpu_bridge(&gpu));
++        assert_eq!(guest_lines(&gpu, false).unwrap(), ["rlimit\t7\t1048576\t1048576", "gpu"]);
++        for none in [json!({}), json!({"DeviceRequests": []}), json!({"DeviceRequests": null})] {
++            assert!(!gpu_bridge(&from_host(&none)));
++            assert_eq!(guest_lines(&from_host(&none), false).unwrap(), ["rlimit\t7\t1048576\t1048576"]);
++        }
+     }
+ 
+     #[test]
+@@ -305,6 +367,9 @@ mod tests {
+         assert_eq!(kept, json!({"Ulimits": [{"Name": "nofile", "Soft": 1, "Hard": 2}]}));
+         assert_eq!(inspect(&kept, "Devices"), json!([]));
+         assert_eq!(inspect(&kept, "GroupAdd"), Value::Null);
++        assert_eq!(inspect(&kept, "DeviceRequests"), Value::Null);
++        let gpu = json!([{"Driver": "", "Count": -1, "Capabilities": [["gpu"]]}]);
++        assert_eq!(inspect(&from_host(&json!({"DeviceRequests": gpu})), "DeviceRequests"), gpu);
+         assert_eq!(inspect(&Value::Null, "Ulimits"), json!([]));
+     }
+ }
+diff --git a/crates/kiri/src/daemon/ports.rs b/crates/kiri/src/daemon/ports.rs
+index 3f5101a..52618fc 100644
+--- a/crates/kiri/src/daemon/ports.rs
++++ b/crates/kiri/src/daemon/ports.rs
+@@ -1038,6 +1038,33 @@ pub fn serve_engine_api(stream: kiri_vmm::VsockStream) {
+     });
+ }
+ 
++/// One connection a `--gpus` container made to its end of the GPU bridge
++/// (the guest dials [`kiri_proto::GPU_BRIDGE_PORT`] for each), relayed to
++/// the executor's socket, `run/gpu.sock` in the state directory. With no
++/// executor listening there the container sees its connection close. The
++/// container's bytes arrive framed, so that their end is an empty frame
++/// and not a half-close Virtualization.framework may drop.
++pub fn serve_gpu_bridge(stream: kiri_vmm::VsockStream) {
++    let _ = std::thread::Builder::new().name("kiri-gpu-bridge".into()).spawn(move || {
++        let Ok(executor) = super::state_dir().and_then(|d| std::os::unix::net::UnixStream::connect(d.join("run/gpu.sock"))) else { return };
++        let (Ok(mut executor_read), Ok(from_guest), Ok(to_guest)) = (executor.try_clone(), stream.fd.try_clone(), stream.fd.try_clone()) else {
++            return;
++        };
++        let mut from_guest = std::fs::File::from(from_guest);
++        let mut to_guest = std::fs::File::from(to_guest);
++        let mut executor_write = executor;
++        let down = std::thread::spawn(move || {
++            let _ = copy(&mut executor_read, &mut to_guest);
++            // SAFETY: half-closing a socket we own.
++            unsafe { libc::shutdown(to_guest.as_raw_fd(), libc::SHUT_WR) };
++        });
++        let _ = copy_frames(&mut from_guest, &mut executor_write);
++        let _ = executor_write.shutdown(Shutdown::Write);
++        let _ = down.join();
++        drop(stream);
++    });
++}
++
+ /// The TCP ports in a container's `/proc/net/tcp` and `tcp6` lines that are
+ /// listening: those a published port reaches, then those it does not. The
+ /// relay dials the container's IPv4 address, so a socket bound to loopback

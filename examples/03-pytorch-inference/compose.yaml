@@ -1,0 +1,20 @@
+# PyTorch inference in a container, computed on the Mac's GPU through the
+# PyTorch bridge. The bridge's server must be running on the Mac (run.sh
+# starts it). The program is not told anything: in this image, with the
+# server running, torch.backends.mps.is_available() is True and "mps" is the
+# Mac's GPU.
+services:
+  infer:
+    # The default bridge network: no network of the project's own is left behind.
+    network_mode: bridge
+    image: varco-torch:${TORCH:-2.15.0}
+    environment:
+      HF_HOME: /hf
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_VERBOSITY: error
+      # BRIDGE: "0" turns the bridge off: the same image, on the CPU.
+      BRIDGE: ${BRIDGE:-1}
+    volumes:
+      - ${HF_CACHE:?set HF_CACHE to your Hugging Face cache, usually ~/.cache/huggingface}:/hf:ro
+      - ./:/app:ro
+    command: python /app/infer.py

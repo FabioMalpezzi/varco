@@ -1,0 +1,123 @@
+diff --git a/crates/kiri/src/daemon/engine.rs b/crates/kiri/src/daemon/engine.rs
+index fa57a7e..da20381 100644
+--- a/crates/kiri/src/daemon/engine.rs
++++ b/crates/kiri/src/daemon/engine.rs
+@@ -10,7 +10,7 @@ use std::io;
+ use std::path::PathBuf;
+ use std::sync::mpsc::{self, Receiver, Sender};
+ use std::sync::{Arc, Condvar, Mutex, MutexGuard, OnceLock, Weak};
+-use std::time::{Duration, SystemTime, UNIX_EPOCH};
++use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+ 
+ use serde::{Deserialize, Serialize};
+ 
+@@ -26,6 +26,21 @@ const MEMORY_HEADROOM: u64 = 256 << 20;
+ const MEMORY_FLOOR: u64 = 256 << 20;
+ /// How much more the guest gets at once when it reports pressure.
+ const MEMORY_GROW: u64 = 1 << 30;
++/// The most headroom the balloon keeps after the guest ran short with less.
++const MEMORY_HEADROOM_MAX: u64 = 2 << 30;
++/// Pressure events this close together are one shortage: the balloon's
++/// growth has not reached the guest yet.
++const MEMORY_SHORTAGE: Duration = Duration::from_secs(2);
++/// With no pressure for this long, the headroom comes back down a step.
++const MEMORY_CALM: Duration = Duration::from_secs(600);
++
++/// The headroom to keep once the guest has run short at `target` while it
++/// counted `used`: the difference was not enough (what the count leaves out,
++/// the files a program keeps reading, took it), so it gets that and the
++/// usual headroom on top.
++fn headroom_after_shortage(headroom: u64, target: u64, used: u64) -> u64 {
++    headroom.max(target.saturating_sub(used) + MEMORY_HEADROOM).min(MEMORY_HEADROOM_MAX)
++}
+ 
+ /// What a request that needs the VM gets while Kiri is stopped.
+ pub const STOPPED: &str = "Kiri is stopped: press Start in the Kiri window to run containers again";
+@@ -521,6 +536,10 @@ pub struct Engine {
+     /// CPUs the running VM has.
+     cpus: std::sync::atomic::AtomicUsize,
+     memory_target: Mutex<u64>,
++    /// The headroom the balloon keeps over what the guest counts as used,
++    /// and when the guest last ran short (or the headroom last came down):
++    /// `MEMORY_HEADROOM`, more after pressure. Locked after `memory_target`.
++    memory_headroom: Mutex<(u64, Option<Instant>)>,
+     /// What the guest last used, in bytes (0 while asleep): the balloon's
+     /// measure, without the pages the balloon itself holds.
+     memory_used: std::sync::atomic::AtomicU64,
+@@ -621,6 +640,7 @@ impl Engine {
+             ceiling: std::sync::atomic::AtomicU64::new(ceiling),
+             cpus: std::sync::atomic::AtomicUsize::new(vm_cpus()),
+             memory_target: Mutex::new(ceiling),
++            memory_headroom: Mutex::new((MEMORY_HEADROOM, None)),
+             memory_used: std::sync::atomic::AtomicU64::new(0),
+             memory_stall: std::sync::atomic::AtomicU64::new(0),
+             oom_kills: std::sync::atomic::AtomicU64::new(0),
+@@ -1337,7 +1357,8 @@ impl Engine {
+ 
+     /// Every second: read what the guest holds and, on the Mac, give it that
+     /// plus headroom through the balloon, the rest back to macOS. Pressure
+-    /// events grow it at once in between. On a Linux host there is no
++    /// events grow it at once in between, and leave it more headroom for a
++    /// while (see `grow_memory`). On a Linux host there is no
+     /// balloon and nothing to give back: the reading is all, and it takes in
+     /// this process too, which runs beside the containers there.
+     fn start_balloon(self: &Arc<Self>) {
+@@ -1375,7 +1396,15 @@ impl Engine {
+                 if !cfg!(target_os = "macos") {
+                     continue;
+                 }
+-                let want = (used + MEMORY_HEADROOM).clamp(MEMORY_FLOOR, ceiling);
++                let headroom = {
++                    let mut headroom = engine.memory_headroom.lock().unwrap_or_else(|e| e.into_inner());
++                    // Calm for a while: try with a step less.
++                    if headroom.0 > MEMORY_HEADROOM && headroom.1.is_none_or(|t| t.elapsed() >= MEMORY_CALM) {
++                        *headroom = (headroom.0.saturating_sub(256 << 20).max(MEMORY_HEADROOM), Some(Instant::now()));
++                    }
++                    headroom.0
++                };
++                let want = (used + headroom).clamp(MEMORY_FLOOR, ceiling);
+                 // Shrink in steps (so the guest's caches go gradually), grow at once.
+                 let next = if want < *target { want.max(target.saturating_sub(256 << 20)) } else { want };
+                 if next.abs_diff(*target) >= 64 << 20 {
+@@ -1388,6 +1417,16 @@ impl Engine {
+ 
+     fn grow_memory(&self) {
+         let mut target = self.memory_target.lock().unwrap_or_else(|e| e.into_inner());
++        // The balloon had shrunk the guest to where it ran short: left at the
++        // same headroom it would shrink it there again, every few seconds,
++        // and each time the guest stalls until this growth reaches it.
++        {
++            let mut headroom = self.memory_headroom.lock().unwrap_or_else(|e| e.into_inner());
++            if headroom.1.is_none_or(|t| t.elapsed() >= MEMORY_SHORTAGE) {
++                headroom.0 = headroom_after_shortage(headroom.0, *target, self.memory_used.load(std::sync::atomic::Ordering::Relaxed));
++            }
++            headroom.1 = Some(Instant::now());
++        }
+         let next = (*target + MEMORY_GROW).min(self.ceiling());
+         if next != *target {
+             *target = next;
+@@ -3171,6 +3210,24 @@ fn image_named(images: Vec<Image>, name: &str) -> Option<Image> {
+     })
+ }
+ 
++#[cfg(test)]
++mod memory_tests {
++    use super::{MEMORY_HEADROOM, MEMORY_HEADROOM_MAX, headroom_after_shortage};
++
++    #[test]
++    fn a_shortage_leaves_more_headroom() {
++        let mib = |n: u64| n << 20;
++        // Short at 599 MiB while counting 339: 260 was not enough.
++        assert_eq!(headroom_after_shortage(MEMORY_HEADROOM, mib(599), mib(339)), mib(260) + MEMORY_HEADROOM);
++        // Short again with that: more still, and never less than it had.
++        assert_eq!(headroom_after_shortage(mib(516), mib(855), mib(339)), mib(772));
++        assert_eq!(headroom_after_shortage(mib(772), mib(599), mib(339)), mib(772));
++        // A count above the target (it is a second old) and a far target stay within bounds.
++        assert_eq!(headroom_after_shortage(MEMORY_HEADROOM, mib(300), mib(900)), MEMORY_HEADROOM);
++        assert_eq!(headroom_after_shortage(MEMORY_HEADROOM, mib(8192), mib(339)), MEMORY_HEADROOM_MAX);
++    }
++}
++
+ #[cfg(test)]
+ mod image_lookup_tests {
+     use kiri_image::{Image, RunConfig};

@@ -1,0 +1,6 @@
+# The image build needs bridge/ and docker/ only.
+*
+!bridge
+bridge/_build
+bridge/__pycache__
+!docker

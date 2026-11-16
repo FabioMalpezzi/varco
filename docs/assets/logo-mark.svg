@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 64 64" width="64" height="64" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">varco</title>
+  <desc id="d">A letter V passing through a gap in a horizontal barrier.</desc>
+  <rect width="64" height="64" rx="14" fill="#2d3142"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="6">
+    <path d="M9 39H19M45 39H55" stroke="#f5f5f5"/>
+    <path d="M21 14L32 50L43 14" stroke="#f08a59"/>
+  </g>
+</svg>

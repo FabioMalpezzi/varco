@@ -1,0 +1,21 @@
+# An OpenAI-compatible model server in a container: mlx-lm's own server,
+# unchanged, computing on the Mac's GPU through the MLX bridge. The weights
+# are read by the bridge's server on the Mac, not by the container.
+services:
+  llm:
+    image: varco-mlx-lm:latest
+    environment:
+      # Where the bridge's server listens, when MLX_REMOTE is set where
+      # Compose is run (run.sh sets it for a server on another port). Not
+      # set, the container finds the server by itself: at port 47800 of the
+      # Mac on Docker Desktop, and in Kiri, with a GPU request, at the
+      # address Kiri gives it.
+      - MLX_REMOTE
+    volumes:
+      - ${MODELS:?set MODELS to the directory of your models}:/models:ro
+    ports:
+      - "127.0.0.1:${LLM_PORT:-18080}:8080"
+    command: >
+      python -m mlx_lm server
+      --model /models/${MODEL:-Qwen/Qwen3.5-0.8B-Base}
+      --host 0.0.0.0 --port 8080

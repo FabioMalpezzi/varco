@@ -1,0 +1,18 @@
+# Embeddings in a container, computed on the Mac's GPU through the MLX bridge.
+# The bridge's server must be running on the Mac (run.sh starts it).
+services:
+  embed:
+    # The default bridge network: no network of the project's own is left behind.
+    network_mode: bridge
+    image: varco-mlx-embeddings:latest
+    environment:
+      # Where the bridge's server listens, when MLX_REMOTE is set where
+      # Compose is run (run.sh sets it for a server on another port). Not
+      # set, the container finds the server by itself: at port 47800 of the
+      # Mac on Docker Desktop, and in Kiri, with a GPU request, at the
+      # address Kiri gives it.
+      - MLX_REMOTE
+    volumes:
+      - ${MODELS:?set MODELS to the directory of your models}:/models:ro
+      - ./:/app:ro
+    command: python /app/embed.py /models/mlx-community/bge-m3-mlx-fp16

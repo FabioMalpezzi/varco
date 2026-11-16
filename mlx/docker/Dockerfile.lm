@@ -1,0 +1,11 @@
+# Text generation: mlx-lm on top of the patched mlx (which pip keeps, since it
+# is installed as mlx 0.32.4).
+#   docker build -f docker/Dockerfile.lm -t varco-mlx-lm:latest docker
+# BASE is the image to build on: build-images.sh gives the varco-mlx it just
+# built, whatever its tag.
+ARG BASE=varco-mlx:latest
+FROM $BASE
+ARG MLX_LM_VERSION=0.32.2
+RUN pip install --no-cache-dir "mlx-lm==$MLX_LM_VERSION" \
+    && pip list 2>/dev/null | grep -i "^mlx " \
+    && python -c "import mlx.core as mx; assert mx.default_device() == mx.gpu"

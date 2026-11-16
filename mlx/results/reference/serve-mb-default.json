@@ -1,0 +1,546 @@
+{
+ "args": {
+  "mac": "http://127.0.0.1:18081",
+  "container": "http://127.0.0.1:18082",
+  "stages": "single,stream,long",
+  "blocks": 2,
+  "max_tokens": 120,
+  "long_words": 1500,
+  "nonce": 6501700,
+  "out": "results/serve-mb-predefinito.json"
+ },
+ "first": {
+  "mac": {
+   "first": null,
+   "tps": null,
+   "seconds": 2.186892291996628,
+   "prompt_tokens": 32,
+   "completion_tokens": 120,
+   "cached_tokens": 0,
+   "finish": "length",
+   "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+   "sha": "86439d1dcca43b33"
+  },
+  "container": {
+   "first": null,
+   "tps": null,
+   "seconds": 1.307627332978882,
+   "prompt_tokens": 32,
+   "completion_tokens": 120,
+   "cached_tokens": 0,
+   "finish": "length",
+   "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+   "sha": "86439d1dcca43b33"
+  }
+ },
+ "runs": {
+  "single": {
+   "mac": [
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.3580562919960357,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.3261062920209952,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.1990989579935558,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.426284124958329,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    }
+   ],
+   "container": [
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.9881219169474207,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.032343500002753,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 0.9098182920133695,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.0100452919723466,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "stream": {
+   "mac": [
+    {
+     "first": 0.27285129198571667,
+     "tps": 94.795340831583,
+     "seconds": 1.5281993339885958,
+     "prompt_tokens": 260,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Il faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava il tempo e la furia del mare. Il guardiano, un uomo dai lineamenti scavati dal vento e dagli anni, saliva ogni giorno le centinaia di scale a chiocciola per mantenere viva la fiamma. La sua vita era un ciclo ripetitivo, scandito dal ritmo delle onde che si infrangevano contro le rocce sottostanti e dal suono costante del vento che fischiava attraverso le fessure delle mura antiche.\n\nO",
+     "sha": "0441569649b03c47"
+    },
+    {
+     "first": 0.5566551249939948,
+     "tps": 89.20888587788112,
+     "seconds": 1.8906082499888726,
+     "prompt_tokens": 489,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Il faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava la furia del mare sottostante. Il guardiano, un uomo dal volto segnato dal tempo e dagli anni di veglia, saliva le scale a chiocciola con passo misurato, come se ogni gradino fosse un passo verso la propria storia. La sua vita era scandita dal ritmo delle maree e dal ciclo incessante del giorno e della notte.\n\nOgni sera, quando il sole si tuffava nell’orizzonte tingendo il cielo",
+     "sha": "88f2781cef78275c"
+    },
+    {
+     "first": 0.4933266660082154,
+     "tps": 96.3991930840522,
+     "seconds": 1.7277828750084154,
+     "prompt_tokens": 699,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave fornite, intitolato **\"Il Custode della Luce\"**.\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra bianca che sfidava il tempo e la tempesta. Il guardiano, un uomo dal volto segnato dal sale e dal silenzio, saliva ogni sera le scale a chiocciola per accendere la grande lente di Fresnel. La sua vita era un ciclo ripetuto di luce e buio, di giorno e di notte, scandito dal ritmo incessante del mare",
+     "sha": "14be1fc808b80d10"
+    },
+    {
+     "first": 0.6542640829575248,
+     "tps": 95.5912294329323,
+     "seconds": 1.8991539159906097,
+     "prompt_tokens": 903,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento, intrecciando gli elementi naturali e gli oggetti descritti in una narrazione coerente.\n\n***\n\nIl faro si ergeva solitario su un monte roccioso, scrutando il mare infinito con la sua luce costante. Il guardiano, un uomo di mezza età con le mani ruvide dal lavoro, saliva ogni giorno le scale a chiocciola per pulire il vetro della lente. Il suo mondo si riduceva a quel piccolo spazio: una sedia di legno, un tavolo di pietra, e un libro",
+     "sha": "219ff9c9e06a70cf"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.22329637501388788,
+     "tps": 122.31067476615245,
+     "seconds": 1.1962366670486517,
+     "prompt_tokens": 260,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Il faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava il tempo e la furia del mare. Il guardiano, un uomo dai lineamenti scavati dal vento e dagli anni, saliva ogni giorno le centinaia di scale a chiocciola per mantenere viva la fiamma. La sua vita era un ciclo ripetitivo, scandito dal ritmo delle onde che si infrangevano contro le rocce sottostanti e dal suono costante del vento che fischiava attraverso le fessure delle mura antiche.\n\nO",
+     "sha": "0441569649b03c47"
+    },
+    {
+     "first": 0.46537408302538097,
+     "tps": 99.76819614063918,
+     "seconds": 1.6581470420351252,
+     "prompt_tokens": 489,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Il faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava la furia del mare sottostante. Il guardiano, un uomo dal volto segnato dal tempo e dagli anni di veglia, saliva le scale a chiocciola con passo misurato, come se ogni gradino fosse un passo verso la propria storia. La sua vita era scandita dal ritmo delle maree e dal ciclo incessante del giorno e della notte.\n\nOgni sera, quando il sole si tuffava nell’orizzonte tingendo il cielo",
+     "sha": "88f2781cef78275c"
+    },
+    {
+     "first": 0.4810469590011053,
+     "tps": 112.88634822799456,
+     "seconds": 1.5352101249736734,
+     "prompt_tokens": 699,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave fornite, intitolato **\"Il Custode della Luce\"**.\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra bianca che sfidava il tempo e la tempesta. Il guardiano, un uomo dal volto segnato dal sale e dal silenzio, saliva ogni sera le scale a chiocciola per accendere la grande lente di Fresnel. La sua vita era un ciclo ripetuto di luce e buio, di giorno e di notte, scandito dal ritmo incessante del mare",
+     "sha": "14be1fc808b80d10"
+    },
+    {
+     "first": 1.0117269590264186,
+     "tps": 112.16093558233895,
+     "seconds": 2.072708417021204,
+     "prompt_tokens": 903,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento, intrecciando gli elementi naturali e gli oggetti descritti in una narrazione coerente.\n\n***\n\nIl faro si ergeva solitario su un monte roccioso, scrutando il mare infinito con la sua luce costante. Il guardiano, un uomo di mezza età con le mani ruvide dal lavoro, saliva ogni giorno le scale a chiocciola per pulire il vetro della lente. Il suo mondo si riduceva a quel piccolo spazio: una sedia di legno, un tavolo di pietra, e un libro",
+     "sha": "219ff9c9e06a70cf"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "long": {
+   "mac": [
+    {
+     "first": 2.047828666982241,
+     "tps": 91.6952442493224,
+     "seconds": 2.1787313749664463,
+     "prompt_tokens": 2307,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 126 righe numerate.",
+     "sha": "899b4bb7c003176d",
+     "prompt_tps": 1126.5590902190484
+    },
+    {
+     "first": 1.8272494170232676,
+     "tps": 93.43377922747435,
+     "seconds": 1.9556884170160629,
+     "prompt_tokens": 2290,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 125 righe numerate.",
+     "sha": "dd54102151ac9bae",
+     "prompt_tps": 1253.2498183693988
+    },
+    {
+     "first": 1.8046997910132632,
+     "tps": 92.39380759616955,
+     "seconds": 1.9346100830007344,
+     "prompt_tokens": 2324,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 126 righe numerate.",
+     "sha": "899b4bb7c003176d",
+     "prompt_tps": 1287.7488054094424
+    },
+    {
+     "first": 1.9239684579661116,
+     "tps": 90.73949808512519,
+     "seconds": 2.0562432499718852,
+     "prompt_tokens": 2304,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 124 righe numerate.",
+     "sha": "67e20b8924460cc3",
+     "prompt_tps": 1197.5248297134933
+    }
+   ],
+   "container": [
+    {
+     "first": 1.758070791955106,
+     "tps": 59.46315916778861,
+     "seconds": 1.9598867499735206,
+     "prompt_tokens": 2307,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 126 righe numerate.",
+     "sha": "899b4bb7c003176d",
+     "prompt_tps": 1312.2338477817743
+    },
+    {
+     "first": 1.9636724169831723,
+     "tps": 115.2847111958794,
+     "seconds": 2.067776291980408,
+     "prompt_tokens": 2290,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 125 righe numerate.",
+     "sha": "dd54102151ac9bae",
+     "prompt_tps": 1166.182292012927
+    },
+    {
+     "first": 1.7877537499880418,
+     "tps": 107.6747009200117,
+     "seconds": 1.8992290840251371,
+     "prompt_tokens": 2324,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 126 righe numerate.",
+     "sha": "899b4bb7c003176d",
+     "prompt_tps": 1299.9553210365493
+    },
+    {
+     "first": 1.99683591601206,
+     "tps": 114.83894595761492,
+     "seconds": 2.1013399999937974,
+     "prompt_tokens": 2304,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 124 righe numerate.",
+     "sha": "67e20b8924460cc3",
+     "prompt_tps": 1153.825400236884
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "same start": {
+   "mac": [
+    {
+     "first": 0.08918016601819545,
+     "tps": 98.41417519749433,
+     "seconds": 0.22129591600969434,
+     "prompt_tokens": 2308,
+     "completion_tokens": 14,
+     "cached_tokens": 2281,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"colore\".",
+     "sha": "7edd0228e54ae4b0"
+    },
+    {
+     "first": 0.0880519169731997,
+     "tps": 98.51865230916691,
+     "seconds": 0.22002254199469462,
+     "prompt_tokens": 2291,
+     "completion_tokens": 14,
+     "cached_tokens": 2264,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"ferro\".",
+     "sha": "5b54e0bc60c16c47"
+    },
+    {
+     "first": 0.08932575001381338,
+     "tps": 97.84815572394861,
+     "seconds": 0.2222026669769548,
+     "prompt_tokens": 2325,
+     "completion_tokens": 14,
+     "cached_tokens": 2298,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"pietra\".",
+     "sha": "e67c0b3ce2d53b4a"
+    },
+    {
+     "first": 0.0894560000160709,
+     "tps": 98.9610987897436,
+     "seconds": 0.22084000002359971,
+     "prompt_tokens": 2305,
+     "completion_tokens": 14,
+     "cached_tokens": 2278,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"voce\".",
+     "sha": "54c3d080f7a7dc3a"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.08946320897666737,
+     "tps": 123.43822983954908,
+     "seconds": 0.19478774996241555,
+     "prompt_tokens": 2308,
+     "completion_tokens": 14,
+     "cached_tokens": 2281,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"colore\".",
+     "sha": "7edd0228e54ae4b0"
+    },
+    {
+     "first": 0.08970408298773691,
+     "tps": 120.6115935658393,
+     "seconds": 0.19750166696030647,
+     "prompt_tokens": 2291,
+     "completion_tokens": 14,
+     "cached_tokens": 2264,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"ferro\".",
+     "sha": "5b54e0bc60c16c47"
+    },
+    {
+     "first": 0.10139120800886303,
+     "tps": 118.86878031202926,
+     "seconds": 0.21077154099475592,
+     "prompt_tokens": 2325,
+     "completion_tokens": 14,
+     "cached_tokens": 2298,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"pietra\".",
+     "sha": "e67c0b3ce2d53b4a"
+    },
+    {
+     "first": 0.09105791599722579,
+     "tps": 121.84173111819538,
+     "seconds": 0.1977644159924239,
+     "prompt_tokens": 2305,
+     "completion_tokens": 14,
+     "cached_tokens": 2278,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"voce\".",
+     "sha": "54c3d080f7a7dc3a"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "follow up": {
+   "mac": [
+    {
+     "first": 0.09101837495109066,
+     "tps": 99.68923796748432,
+     "seconds": 0.22143099998356774,
+     "prompt_tokens": 2340,
+     "completion_tokens": 14,
+     "cached_tokens": 2304,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"colore\".",
+     "sha": "751d6b40e5c7b850"
+    },
+    {
+     "first": 0.09116095904028043,
+     "tps": 99.37600154820274,
+     "seconds": 0.21194287500111386,
+     "prompt_tokens": 2323,
+     "completion_tokens": 13,
+     "cached_tokens": 2287,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"porta\".",
+     "sha": "adc81e46a68a4e67"
+    },
+    {
+     "first": 0.09120083297602832,
+     "tps": 99.18417541957683,
+     "seconds": 0.21220274997176602,
+     "prompt_tokens": 2357,
+     "completion_tokens": 13,
+     "cached_tokens": 2321,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"ombra\".",
+     "sha": "18c2373b893712f5"
+    },
+    {
+     "first": 0.09129258303437382,
+     "tps": 97.7885370744608,
+     "seconds": 0.2242477080435492,
+     "prompt_tokens": 2337,
+     "completion_tokens": 14,
+     "cached_tokens": 2301,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"giardino\".",
+     "sha": "0a9b3915bb119cc8"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.0939824579982087,
+     "tps": 124.69565388229452,
+     "seconds": 0.19824983295984566,
+     "prompt_tokens": 2340,
+     "completion_tokens": 14,
+     "cached_tokens": 2304,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"colore\".",
+     "sha": "751d6b40e5c7b850"
+    },
+    {
+     "first": 0.09421237499918789,
+     "tps": 121.99667812516883,
+     "seconds": 0.19258849998004735,
+     "prompt_tokens": 2323,
+     "completion_tokens": 13,
+     "cached_tokens": 2287,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"porta\".",
+     "sha": "adc81e46a68a4e67"
+    },
+    {
+     "first": 0.09931837499607354,
+     "tps": 120.26392878964549,
+     "seconds": 0.1991112080286257,
+     "prompt_tokens": 2357,
+     "completion_tokens": 13,
+     "cached_tokens": 2321,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"ombra\".",
+     "sha": "18c2373b893712f5"
+    },
+    {
+     "first": 0.09470104204956442,
+     "tps": 121.39997481412401,
+     "seconds": 0.20179620903218165,
+     "prompt_tokens": 2337,
+     "completion_tokens": 14,
+     "cached_tokens": 2301,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"giardino\".",
+     "sha": "0a9b3915bb119cc8"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  }
+ }
+}

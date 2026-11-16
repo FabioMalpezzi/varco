@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 880 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="two-bridges-title two-bridges-desc" id="two-bridges-root">
+        <title id="two-bridges-title">The two bridges: MLX and PyTorch</title>
+        <desc id="two-bridges-desc">Two independent bridges cross from the Linux virtual machine to macOS. An MLX program uses the MLX remote gpu backend, which speaks protocol 11 to mlx-remote-server, one process with a thread per connection and one executor thread, which computes on the Apple GPU with stock MLX and reads weight files directly from the Mac's disk. A PyTorch program uses an MPS backend made of bridge_native and bridge/*.py, which sends J, D, O and F frames to bridge.server, the door that never loads PyTorch and hands each connection to a bridge.session, one process per program, which computes on the Apple GPU with stock PyTorch MPS.</desc>
+        <defs>
+      <style>#two-bridges-root { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      #two-bridges-root .t-name { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; }
+      #two-bridges-root .t-part { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; }
+      #two-bridges-root .t-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; }
+      #two-bridges-root .t-sub { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 400; }
+      #two-bridges-root .t-subb { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; }
+      #two-bridges-root .t-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 400; }
+      #two-bridges-root .t-msg { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+      #two-bridges-root .t-eye { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; }
+      #two-bridges-root .t-fig { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 16px; font-weight: 600; }
+      #two-bridges-root .mid { text-anchor: middle; }
+      #two-bridges-root .end { text-anchor: end; }
+      #two-bridges-root .sheet { stroke-width: 1; }
+      #two-bridges-root .zone { stroke-width: 1.2; }
+      #two-bridges-root .zone.vm { stroke-dasharray: 7 5; }
+      #two-bridges-root .ctr { fill: none; stroke-width: 1; }
+      #two-bridges-root .band { stroke-width: 1.2; }
+      #two-bridges-root .n-prog, #two-bridges-root .n-part, #two-bridges-root .n-file, #two-bridges-root .n-none { stroke-width: 1; }
+      #two-bridges-root .n-end { stroke-width: 1.5; }
+      #two-bridges-root .n-gpu { stroke-width: 1; stroke-linejoin: round; }
+      #two-bridges-root .n-none, #two-bridges-root .dashed { stroke-dasharray: 4 3; }
+      #two-bridges-root .n-fold { fill: none; stroke-width: 1; }
+      #two-bridges-root .ln { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+      #two-bridges-root .ln.strong { stroke-width: 2.4; }
+      #two-bridges-root .ln.back { stroke-dasharray: 5 4; }
+      #two-bridges-root .ln.faint { stroke-width: 1.2; stroke-dasharray: 2 4; }
+      #two-bridges-root .rule { fill: none; stroke-width: 1; }
+      #two-bridges-root { color: #2d3142; }
+      #two-bridges-root .sheet { fill: #f5f5f5; stroke: #d5d6d8; }
+      #two-bridges-root .zone { fill: #eeeeef; stroke: #91939c; }
+      #two-bridges-root .ctr-fill { fill: #fafafa; }
+      #two-bridges-root .ctr-head { fill: #e1e1e3; }
+      #two-bridges-root .ctr { stroke: #878993; }
+      #two-bridges-root .band { fill: #f0e3e0; stroke: #bf4520; }
+      #two-bridges-root .n-prog { fill: #e4e6e9; stroke: #5a6580; }
+      #two-bridges-root .n-end { fill: #ffffff; stroke: #2d3142; }
+      #two-bridges-root .n-part { fill: #f4f5f6; stroke: #878993; }
+      #two-bridges-root .n-gpu { fill: #2d3142; stroke: #2d3142; }
+      #two-bridges-root .n-file { fill: #e5e5e7; stroke: #4f5d75; }
+      #two-bridges-root .n-fold { stroke: #4f5d75; }
+      #two-bridges-root .n-none { fill: none; stroke: #878993; }
+      #two-bridges-root .cell { fill: #f4f5f6; stroke: #878993; }
+      #two-bridges-root .cell-full { fill: #797b86; stroke: #878993; }
+      #two-bridges-root .bar { fill: #a2a9b5; }
+      #two-bridges-root .bar-ink { fill: #2d3142; }
+      #two-bridges-root .mask-paper { fill: #f5f5f5; }
+      #two-bridges-root .mask-zone { fill: #eeeeef; }
+      #two-bridges-root .mask-band { fill: #f0e3e0; }
+      #two-bridges-root .mask-end { fill: #ffffff; }
+      #two-bridges-root .ln { stroke: #4f5d75; }
+      #two-bridges-root .ln.strong { stroke: #2d3142; }
+      #two-bridges-root .ln.faint { stroke: #788395; }
+      #two-bridges-root .mk { fill: #4f5d75; }
+      #two-bridges-root .mk-strong { fill: #2d3142; }
+      #two-bridges-root .mk-faint { fill: #788395; }
+      #two-bridges-root .rule { stroke: #d1d2d5; }
+      #two-bridges-root .c-ink { fill: #2d3142; }
+      #two-bridges-root .c-muted { fill: #4f5d75; }
+      #two-bridges-root .c-soft { fill: #5a6580; }
+      #two-bridges-root .c-inv { fill: #f5f5f5; }
+      #two-bridges-root .c-inv2 { fill: #cdced1; }</style>
+          <marker id="two-bridges-arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk" points="0 0, 10 4, 0 8"/></marker>
+          <marker id="two-bridges-arrow-strong" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto"><polygon class="mk-strong" points="0 0, 12 5, 0 10"/></marker>
+          <marker id="two-bridges-arrow-faint" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk-faint" points="0 0, 10 4, 0 8"/></marker>
+        </defs>
+        <rect class="sheet" x="0.5" y="0.5" width="879" height="479" rx="10"/>
+        <!-- zones: the virtual machine and macOS -->
+        <g class="l-zones">
+          <rect class="zone vm" x="20" y="20" width="280" height="440" rx="8"/>
+          <text x="34" y="40" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="460" y="20" width="400" height="440" rx="8"/>
+          <text x="474" y="40" class="t-eye c-soft">macOS</text>
+        </g>
+        <!-- containers -->
+        <g class="l-ctrs">
+          <rect class="ctr-fill" x="36" y="52" width="248" height="188" rx="6"/>
+          <path class="ctr-head" d="M 36,76 V 58 Q 36,52 42,52 H 278 Q 284,52 284,58 V 76 Z"/>
+          <rect class="ctr" x="36" y="52" width="248" height="188" rx="6"/>
+          <text x="48" y="68.5" class="t-eye c-muted">CONTAINER A</text>
+          <rect class="ctr-fill" x="36" y="256" width="248" height="188" rx="6"/>
+          <path class="ctr-head" d="M 36,280 V 262 Q 36,256 42,256 H 278 Q 284,256 284,262 V 280 Z"/>
+          <rect class="ctr" x="36" y="256" width="248" height="188" rx="6"/>
+          <text x="48" y="272.5" class="t-eye c-muted">CONTAINER B</text>
+        </g>
+        <!-- the channel -->
+        <g class="l-bands">
+          <rect class="band" x="304" y="168" width="152" height="64" rx="6"/>
+          <rect class="band" x="304" y="372" width="152" height="64" rx="6"/>
+        </g>
+        <!-- connectors -->
+        <g class="l-lines">
+          <path class="ln " d="M 160,144 L 160,172" marker-end="url(#two-bridges-arrow)"/>
+          <path class="ln " d="M 160,348 L 160,376" marker-end="url(#two-bridges-arrow)"/>
+          <path class="ln " d="M 272,200 L 476,200" marker-end="url(#two-bridges-arrow)"/>
+          <path class="ln " d="M 556,108 L 556,156" marker-end="url(#two-bridges-arrow)"/>
+          <path class="ln " d="M 692,200 L 772,200 Q 780,200 780,208 L 780,268" marker-end="url(#two-bridges-arrow)"/>
+          <path class="ln " d="M 272,404 L 476,404" marker-end="url(#two-bridges-arrow)"/>
+          <path class="ln " d="M 628,404 L 656,404" marker-end="url(#two-bridges-arrow)"/>
+          <path class="ln " d="M 780,368 L 780,332" marker-end="url(#two-bridges-arrow)"/>
+        </g>
+        <!-- connector labels -->
+        <g class="l-labels">
+          <text x="380" y="189" class="t-sub c-ink mid">protocol 11</text>
+          <text x="380" y="221" class="t-sub c-muted mid">GRAPH and the others</text>
+          <text x="568" y="137" class="t-sub c-muted">read directly</text>
+          <text x="732" y="189" class="t-sub c-muted mid">stock MLX</text>
+          <text x="380" y="393" class="t-sub c-ink mid">J, D, O and F</text>
+          <text x="380" y="425" class="t-sub c-muted mid">frames</text>
+          <text x="768" y="354" class="t-sub c-muted end">stock PyTorch MPS</text>
+        </g>
+        <!-- nodes -->
+        <g class="l-nodes">
+          <rect class="n-prog" x="48" y="88" width="224" height="56" rx="6"/>
+          <text x="160" y="112.8" class="t-name c-ink mid">program</text>
+          <text x="160" y="129.8" class="t-sub c-muted mid">MLX</text>
+          <rect class="n-end" x="48" y="172" width="224" height="56" rx="6"/>
+          <text x="160" y="196.8" class="t-name c-ink mid">MLX remote gpu backend</text>
+          <text x="160" y="213.8" class="t-sub c-muted mid">container end</text>
+          <rect class="n-prog" x="48" y="292" width="224" height="56" rx="6"/>
+          <text x="160" y="316.8" class="t-name c-ink mid">program</text>
+          <text x="160" y="333.8" class="t-sub c-muted mid">PyTorch</text>
+          <rect class="n-end" x="48" y="376" width="224" height="56" rx="6"/>
+          <text x="160" y="400.8" class="t-name c-ink mid">MPS backend</text>
+          <text x="160" y="417.8" class="t-mono c-muted mid">bridge_native + bridge/*.py</text>
+          <path class="n-file" d="M 476,52 H 622 L 636,66 V 108 H 476 Z"/>
+          <path class="n-fold" d="M 622,52 V 66 H 636"/>
+          <text x="556" y="76.6" class="t-part c-ink mid">weight files</text>
+          <text x="556" y="93.3" class="t-sub c-muted mid">on the Mac's disk</text>
+          <rect class="n-end" x="476" y="156" width="216" height="88" rx="6"/>
+          <text x="584" y="180.8" class="t-code c-ink mid">mlx-remote-server</text>
+          <text x="584" y="197.8" class="t-sub c-muted mid">one process</text>
+          <text x="584" y="213.8" class="t-sub c-muted mid">a thread per connection</text>
+          <text x="584" y="229.8" class="t-sub c-muted mid">one executor thread</text>
+          <polygon class="n-gpu" points="726,268 834,268 844,278 844,322 834,332 726,332 716,322 716,278"/>
+          <text x="780" y="304.8" class="t-name c-inv mid">Apple GPU</text>
+          <rect class="n-end" x="476" y="368" width="152" height="72" rx="6"/>
+          <text x="552" y="392.8" class="t-code c-ink mid">bridge.server</text>
+          <text x="552" y="409.8" class="t-sub c-muted mid">the door</text>
+          <text x="552" y="425.8" class="t-sub c-muted mid">never loads PyTorch</text>
+          <rect class="n-end" x="656" y="368" width="188" height="72" rx="6"/>
+          <text x="750" y="400.8" class="t-code c-ink mid">bridge.session</text>
+          <text x="750" y="417.8" class="t-sub c-muted mid">one process per program</text>
+        </g>
+        <!-- notes -->
+        <g class="l-text">
+          <text x="380" y="156" class="t-eye c-soft mid">MLX BRIDGE</text>
+          <text x="380" y="360" class="t-eye c-soft mid">PYTORCH BRIDGE</text>
+        </g>
+      </svg>

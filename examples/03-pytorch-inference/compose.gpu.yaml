@@ -1,0 +1,13 @@
+# The GPU request, what `docker run --gpus all` sends: for Kiri on a Mac, where
+# a container that asks for the GPU gets its end of the bridge at
+# 127.0.0.1:47700 (run.sh adds this file with ENGINE=kiri). Docker Desktop on a
+# Mac refuses the request: there compose.yaml is used alone.
+services:
+  infer:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

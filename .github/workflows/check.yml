@@ -1,0 +1,26 @@
+# What a hosted runner can check. It has no Apple GPU, so it runs neither
+# bridge: the tests of the bridges (scripts/test-all.sh) are run on a Mac by
+# whoever proposes a change, and their output goes in the pull request.
+#
+# This workflow checks only that the scripts parse, the Python files
+# compile, the comparators of those tests fail on results that are wrong or
+# missing (scripts/check-comparators.py, on results made up for it), the
+# links between the documents hold, and the patches apply to their upstream
+# at the pinned commits.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax, comparators, links and patches
+        run: scripts/check.sh

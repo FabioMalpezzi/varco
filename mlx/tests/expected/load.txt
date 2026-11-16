@@ -1,0 +1,75 @@
+# The tests of the stage "load" of mlx/tests/run-all.sh, one name per line.
+# tests/compare.py fails when a result lacks one of them or holds another.
+# After adding or removing a test, on a Mac, from mlx/:
+#   tests/run-all.sh load
+#   python3 tests/compare.py --inventory load results/load-native.json > tests/expected/load.txt
+# and read the diff before committing it: a name that goes is a test that no
+# longer runs. (The first of the two fails until the second is done.)
+allowed/w.safetensors bf16
+allowed/w.safetensors bool
+allowed/w.safetensors empty
+allowed/w.safetensors f16
+allowed/w.safetensors f32
+allowed/w.safetensors i32
+allowed/w.safetensors i64
+allowed/w.safetensors large
+allowed/w.safetensors scalar
+allowed/w.safetensors u32
+allowed/w.safetensors u8
+allowed/w.npz bool
+allowed/w.npz empty
+allowed/w.npz f16
+allowed/w.npz f32
+allowed/w.npz i32
+allowed/w.npz i64
+allowed/w.npz scalar
+allowed/w.npz u32
+allowed/w.npz u8
+allowed/wc.npz bool
+allowed/wc.npz empty
+allowed/wc.npz f16
+allowed/wc.npz f32
+allowed/wc.npz i32
+allowed/wc.npz i64
+allowed/wc.npz scalar
+allowed/wc.npz u32
+allowed/wc.npz u8
+allowed/sub/a.npy
+allowed/big-endian.npy
+allowed/fortran.npy
+allowed/link-in.safetensors bf16
+allowed/link-in.safetensors bool
+allowed/link-in.safetensors empty
+allowed/link-in.safetensors f16
+allowed/link-in.safetensors f32
+allowed/link-in.safetensors i32
+allowed/link-in.safetensors i64
+allowed/link-in.safetensors large
+allowed/link-in.safetensors scalar
+allowed/link-in.safetensors u32
+allowed/link-in.safetensors u8
+allowed/link-out.safetensors bool
+allowed/link-out.safetensors f32
+allowed/link-out.safetensors i32
+allowed/link-out.safetensors u8
+outside/s.safetensors bool
+outside/s.safetensors f32
+outside/s.safetensors i32
+outside/s.safetensors u8
+saved again bf16
+saved again bool
+saved again empty
+saved again f16
+saved again f32
+saved again i32
+saved again i64
+saved again large
+saved again scalar
+saved again u32
+saved again u8
+lazy in a graph
+on the cpu dtype
+on the cpu shape
+on the cpu sum
+on the cpu max
+on the cpu sha

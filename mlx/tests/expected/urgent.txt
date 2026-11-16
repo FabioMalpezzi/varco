@@ -1,0 +1,29 @@
+# The tests of the stage "urgent" of mlx/tests/run-all.sh, one name per line.
+# tests/compare.py fails when a result lacks one of them or holds another.
+# After adding or removing a test, on a Mac, from mlx/:
+#   tests/run-all.sh urgent
+#   python3 tests/compare.py --inventory urgent results/urgent-native.json > tests/expected/urgent.txt
+# and read the diff before committing it: a name that goes is a test that no
+# longer runs. (The first of the two fails until the second is done.)
+an element
+an element from the end
+a slice
+a slice with a step
+an element of floating point
+the items of a list
+rows by an array of indices
+an element of the transpose
+an element after a reshape
+a comparison of integers
+any of a comparison
+all of a comparison
+a concatenation
+integers of another size
+a choice between two rows
+a sum
+a comparison of floating point
+the place of the largest
+floating point made integer
+a large result
+a value of the work in flight
+40 elements, one by one

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 880 508" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="weights-title weights-desc" id="weights-root">
+        <title id="weights-title">Weights read by the Mac</title>
+        <desc id="weights-desc">The weight file is on the Mac's disk and is mounted into the container. When MLX loads an array from a file, the container end sends OPEN with the file's path, its size, the time it was last modified and a digest of parts of it. If the path is under a directory the server was started with, --map or --models, and the file there has that size, that time and that digest, mlx-remote-server opens it read-only, and each array is a LOAD message: a handle, a type, a shape, an offset. The bytes never enter the virtual machine. The fallback, drawn faint, is the container reading the file and uploading the arrays. Measured with Qwen3.6-35B-A3B-4bit: load time from 31.6 s to 1.2 s; the server read 1,757 arrays, 19.5 GB, in 0.36 to 0.43 s, while 608 to 652 bytes went up from the container.</desc>
+        <defs>
+      <style>#weights-root { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      #weights-root .t-name { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; }
+      #weights-root .t-part { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; }
+      #weights-root .t-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; }
+      #weights-root .t-sub { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 400; }
+      #weights-root .t-subb { font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; }
+      #weights-root .t-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 400; }
+      #weights-root .t-msg { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+      #weights-root .t-eye { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; }
+      #weights-root .t-fig { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 16px; font-weight: 600; }
+      #weights-root .mid { text-anchor: middle; }
+      #weights-root .end { text-anchor: end; }
+      #weights-root .sheet { stroke-width: 1; }
+      #weights-root .zone { stroke-width: 1.2; }
+      #weights-root .zone.vm { stroke-dasharray: 7 5; }
+      #weights-root .ctr { fill: none; stroke-width: 1; }
+      #weights-root .band { stroke-width: 1.2; }
+      #weights-root .n-prog, #weights-root .n-part, #weights-root .n-file, #weights-root .n-none { stroke-width: 1; }
+      #weights-root .n-end { stroke-width: 1.5; }
+      #weights-root .n-gpu { stroke-width: 1; stroke-linejoin: round; }
+      #weights-root .n-none, #weights-root .dashed { stroke-dasharray: 4 3; }
+      #weights-root .n-fold { fill: none; stroke-width: 1; }
+      #weights-root .ln { fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+      #weights-root .ln.strong { stroke-width: 2.4; }
+      #weights-root .ln.back { stroke-dasharray: 5 4; }
+      #weights-root .ln.faint { stroke-width: 1.2; stroke-dasharray: 2 4; }
+      #weights-root .rule { fill: none; stroke-width: 1; }
+      #weights-root { color: #2d3142; }
+      #weights-root .sheet { fill: #f5f5f5; stroke: #d5d6d8; }
+      #weights-root .zone { fill: #eeeeef; stroke: #91939c; }
+      #weights-root .ctr-fill { fill: #fafafa; }
+      #weights-root .ctr-head { fill: #e1e1e3; }
+      #weights-root .ctr { stroke: #878993; }
+      #weights-root .band { fill: #f0e3e0; stroke: #bf4520; }
+      #weights-root .n-prog { fill: #e4e6e9; stroke: #5a6580; }
+      #weights-root .n-end { fill: #ffffff; stroke: #2d3142; }
+      #weights-root .n-part { fill: #f4f5f6; stroke: #878993; }
+      #weights-root .n-gpu { fill: #2d3142; stroke: #2d3142; }
+      #weights-root .n-file { fill: #e5e5e7; stroke: #4f5d75; }
+      #weights-root .n-fold { stroke: #4f5d75; }
+      #weights-root .n-none { fill: none; stroke: #878993; }
+      #weights-root .cell { fill: #f4f5f6; stroke: #878993; }
+      #weights-root .cell-full { fill: #797b86; stroke: #878993; }
+      #weights-root .bar { fill: #a2a9b5; }
+      #weights-root .bar-ink { fill: #2d3142; }
+      #weights-root .mask-paper { fill: #f5f5f5; }
+      #weights-root .mask-zone { fill: #eeeeef; }
+      #weights-root .mask-band { fill: #f0e3e0; }
+      #weights-root .mask-end { fill: #ffffff; }
+      #weights-root .ln { stroke: #4f5d75; }
+      #weights-root .ln.strong { stroke: #2d3142; }
+      #weights-root .ln.faint { stroke: #788395; }
+      #weights-root .mk { fill: #4f5d75; }
+      #weights-root .mk-strong { fill: #2d3142; }
+      #weights-root .mk-faint { fill: #788395; }
+      #weights-root .rule { stroke: #d1d2d5; }
+      #weights-root .c-ink { fill: #2d3142; }
+      #weights-root .c-muted { fill: #4f5d75; }
+      #weights-root .c-soft { fill: #5a6580; }
+      #weights-root .c-inv { fill: #f5f5f5; }
+      #weights-root .c-inv2 { fill: #cdced1; }</style>
+          <marker id="weights-arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk" points="0 0, 10 4, 0 8"/></marker>
+          <marker id="weights-arrow-strong" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto"><polygon class="mk-strong" points="0 0, 12 5, 0 10"/></marker>
+          <marker id="weights-arrow-faint" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon class="mk-faint" points="0 0, 10 4, 0 8"/></marker>
+        </defs>
+        <rect class="sheet" x="0.5" y="0.5" width="879" height="507" rx="10"/>
+        <!-- zones: the virtual machine and macOS -->
+        <g class="l-zones">
+          <rect class="zone vm" x="20" y="20" width="296" height="372" rx="8"/>
+          <text x="34" y="40" class="t-eye c-soft">LINUX VIRTUAL MACHINE</text>
+          <rect class="zone mac" x="552" y="20" width="308" height="372" rx="8"/>
+          <text x="566" y="40" class="t-eye c-soft">macOS</text>
+        </g>
+        <!-- containers -->
+        <g class="l-ctrs">
+          <rect class="ctr-fill" x="32" y="52" width="272" height="328" rx="6"/>
+          <path class="ctr-head" d="M 32,76 V 58 Q 32,52 38,52 H 298 Q 304,52 304,58 V 76 Z"/>
+          <rect class="ctr" x="32" y="52" width="272" height="328" rx="6"/>
+          <text x="44" y="68.5" class="t-eye c-muted">CONTAINER</text>
+        </g>
+        <!-- the channel -->
+        <g class="l-bands">
+          <rect class="band" x="320" y="96" width="228" height="184" rx="6"/>
+        </g>
+        <!-- connectors -->
+        <g class="l-lines">
+          <path class="ln faint" d="M 168,312 L 168,288" marker-end="url(#weights-arrow-faint)"/>
+          <path class="ln strong" d="M 292,120 L 564,120" marker-end="url(#weights-arrow-strong)"/>
+          <path class="ln strong" d="M 292,192 L 564,192" marker-end="url(#weights-arrow-strong)"/>
+          <path class="ln faint" d="M 292,260 L 564,260" marker-end="url(#weights-arrow-faint)"/>
+          <path class="ln strong" d="M 664,312 L 664,288" marker-end="url(#weights-arrow-strong)"/>
+          <path class="ln back" d="M 564,340 L 292,340" marker-end="url(#weights-arrow)"/>
+        </g>
+        <!-- connector labels -->
+        <g class="l-labels">
+          <text x="180" y="305" class="t-sub c-soft">fallback: read here</text>
+          <text x="434" y="110" class="t-msg c-ink mid">OPEN</text>
+          <text x="434" y="139" class="t-sub c-muted mid">the path, the size, the time</text>
+          <text x="434" y="155" class="t-sub c-muted mid">and a digest of parts of it</text>
+          <text x="434" y="182" class="t-msg c-ink mid">LOAD</text>
+          <text x="434" y="211" class="t-sub c-muted mid">one per array: a handle,</text>
+          <text x="434" y="227" class="t-sub c-muted mid">a type, a shape, an offset</text>
+          <text x="434" y="251" class="t-sub c-soft mid">fallback: arrays uploaded</text>
+          <text x="678" y="305" class="t-sub c-muted">opened read-only</text>
+          <rect class="mask-paper" x="398.64" y="318" width="58.72" height="17" rx="2"/>
+          <text x="428" y="330" class="t-sub c-muted mid">mounted</text>
+        </g>
+        <!-- nodes -->
+        <g class="l-nodes">
+          <rect class="n-end" x="44" y="88" width="248" height="200" rx="6"/>
+          <text x="168" y="176.8" class="t-name c-ink mid">container end</text>
+          <text x="168" y="193.8" class="t-sub c-muted mid">when MLX loads an array</text>
+          <text x="168" y="209.8" class="t-sub c-muted mid">from a file</text>
+          <path class="n-file dashed" d="M 44,312 H 278 L 292,326 V 368 H 44 Z"/>
+          <path class="n-fold" d="M 278,312 V 326 H 292"/>
+          <text x="168" y="336.6" class="t-part c-ink mid">weight file</text>
+          <text x="168" y="353.3" class="t-sub c-muted mid">mounted into the container</text>
+          <rect class="n-end" x="564" y="88" width="284" height="200" rx="6"/>
+          <text x="706" y="160.8" class="t-code c-ink mid">mlx-remote-server</text>
+          <text x="706" y="177.8" class="t-sub c-muted mid">if the path is under a directory it</text>
+          <text x="706" y="193.8" class="t-sub c-muted mid">was started with (<tspan class="t-mono">--map</tspan>, <tspan class="t-mono">--models</tspan>)</text>
+          <text x="706" y="209.8" class="t-sub c-muted mid">and the file has that size, time</text>
+          <text x="706" y="225.8" class="t-sub c-muted mid">and digest, opens it read-only</text>
+          <path class="n-file" d="M 564,312 H 750 L 764,326 V 368 H 564 Z"/>
+          <path class="n-fold" d="M 750,312 V 326 H 764"/>
+          <text x="664" y="336.6" class="t-part c-ink mid">weight file</text>
+          <text x="664" y="353.3" class="t-sub c-muted mid">on the Mac's disk</text>
+        </g>
+        <!-- notes -->
+        <g class="l-text">
+          <path class="rule" d="M 20,408 H 860"/>
+          <text x="20" y="432" class="t-subb c-ink">The bytes never enter the virtual machine.</text>
+          <text x="860" y="432" class="t-eye c-soft end">MEASURED WITH QWEN3.6-35B-A3B-4BIT</text>
+          <text x="20" y="464" class="t-fig c-ink">31.6 s → 1.2 s</text>
+          <text x="20" y="483" class="t-sub c-muted">load time</text>
+          <text x="290" y="464" class="t-fig c-ink">19.5 GB in 0.36–0.43 s</text>
+          <text x="290" y="483" class="t-sub c-muted">1,757 arrays read by the server</text>
+          <text x="620" y="464" class="t-fig c-ink">608–652 bytes</text>
+          <text x="620" y="483" class="t-sub c-muted">went up from the container</text>
+        </g>
+      </svg>

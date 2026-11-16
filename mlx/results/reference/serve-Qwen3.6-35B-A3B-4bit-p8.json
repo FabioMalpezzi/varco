@@ -1,0 +1,870 @@
+{
+ "args": {
+  "mac": "http://127.0.0.1:18081",
+  "container": "http://127.0.0.1:18082",
+  "stages": "single,stream,long,concurrent,idle",
+  "blocks": 2,
+  "max_tokens": 120,
+  "long_words": 1500,
+  "nonce": 5985000,
+  "out": "results/serve-Qwen3.6-35B-A3B-4bit-p8.json"
+ },
+ "first": {
+  "mac": {
+   "first": null,
+   "tps": null,
+   "seconds": 2.3090185829787515,
+   "prompt_tokens": 32,
+   "completion_tokens": 120,
+   "cached_tokens": 0,
+   "finish": "length",
+   "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+   "sha": "86439d1dcca43b33"
+  },
+  "container": {
+   "first": null,
+   "tps": null,
+   "seconds": 1.9333057080511935,
+   "prompt_tokens": 32,
+   "completion_tokens": 120,
+   "cached_tokens": 0,
+   "finish": "length",
+   "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+   "sha": "86439d1dcca43b33"
+  }
+ },
+ "runs": {
+  "single": {
+   "mac": [
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.1457214999827556,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.1455362919950858,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.136299500009045,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.1650198340066709,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    }
+   ],
+   "container": [
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.4988809999777004,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.392724375007674,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.4086684579961002,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    },
+    {
+     "first": null,
+     "tps": null,
+     "seconds": 1.383505875011906,
+     "prompt_tokens": 32,
+     "completion_tokens": 120,
+     "cached_tokens": 31,
+     "finish": "length",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’entità vivente, un gigante solitario che vegliava sulle acque torbide del Nord Atlantico da oltre un secolo. Il suo guardiano, Elias, conosceva ogni crepa nel muro esterno, ogni sfarfallio della lente di Fresnel e ogni sussurro del vento che si infrangeva contro le scogliere sottostanti. La sua vita era un ciclo ritmico, scandito dal ticchettio dell’orologio a pendolo nella sala macchine e",
+     "sha": "86439d1dcca43b33"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "stream": {
+   "mac": [
+    {
+     "first": 0.20850533299380913,
+     "tps": 100.96952662279593,
+     "seconds": 1.3870892919949256,
+     "prompt_tokens": 263,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento 5985050, intrecciando gli elementi naturali e gli oggetti domestici in una narrazione sul faro e il suo custode.\n\nIl faro si ergeva solitario su un monte di pietra, scrutando il mare infinito con il suo occhio di vetro. Il guardiano, un uomo di mezza età, conosceva ogni sfumatura di quel paesaggio mutevole. La sua vita era scandita dal ritmo delle stagioni e dal ciclo del sole e della luna. Ogni sera, quando la notte",
+     "sha": "2fc882a9a544f975"
+    },
+    {
+     "first": 0.31405225000344217,
+     "tps": 96.48566179206176,
+     "seconds": 1.5474015420186333,
+     "prompt_tokens": 486,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave fornite, intitolato **\"Il Custode della Luce\"**.\n\n***\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava il tempo e la furia del mare. Il guardiano, un uomo dai capelli bianchi come la schiuma delle onde, conosceva ogni crepa del suo muro di ferro. Ogni sera, quando il sole scompariva dietro l’orizzonte, lui accendeva la grande lente di vetro, il cuore pulsante della torre.",
+     "sha": "096c001d393b9397"
+    },
+    {
+     "first": 0.4267022080020979,
+     "tps": 94.10699744344184,
+     "seconds": 1.6912253749906085,
+     "prompt_tokens": 724,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento, intitolato \"Il Custode del Silenzio\".\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava il mare furioso. Il guardiano, un uomo anziano dal volto segnato dal tempo e dal vento, conosceva ogni crepa del suo muro. La sua vita era scandita dal ritmo incessante delle onde e dal suono costante della ruota dentata che azionava la lente. Ogni sera, quando il sole scompariva dietro l’or",
+     "sha": "437870850c4f035f"
+    },
+    {
+     "first": 0.5914915000321344,
+     "tps": 94.32044928481403,
+     "seconds": 1.8531532079796307,
+     "prompt_tokens": 927,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento, intrecciando gli elementi naturali e gli oggetti menzionati per creare un'atmosfera di solitudine e vigilanza.\n\n***\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra bianca che sfidava il tempo e la furia del mare. Il guardiano, un uomo dai lineamenti scavati dal vento, saliva ogni sera le centinaia di gradini di ferro che conducevano alla lanterna. La sua vita era un ciclo ininterrotto di giorno e notte, segnato dal",
+     "sha": "edb131ee79a9f0ed"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.23433829203713685,
+     "tps": 73.76583632946198,
+     "seconds": 1.8475580840022303,
+     "prompt_tokens": 263,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento 5985050, intrecciando gli elementi naturali e gli oggetti domestici in una narrazione sul faro e il suo custode.\n\nIl faro si ergeva solitario su un monte di pietra, scrutando il mare infinito con il suo occhio di vetro. Il guardiano, un uomo di mezza età, conosceva ogni sfumatura di quel paesaggio mutevole. La sua vita era scandita dal ritmo delle stagioni e dal ciclo del sole e della luna. Ogni sera, quando la notte",
+     "sha": "2fc882a9a544f975"
+    },
+    {
+     "first": 0.32948112505255267,
+     "tps": 72.0838704939328,
+     "seconds": 1.9803410000167787,
+     "prompt_tokens": 486,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave fornite, intitolato **\"Il Custode della Luce\"**.\n\n***\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava il tempo e la furia del mare. Il guardiano, un uomo dai capelli bianchi come la schiuma delle onde, conosceva ogni crepa del suo muro di ferro. Ogni sera, quando il sole scompariva dietro l’orizzonte, lui accendeva la grande lente di vetro, il cuore pulsante della torre.",
+     "sha": "096c001d393b9397"
+    },
+    {
+     "first": 0.4874667499680072,
+     "tps": 59.54284730025626,
+     "seconds": 2.4860337079735473,
+     "prompt_tokens": 724,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento, intitolato \"Il Custode del Silenzio\".\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra grigia che sfidava il mare furioso. Il guardiano, un uomo anziano dal volto segnato dal tempo e dal vento, conosceva ogni crepa del suo muro. La sua vita era scandita dal ritmo incessante delle onde e dal suono costante della ruota dentata che azionava la lente. Ogni sera, quando il sole scompariva dietro l’or",
+     "sha": "437870850c4f035f"
+    },
+    {
+     "first": 0.6256276249769144,
+     "tps": 60.52587961367128,
+     "seconds": 2.5917342499597,
+     "prompt_tokens": 927,
+     "completion_tokens": 120,
+     "cached_tokens": 0,
+     "finish": "length",
+     "text": "Ecco un racconto ispirato alle parole chiave del documento, intrecciando gli elementi naturali e gli oggetti menzionati per creare un'atmosfera di solitudine e vigilanza.\n\n***\n\nIl faro si ergeva solitario sulla scogliera, un gigante di pietra bianca che sfidava il tempo e la furia del mare. Il guardiano, un uomo dai lineamenti scavati dal vento, saliva ogni sera le centinaia di gradini di ferro che conducevano alla lanterna. La sua vita era un ciclo ininterrotto di giorno e notte, segnato dal",
+     "sha": "edb131ee79a9f0ed"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "long": {
+   "mac": [
+    {
+     "first": 1.7550218750257045,
+     "tps": 90.23305530277388,
+     "seconds": 1.8880313750123605,
+     "prompt_tokens": 2306,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 128 righe numerate.",
+     "sha": "16758cd727f50968",
+     "prompt_tps": 1313.943736437032
+    },
+    {
+     "first": 1.5100782079971395,
+     "tps": 99.86431603329994,
+     "seconds": 1.630256374948658,
+     "prompt_tokens": 2284,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 122 righe numerate.",
+     "sha": "f47ad9aac1d165c1",
+     "prompt_tps": 1512.5044437462186
+    },
+    {
+     "first": 1.5912010830361396,
+     "tps": 100.00736138952753,
+     "seconds": 1.7112104159896262,
+     "prompt_tokens": 2327,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 129 righe numerate.",
+     "sha": "cc1a9a6c589035bc",
+     "prompt_tps": 1462.417305272252
+    },
+    {
+     "first": 1.6052840000484139,
+     "tps": 99.39527667657339,
+     "seconds": 1.7260275420267135,
+     "prompt_tokens": 2304,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 128 righe numerate.",
+     "sha": "16758cd727f50968",
+     "prompt_tps": 1435.2600536294597
+    }
+   ],
+   "container": [
+    {
+     "first": 1.7511509580072016,
+     "tps": 68.58454115499575,
+     "seconds": 1.9261301250080578,
+     "prompt_tokens": 2306,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 128 righe numerate.",
+     "sha": "16758cd727f50968",
+     "prompt_tps": 1316.8482074350763
+    },
+    {
+     "first": 1.5564592079608701,
+     "tps": 71.35723160066173,
+     "seconds": 1.724636124970857,
+     "prompt_tokens": 2284,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento contiene 122 righe numerate.",
+     "sha": "f47ad9aac1d165c1",
+     "prompt_tps": 1467.4332538353426
+    },
+    {
+     "first": 1.664602125005331,
+     "tps": 68.84653618547095,
+     "seconds": 1.8389146660338156,
+     "prompt_tokens": 2327,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 129 righe numerate.",
+     "sha": "cc1a9a6c589035bc",
+     "prompt_tps": 1397.9316528822453
+    },
+    {
+     "first": 1.6964312499621883,
+     "tps": 77.1327400211055,
+     "seconds": 1.8520178339676932,
+     "prompt_tokens": 2304,
+     "completion_tokens": 13,
+     "cached_tokens": 0,
+     "finish": "stop",
+     "text": "Il documento ha 128 righe numerate.",
+     "sha": "16758cd727f50968",
+     "prompt_tps": 1358.145224011497
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "same start": {
+   "mac": [
+    {
+     "first": 0.09134670899948105,
+     "tps": 95.50212536030867,
+     "seconds": 0.22748624999076128,
+     "prompt_tokens": 2307,
+     "completion_tokens": 14,
+     "cached_tokens": 2280,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"silenzio\".",
+     "sha": "e9596bc1cc386552"
+    },
+    {
+     "first": 0.0791915410081856,
+     "tps": 102.1172969217291,
+     "seconds": 0.20651774998987094,
+     "prompt_tokens": 2285,
+     "completion_tokens": 14,
+     "cached_tokens": 2258,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"cielo\".",
+     "sha": "6dce4866c8b8fa08"
+    },
+    {
+     "first": 0.07905958301853389,
+     "tps": 101.39853093249938,
+     "seconds": 0.18755454203346744,
+     "prompt_tokens": 2328,
+     "completion_tokens": 12,
+     "cached_tokens": 2301,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è fuoco.",
+     "sha": "ec009e834a59d9e0"
+    },
+    {
+     "first": 0.08034141699317843,
+     "tps": 101.42465914480366,
+     "seconds": 0.20853045798139647,
+     "prompt_tokens": 2305,
+     "completion_tokens": 14,
+     "cached_tokens": 2278,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"passo\".",
+     "sha": "69dbf1f1917aa3d1"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.09689945896388963,
+     "tps": 73.71980943344231,
+     "seconds": 0.2732579169678502,
+     "prompt_tokens": 2307,
+     "completion_tokens": 14,
+     "cached_tokens": 2280,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"silenzio\".",
+     "sha": "e9596bc1cc386552"
+    },
+    {
+     "first": 0.09017345798201859,
+     "tps": 78.31044230577764,
+     "seconds": 0.2561889999778941,
+     "prompt_tokens": 2285,
+     "completion_tokens": 14,
+     "cached_tokens": 2258,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"cielo\".",
+     "sha": "6dce4866c8b8fa08"
+    },
+    {
+     "first": 0.09274395799729973,
+     "tps": 76.18535335660815,
+     "seconds": 0.2371415410307236,
+     "prompt_tokens": 2328,
+     "completion_tokens": 12,
+     "cached_tokens": 2301,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è fuoco.",
+     "sha": "ec009e834a59d9e0"
+    },
+    {
+     "first": 0.10093570803292096,
+     "tps": 78.82436493804252,
+     "seconds": 0.2658677080180496,
+     "prompt_tokens": 2305,
+     "completion_tokens": 14,
+     "cached_tokens": 2278,
+     "finish": "stop",
+     "text": "La prima parola della riga 3 è \"passo\".",
+     "sha": "69dbf1f1917aa3d1"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "follow up": {
+   "mac": [
+    {
+     "first": 0.09226087498245761,
+     "tps": 97.8744595254139,
+     "seconds": 0.21488929097540677,
+     "prompt_tokens": 2339,
+     "completion_tokens": 13,
+     "cached_tokens": 2303,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"terra\".",
+     "sha": "12ee0ac1aa32e706"
+    },
+    {
+     "first": 0.08496166596887633,
+     "tps": 99.92204772320764,
+     "seconds": 0.21508508297847584,
+     "prompt_tokens": 2317,
+     "completion_tokens": 14,
+     "cached_tokens": 2281,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"libro\".",
+     "sha": "577ef0ec70e4ee7a"
+    },
+    {
+     "first": 0.08495883399154991,
+     "tps": 101.32019472442113,
+     "seconds": 0.19355212501250207,
+     "prompt_tokens": 2358,
+     "completion_tokens": 12,
+     "cached_tokens": 2324,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è giardino.",
+     "sha": "3142f5edc1bfb46a"
+    },
+    {
+     "first": 0.08567637501982972,
+     "tps": 101.09622681896585,
+     "seconds": 0.2043955420376733,
+     "prompt_tokens": 2337,
+     "completion_tokens": 13,
+     "cached_tokens": 2301,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"acqua\".",
+     "sha": "397b8b259d645fd1"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.10478766600135714,
+     "tps": 72.74635915832305,
+     "seconds": 0.26975525001762435,
+     "prompt_tokens": 2339,
+     "completion_tokens": 13,
+     "cached_tokens": 2303,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"terra\".",
+     "sha": "12ee0ac1aa32e706"
+    },
+    {
+     "first": 0.10339637496508658,
+     "tps": 75.09625301732781,
+     "seconds": 0.2765262919710949,
+     "prompt_tokens": 2317,
+     "completion_tokens": 14,
+     "cached_tokens": 2281,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"libro\".",
+     "sha": "577ef0ec70e4ee7a"
+    },
+    {
+     "first": 0.10792779101757333,
+     "tps": 72.77986237306416,
+     "seconds": 0.2590774159762077,
+     "prompt_tokens": 2358,
+     "completion_tokens": 12,
+     "cached_tokens": 2324,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è giardino.",
+     "sha": "3142f5edc1bfb46a"
+    },
+    {
+     "first": 0.09722283302107826,
+     "tps": 76.63960863342352,
+     "seconds": 0.2538137080264278,
+     "prompt_tokens": 2337,
+     "completion_tokens": 13,
+     "cached_tokens": 2301,
+     "finish": "stop",
+     "text": "La seconda parola della riga 3 è \"acqua\".",
+     "sha": "397b8b259d645fd1"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "2 at once": {
+   "mac": [
+    {
+     "seconds": 1.6394313339842483,
+     "completion_tokens": 240,
+     "tps": 146.39222456285316,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "9eaafd6371980521",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto color cenere. Era un animale solitario, abituato a osservare il mondo dall’alto, lontano dal caos delle strade sottostanti. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era Silente, un appellativo che gli si addiceva perfettamente. I suoi movimenti erano fluidi, quasi liquidi, e i suoi occhi verdi brill\n---\nIl treno si svegliò con un brivido metallico che gli percorreva l’intero corpo, dalle ruote di acciaio fino alla caldaia fumante. Non era un risveglio dolce, ma un’esplosione di vapore e pressione che lo costringeva a muoversi, a obbedire alla chiamata silenziosa ma imperativa delle rotaie. Era un vecchio locomotore a vapore, di quelli che avevano visto passare decenni di storie umane, di partenze dolorose e di arrivi gioiosi. Il suo nome, inciso in lettere sb",
+     "errors": []
+    },
+    {
+     "seconds": 1.6786055840202607,
+     "completion_tokens": 240,
+     "tps": 142.97581414283155,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "ea9eb751bd74f063",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il vetro. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano quella casa, era stato dimenticato nel tempo; per lui, esisteva solo\n---\nIl treno era un vecchio locomotore a vapore di nome Ettore, con la vernice rossa sbiadita dal tempo e dai viaggi infiniti che sembrava raccontare storie di epoche passate. Ogni mattina, alle cinque in punto, Ettore si svegliava con un sospiro profondo, un soffio di vapore bianco che si levava dal suo camino come un saluto al mondo ancora addormentato. I suoi binari erano la sua vita, le sue rotaie il suo destino, eppure, in cuor suo, Ettore sognava di vedere",
+     "errors": []
+    },
+    {
+     "seconds": 1.656098750012461,
+     "completion_tokens": 240,
+     "tps": 144.91889447908474,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "73a45c985a269d21",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto color cenere. Era un animale solitario, abituato a osservare il mondo dall’alto, lontano dal caos rumoroso della strada sottostante. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era Silente, un appellativo che gli si addiceva perfettamente. I suoi occhi verdi, lucidi come smeraldi tagliati, scrutavano l\n---\nIl treno era un vecchio locomotore a vapore di nome Giuseppe, con la vernice rossa sbiadita dal tempo e le ruote di ferro segnate da decenni di viaggi incessanti lungo le colline toscane. Non era un mezzo moderno, veloce e silenzioso come quelli che correvano sulle nuove linee ad alta velocità; Giuseppe era pesante, rumoroso e profumava di carbone bruciato e olio lubrificante. Eppure, aveva un cuore pulsante che batteva all’unisono con quello dei suoi passeggeri, specialmente quelli che salivano ogni mattina alla",
+     "errors": []
+    },
+    {
+     "seconds": 1.635433290968649,
+     "completion_tokens": 240,
+     "tps": 146.7501006157522,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "7a337b65c63ca0f8",
+     "text": "Il gatto si stiracchiò pigramente sulla vecchia poltrona di velluto, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto color cenere. Si chiamava Ombra, un nome che gli si addiceva perfettamente, dato che la sua pellicra sembrava assorbire la luce piuttosto che rifletterla. Viveva in quella casa da decenni, osservando il passare delle stagioni attraverso la grande finestra del salotto, dove il mondo esterno sembrava muoversi a una velocità vertiginosa rispetto alla sua calma\n---\nIl treno era un vecchio locomotore a vapore, con la vernice rossa sbiadita dal tempo e dal sole cocente, che sembrava sorridere con i suoi fari gialli e le sue ruote di ferro battuto. Si chiamava \"Il Viandante\", un soprannome che gli era stato affibbiato dai macchinisti che lo avevano guidato per decenni, prima che venisse sostituito da modelli più moderni e silenziosi.\n\nOgni mattina, alle cinque in punto, Il Viandante si svegliava con un sos",
+     "errors": []
+    }
+   ],
+   "container": [
+    {
+     "seconds": 2.563076041988097,
+     "completion_tokens": 240,
+     "tps": 93.63748717101643,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "9eaafd6371980521",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto color cenere. Era un animale solitario, abituato a osservare il mondo dall’alto, lontano dal caos delle strade sottostanti. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era Silente, un appellativo che gli si addiceva perfettamente. I suoi movimenti erano fluidi, quasi liquidi, e i suoi occhi verdi brill\n---\nIl treno si svegliò con un brivido metallico che gli percorreva l’intero corpo, dalle ruote di acciaio fino alla caldaia fumante. Non era un risveglio dolce, ma un’esplosione di vapore e pressione che lo costringeva a muoversi, a obbedire alla chiamata silenziosa ma imperativa delle rotaie. Era un vecchio locomotore a vapore, di quelli che avevano visto passare decenni di storie umane, di partenze dolorose e di arrivi gioiosi. Il suo nome, inciso in lettere sb",
+     "errors": []
+    },
+    {
+     "seconds": 2.2907249580021016,
+     "completion_tokens": 240,
+     "tps": 104.77032572662955,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "ea9eb751bd74f063",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il vetro. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano quella casa, era stato dimenticato nel tempo; per lui, esisteva solo\n---\nIl treno era un vecchio locomotore a vapore di nome Ettore, con la vernice rossa sbiadita dal tempo e dai viaggi infiniti che sembrava raccontare storie di epoche passate. Ogni mattina, alle cinque in punto, Ettore si svegliava con un sospiro profondo, un soffio di vapore bianco che si levava dal suo camino come un saluto al mondo ancora addormentato. I suoi binari erano la sua vita, le sue rotaie il suo destino, eppure, in cuor suo, Ettore sognava di vedere",
+     "errors": []
+    },
+    {
+     "seconds": 1.9867507500457577,
+     "completion_tokens": 240,
+     "tps": 120.800256395762,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "73a45c985a269d21",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto color cenere. Era un animale solitario, abituato a osservare il mondo dall’alto, lontano dal caos rumoroso della strada sottostante. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era Silente, un appellativo che gli si addiceva perfettamente. I suoi occhi verdi, lucidi come smeraldi tagliati, scrutavano l\n---\nIl treno era un vecchio locomotore a vapore di nome Giuseppe, con la vernice rossa sbiadita dal tempo e le ruote di ferro segnate da decenni di viaggi incessanti lungo le colline toscane. Non era un mezzo moderno, veloce e silenzioso come quelli che correvano sulle nuove linee ad alta velocità; Giuseppe era pesante, rumoroso e profumava di carbone bruciato e olio lubrificante. Eppure, aveva un cuore pulsante che batteva all’unisono con quello dei suoi passeggeri, specialmente quelli che salivano ogni mattina alla",
+     "errors": []
+    },
+    {
+     "seconds": 1.993866665987298,
+     "completion_tokens": 240,
+     "tps": 120.36913204582805,
+     "right": 2,
+     "of": 2,
+     "cached_tokens": [
+      0,
+      0
+     ],
+     "sha": "7a337b65c63ca0f8",
+     "text": "Il gatto si stiracchiò pigramente sulla vecchia poltrona di velluto, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto color cenere. Si chiamava Ombra, un nome che gli si addiceva perfettamente, dato che la sua pellicra sembrava assorbire la luce piuttosto che rifletterla. Viveva in quella casa da decenni, osservando il passare delle stagioni attraverso la grande finestra del salotto, dove il mondo esterno sembrava muoversi a una velocità vertiginosa rispetto alla sua calma\n---\nIl treno era un vecchio locomotore a vapore, con la vernice rossa sbiadita dal tempo e dal sole cocente, che sembrava sorridere con i suoi fari gialli e le sue ruote di ferro battuto. Si chiamava \"Il Viandante\", un soprannome che gli era stato affibbiato dai macchinisti che lo avevano guidato per decenni, prima che venisse sostituito da modelli più moderni e silenziosi.\n\nOgni mattina, alle cinque in punto, Il Viandante si svegliava con un sos",
+     "errors": []
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "4 at once": {
+   "mac": [
+    {
+     "seconds": 2.5737857499625534,
+     "completion_tokens": 480,
+     "tps": 186.4957096786256,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "4b95c8d00045ae9c",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il suo regno di cemento e vetri. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era stato dimenticato da\n---\nIl treno era un vecchio locomotore a vapore di colore rosso scuro, con la vernice scrostata che lasciava intravedere l'acciaio arrugginito sotto, ma i suoi occhi di vetro, due grandi fanali anteriori, brillavano ancora di una luce determinata. Non era un mezzo moderno, veloce e silenzioso come quelli che correvano sulle nuove linee ad alta velocità; lui era fatto di ferro battuto, di vapore bollente e di ricordi. Ogni suo movimento era accompagnato dal caratteristico fischio acuto che risu\n---\nIl vulcano non era un luogo di morte, come spesso si crede, ma un immenso cuore pulsante che batteva sotto la crosta terrestre con una lentezza geologica, scandendo il ritmo di secoli che per gli uomini duravano appena un battito di ciglia. Per millenni, il suo sonno era stato profondo e silenzioso, avvolto da una coltre di neve perpetua che rifletteva la luce fredda delle stelle artiche. Tuttavia, nel suo intimo, il magma continuava a scorrere, un fiume di fuoco incosciente che cercava\n---\nIl violino giaceva silenzioso nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante quanto il legno di acero e abete che lo componevano. Non era un silenzio di abbandono, ma piuttosto quello di una pausa sospesa, come il respiro trattenuto prima dell’attacco di una sinfonia. Da anni, quella cassa armonica non aveva vibrato sotto l’arco di un musicista, se non per le dita curiose di un liutaio che, mesi prima, aveva controllato le corde e regolato l’",
+     "errors": []
+    },
+    {
+     "seconds": 2.267798875051085,
+     "completion_tokens": 480,
+     "tps": 211.6589814381963,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "f268caa207d1050e",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il suo regno di cemento e vetri. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era semplicemente \"Omb\n---\nIl treno era un vecchio locomotore a vapore di nome Ettore, con la vernice rossa sbiadita dal tempo e dai viaggi infiniti che sembrava raccontare storie di terre lontane e cieli infiniti. Ogni mattina, alle cinque in punto, Ettore si svegliava con un sospiro profondo, un'emissione di vapore che si trasformava in una nuvola bianca e densa, avvolgendo i binari come un abbraccio matutino. I suoi occhi, due grandi fanali rotondi, si accendevano con un bagli\n---\nIl vulcano non era un luogo di morte, ma di attesa. Per secoli, la sua montagna di pietra grigia e cenere aveva osservato il mondo con indifferenza silenziosa, custodendo nel proprio cuore un calore pulsante che solo lui conosceva. Non era un mostro, come lo dipingevano le leggende dei villaggi situati ai suoi piedi, ma piuttosto un gigante addormentato, un guardiano antico le cui respirazioni erano i terremoti lievi che facevano tremare la terra ogni tanto.\n\nOgni mattina, quando il sole s\n---\nIl violino giaceva immobile nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante come piombo fuso. Non era un silenzio di pace, ma quello di un trattenuto respiro, di una voce che aveva dimenticato come emettere suoni. La sua anima di legno di abete e acero, levigata da decenni di mani esperte, attendeva con una pazienza quasi umana il momento della riscoperta. Era stato dimenticato in un angolo polveroso della cantina, lontano dalla luce calda dei riflettori e dal",
+     "errors": []
+    },
+    {
+     "seconds": 2.5381580000394024,
+     "completion_tokens": 480,
+     "tps": 189.1135224806921,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "26905221d6c2dcad",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il suo regno di cemento e vetri. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era stato dimenticato da\n---\nIl treno era un vecchio locomotore a vapore di nome Barnaby, con la vernice rossa sbiadita dal sole e dal tempo che gli dava un’aria storicamente dignitosa, sebbene i suoi pistoni gemessero ad ogni movimento. Barnaby non era veloce come i moderni treni ad alta velocità che sfrecciavano lungo le linee adiacenti, emettendo un ruggito elettrico e silenzioso; lui era fatto di ferro battuto, di caldaie bollenti e di un’anima, se così si poteva definire un insieme di\n---\nIl vulcano non era un luogo di morte, come spesso si crede, ma un immenso cuore pulsante che batteva sotto la crosta terrestre, scandendo il ritmo lento e inesorabile della storia geologica. Per secoli, gli abitanti della valle sottostante avevano vissuto all'ombra della sua maestosa cupola, ignorando il brontolio sordo che saliva dalle profondità, un sussurro antico che parlava di fuoco e di rinascita. Il vulcano, con la sua sagoma imponente che sfiorava le nuvole basse, era diventato parte integrante\n---\nIl violino giaceva silenzioso nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante come la polvere che si depositava lentamente sulle sue corde di budino. Non era un luogo comune per uno strumento nato per risuonare nelle sale da concerto, ma piuttosto un ripostio polveroso in una cantina dimenticata, lontano dagli occhi curiosi e dalle mani esperte dei musicisti. La sua anima di abete rosso, levigata da decenni di vibrazioni, sembrava addormentata, conservando gelosamente i",
+     "errors": []
+    },
+    {
+     "seconds": 2.5609301250078715,
+     "completion_tokens": 480,
+     "tps": 187.43190035242552,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "06a38149e8646cdb",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo oltre il vetro. Il suo nome, per gli umani che abitavano quella casa, era Micio, ma lui si considerava il guardiano silenzioso di quel piccolo regno di matton\n---\nIl treno era un vecchio locomotore a vapore di colore rosso scuro, con la vernice scrostata che lasciava intravedere l'acciaio arrugginito sotto, ma i suoi occhi di vetro erano ancora lucidi e vigili. Si chiamava \"Il Vecchio Amico\" e aveva servito la linea ferroviaria tra le montagne e la costa per oltre cinquant'anni. Ogni mattina, alle cinque in punto, il suo fischio acuto squarciava il silenzio della valle, svegliando i contadini e i bambini che correv\n---\nIl vulcano non era un luogo di morte, come spesso si crede, ma un immenso cuore pulsante che batteva sotto la crosta terrestre con una lentezza millenaria. Per secoli, i suoi abitanti lo avevano venerato come una divinità capricciosa, offrendogli sacrifici e preghiere per placare il suo risveglio, ignorando che il suo sonno era semplicemente un respiro profondo, necessario per rigenerare le energie del mondo.\n\nEgli si chiamava Ignis, un nome antico che significava fuoco, sebbene per lui il\n---\nIl violino giaceva silenzioso nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante come l’umidità della cantina polverosa dove era stato dimenticato. Non era un violino qualsiasi; era un Cremonese del XVIII secolo, con una verniciatura arancione scuro che brillava ancora, seppur opaca, sotto la luce fioca di una lampadina a incandescenza. La sua anima, fatta di abete rosso selezionato e acero riccio per le fasce, aveva cantato per",
+     "errors": []
+    }
+   ],
+   "container": [
+    {
+     "seconds": 3.681676125037484,
+     "completion_tokens": 480,
+     "tps": 130.3754006865862,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "4b95c8d00045ae9c",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il suo regno di cemento e vetri. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era stato dimenticato da\n---\nIl treno era un vecchio locomotore a vapore di colore rosso scuro, con la vernice scrostata che lasciava intravedere l'acciaio arrugginito sotto, ma i suoi occhi di vetro, due grandi fanali anteriori, brillavano ancora di una luce determinata. Non era un mezzo moderno, veloce e silenzioso come quelli che correvano sulle nuove linee ad alta velocità; lui era fatto di ferro battuto, di vapore bollente e di ricordi. Ogni suo movimento era accompagnato dal caratteristico fischio acuto che risu\n---\nIl vulcano non era un luogo di morte, come spesso si crede, ma un immenso cuore pulsante che batteva sotto la crosta terrestre con una lentezza geologica, scandendo il ritmo di secoli che per gli uomini duravano appena un battito di ciglia. Per millenni, il suo sonno era stato profondo e silenzioso, avvolto da una coltre di neve perpetua che rifletteva la luce fredda delle stelle artiche. Tuttavia, nel suo intimo, il magma continuava a scorrere, un fiume di fuoco incosciente che cercava\n---\nIl violino giaceva silenzioso nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante quanto il legno di acero e abete che lo componevano. Non era un silenzio di abbandono, ma piuttosto quello di una pausa sospesa, come il respiro trattenuto prima dell’attacco di una sinfonia. Da anni, quella cassa armonica non aveva vibrato sotto l’arco di un musicista, se non per le dita curiose di un liutaio che, mesi prima, aveva controllato le corde e regolato l’",
+     "errors": []
+    },
+    {
+     "seconds": 2.461416875012219,
+     "completion_tokens": 480,
+     "tps": 195.00963240841403,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "f268caa207d1050e",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il suo regno di cemento e vetri. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era semplicemente \"Omb\n---\nIl treno era un vecchio locomotore a vapore di nome Ettore, con la vernice rossa sbiadita dal tempo e dai viaggi infiniti che sembrava raccontare storie di terre lontane e cieli infiniti. Ogni mattina, alle cinque in punto, Ettore si svegliava con un sospiro profondo, un'emissione di vapore che si trasformava in una nuvola bianca e densa, avvolgendo i binari come un abbraccio matutino. I suoi occhi, due grandi fanali rotondi, si accendevano con un bagli\n---\nIl vulcano non era un luogo di morte, ma di attesa. Per secoli, la sua montagna di pietra grigia e cenere aveva osservato il mondo con indifferenza silenziosa, custodendo nel proprio cuore un calore pulsante che solo lui conosceva. Non era un mostro, come lo dipingevano le leggende dei villaggi situati ai suoi piedi, ma piuttosto un gigante addormentato, un guardiano antico le cui respirazioni erano i terremoti lievi che facevano tremare la terra ogni tanto.\n\nOgni mattina, quando il sole s\n---\nIl violino giaceva immobile nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante come piombo fuso. Non era un silenzio di pace, ma quello di un trattenuto respiro, di una voce che aveva dimenticato come emettere suoni. La sua anima di legno di abete e acero, levigata da decenni di mani esperte, attendeva con una pazienza quasi umana il momento della riscoperta. Era stato dimenticato in un angolo polveroso della cantina, lontano dalla luce calda dei riflettori e dal",
+     "errors": []
+    },
+    {
+     "seconds": 2.796660041960422,
+     "completion_tokens": 480,
+     "tps": 171.6333028677759,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "26905221d6c2dcad",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo che si estendeva oltre il suo regno di cemento e vetri. Il suo nome, se pure ne aveva uno riconosciuto dagli umani che abitavano in quella casa, era stato dimenticato da\n---\nIl treno era un vecchio locomotore a vapore di nome Barnaby, con la vernice rossa sbiadita dal sole e dal tempo che gli dava un’aria storicamente dignitosa, sebbene i suoi pistoni gemessero ad ogni movimento. Barnaby non era veloce come i moderni treni ad alta velocità che sfrecciavano lungo le linee adiacenti, emettendo un ruggito elettrico e silenzioso; lui era fatto di ferro battuto, di caldaie bollenti e di un’anima, se così si poteva definire un insieme di\n---\nIl vulcano non era un luogo di morte, come spesso si crede, ma un immenso cuore pulsante che batteva sotto la crosta terrestre, scandendo il ritmo lento e inesorabile della storia geologica. Per secoli, gli abitanti della valle sottostante avevano vissuto all'ombra della sua maestosa cupola, ignorando il brontolio sordo che saliva dalle profondità, un sussurro antico che parlava di fuoco e di rinascita. Il vulcano, con la sua sagoma imponente che sfiorava le nuvole basse, era diventato parte integrante\n---\nIl violino giaceva silenzioso nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante come la polvere che si depositava lentamente sulle sue corde di budino. Non era un luogo comune per uno strumento nato per risuonare nelle sale da concerto, ma piuttosto un ripostio polveroso in una cantina dimenticata, lontano dagli occhi curiosi e dalle mani esperte dei musicisti. La sua anima di abete rosso, levigata da decenni di vibrazioni, sembrava addormentata, conservando gelosamente i",
+     "errors": []
+    },
+    {
+     "seconds": 3.2875224159797654,
+     "completion_tokens": 480,
+     "tps": 146.006609009523,
+     "right": 4,
+     "of": 4,
+     "cached_tokens": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "sha": "06a38149e8646cdb",
+     "text": "Il gatto si stiracchiò pigramente sulla calda lastra di pietra del davanzale, lasciando che i raggi del sole pomeridiano gli accarezzassero il manto folto e lucido. Era un esemplare di razza sconosciuta, con occhi color ambra che sembravano custodire segreti antichi e una curiosità insaziabile per il mondo oltre il vetro. Il suo nome, per gli umani che abitavano quella casa, era Micio, ma lui si considerava il guardiano silenzioso di quel piccolo regno di matton\n---\nIl treno era un vecchio locomotore a vapore di colore rosso scuro, con la vernice scrostata che lasciava intravedere l'acciaio arrugginito sotto, ma i suoi occhi di vetro erano ancora lucidi e vigili. Si chiamava \"Il Vecchio Amico\" e aveva servito la linea ferroviaria tra le montagne e la costa per oltre cinquant'anni. Ogni mattina, alle cinque in punto, il suo fischio acuto squarciava il silenzio della valle, svegliando i contadini e i bambini che correv\n---\nIl vulcano non era un luogo di morte, come spesso si crede, ma un immenso cuore pulsante che batteva sotto la crosta terrestre con una lentezza millenaria. Per secoli, i suoi abitanti lo avevano venerato come una divinità capricciosa, offrendogli sacrifici e preghiere per placare il suo risveglio, ignorando che il suo sonno era semplicemente un respiro profondo, necessario per rigenerare le energie del mondo.\n\nEgli si chiamava Ignis, un nome antico che significava fuoco, sebbene per lui il\n---\nIl violino giaceva silenzioso nella sua custodia di velluto nero, avvolto in un silenzio che sembrava pesante come l’umidità della cantina polverosa dove era stato dimenticato. Non era un violino qualsiasi; era un Cremonese del XVIII secolo, con una verniciatura arancione scuro che brillava ancora, seppur opaca, sotto la luce fioca di una lampadina a incandescenza. La sua anima, fatta di abete rosso selezionato e acero riccio per le fasce, aveva cantato per",
+     "errors": []
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "after 3 s idle": {
+   "mac": [
+    {
+     "first": 0.4962187090422958,
+     "seconds": 0.690390334057156,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    },
+    {
+     "first": 0.4431275409879163,
+     "seconds": 0.6277687079855241,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    },
+    {
+     "first": 0.37149575003422797,
+     "seconds": 0.556448207993526,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    },
+    {
+     "first": 0.45095245901029557,
+     "seconds": 0.6336104170186445,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    }
+   ],
+   "container": [
+    {
+     "first": 0.32865575002506375,
+     "seconds": 0.5870822090073489,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    },
+    {
+     "first": 0.3296000830014236,
+     "seconds": 0.5895137079642154,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    },
+    {
+     "first": 0.24699758301721886,
+     "seconds": 0.4787203749874607,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    },
+    {
+     "first": 0.3716592909768224,
+     "seconds": 0.6036200409871526,
+     "sha": "fbc10cea790f1eb9",
+     "text": "Il faro di Capo Speranza non era solo una struttura di pietra e vetro; era un’"
+    }
+   ],
+   "identical": [
+    true,
+    true,
+    true,
+    true
+   ]
+  }
+ }
+}
