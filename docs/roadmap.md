@@ -278,13 +278,20 @@ the import check of vLLM.
 
 ### Proposing it upstream
 
-This is the order that was thought through. None of it has started.
+This is the order that was thought through, and where it stands on 16
+November 2026:
 
-1. a working demonstration and this repository, with its measurements;
+1. a working demonstration and this repository, with its measurements:
+   published;
 2. a proposal to MLX for the remote backend, which is a build option and one
-   directory next to the existing backends;
-3. a discussion, not a pull request, with vllm-metal on splitting what its
-   operations are from how Metal runs them.
+   directory next to the existing backends: asked in MLX's
+   [discussion 4900](https://github.com/ml-explore/mlx/discussions/4900);
+3. Kiri's channel, proposed in Kiri's
+   [issue 356](https://github.com/libracoder/kiri/issues/356), and the
+   memory change, reported in its
+   [issue 210](https://github.com/libracoder/kiri/issues/210);
+4. a discussion, not a pull request, with vllm-metal on splitting what its
+   operations are from how Metal runs them: not started.
 
 The benefit that can be promised is containers. Speed is shown for MLX and
 PyTorch programs here; it is not shown for vLLM. Any proposal upstream goes
