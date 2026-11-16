@@ -1,5 +1,5 @@
 diff --git a/crates/kiri/src/daemon/engine.rs b/crates/kiri/src/daemon/engine.rs
-index fa57a7e..da20381 100644
+index b65e52c..7c17c59 100644
 --- a/crates/kiri/src/daemon/engine.rs
 +++ b/crates/kiri/src/daemon/engine.rs
 @@ -10,7 +10,7 @@ use std::io;
@@ -33,7 +33,7 @@ index fa57a7e..da20381 100644
  
  /// What a request that needs the VM gets while Kiri is stopped.
  pub const STOPPED: &str = "Kiri is stopped: press Start in the Kiri window to run containers again";
-@@ -521,6 +536,10 @@ pub struct Engine {
+@@ -567,6 +582,10 @@ pub struct Engine {
      /// CPUs the running VM has.
      cpus: std::sync::atomic::AtomicUsize,
      memory_target: Mutex<u64>,
@@ -44,7 +44,7 @@ index fa57a7e..da20381 100644
      /// What the guest last used, in bytes (0 while asleep): the balloon's
      /// measure, without the pages the balloon itself holds.
      memory_used: std::sync::atomic::AtomicU64,
-@@ -621,6 +640,7 @@ impl Engine {
+@@ -679,6 +698,7 @@ impl Engine {
              ceiling: std::sync::atomic::AtomicU64::new(ceiling),
              cpus: std::sync::atomic::AtomicUsize::new(vm_cpus()),
              memory_target: Mutex::new(ceiling),
@@ -52,7 +52,7 @@ index fa57a7e..da20381 100644
              memory_used: std::sync::atomic::AtomicU64::new(0),
              memory_stall: std::sync::atomic::AtomicU64::new(0),
              oom_kills: std::sync::atomic::AtomicU64::new(0),
-@@ -1337,7 +1357,8 @@ impl Engine {
+@@ -1654,7 +1674,8 @@ impl Engine {
  
      /// Every second: read what the guest holds and, on the Mac, give it that
      /// plus headroom through the balloon, the rest back to macOS. Pressure
@@ -62,7 +62,7 @@ index fa57a7e..da20381 100644
      /// balloon and nothing to give back: the reading is all, and it takes in
      /// this process too, which runs beside the containers there.
      fn start_balloon(self: &Arc<Self>) {
-@@ -1375,7 +1396,15 @@ impl Engine {
+@@ -1692,7 +1713,15 @@ impl Engine {
                  if !cfg!(target_os = "macos") {
                      continue;
                  }
@@ -79,7 +79,7 @@ index fa57a7e..da20381 100644
                  // Shrink in steps (so the guest's caches go gradually), grow at once.
                  let next = if want < *target { want.max(target.saturating_sub(256 << 20)) } else { want };
                  if next.abs_diff(*target) >= 64 << 20 {
-@@ -1388,6 +1417,16 @@ impl Engine {
+@@ -1705,6 +1734,16 @@ impl Engine {
  
      fn grow_memory(&self) {
          let mut target = self.memory_target.lock().unwrap_or_else(|e| e.into_inner());
@@ -96,7 +96,7 @@ index fa57a7e..da20381 100644
          let next = (*target + MEMORY_GROW).min(self.ceiling());
          if next != *target {
              *target = next;
-@@ -3171,6 +3210,24 @@ fn image_named(images: Vec<Image>, name: &str) -> Option<Image> {
+@@ -3678,6 +3717,24 @@ fn image_named(images: Vec<Image>, name: &str) -> Option<Image> {
      })
  }
  

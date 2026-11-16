@@ -16,7 +16,7 @@ gave the Mac's result. Nothing was run anywhere else.
 | PyTorch | 2.15.0 (Python 3.13 in the container) | The same version on both ends, or the server refuses the connection. |
 | Bridge protocols | MLX: 11. PyTorch: 3 | Each end refuses another version. See [protocol-mlx.md](protocol-mlx.md), [protocol-pytorch.md](protocol-pytorch.md). |
 | Docker Desktop | engine 29.2.1 | Every collection of the released code was run on it. |
-| Kiri | upstream `baa2d41` with [the patches](../kiri/README.md) | The collections that need one server were run through it on the released code, with its virtual machine at 8 CPUs and 16 GiB. Most of the earlier measurements were taken on it. |
+| Kiri | upstream `baa2d41` with [the patches](../kiri/README.md), which are now against `260cf66` | The collections that need one server were run through it on the released code, with its virtual machine at 8 CPUs and 16 GiB. Most of the earlier measurements were taken on it. |
 
 The bridge is for PyTorch 2.15.0, the one version it was built for and
 tested with. Another version needs its own operator lists, made on a Mac

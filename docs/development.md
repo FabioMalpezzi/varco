@@ -35,7 +35,7 @@ pytorch/
   tests/                  compat.py, compat_train.py, their comparator and inventories (expected/),
                           and the other test programs
 kiri/
-  patches/                two patches against Kiri baa2d41
+  patches/                two patches against Kiri 260cf66
   apply.sh                clones Kiri at that commit and applies them
 examples/                 one directory per use case, each with a run.sh
 scripts/

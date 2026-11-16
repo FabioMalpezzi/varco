@@ -90,8 +90,7 @@ KIRI_DATA_DIR=$PWD/target/gpu-data target/release/kiri daemon    # stays in the 
 
 Done when, from another terminal,
 `DOCKER_HOST=unix://$HOME/.kiri/run/docker.sock docker version` prints a
-`Server` section. For a build from source it reads `Server: Kiri` and
-`Version: 0.0.0`. The build commands were run in `kiri/kiri-src`: go back to
+`Server` section that reads `Server: Kiri`. The build commands were run in `kiri/kiri-src`: go back to
 the root of the clone, where every step below runs, and tell the scripts of
 this repository to use Kiri:
 

@@ -2,7 +2,7 @@
 
 [Kiri](https://github.com/libracoder/kiri) is a container engine for macOS,
 Windows and Linux that speaks the Docker API. These are two patches against
-its commit `baa2d41`, licensed under Apache-2.0 as Kiri is
+its commit `260cf66`, licensed under Apache-2.0 as Kiri is
 ([LICENSE-APACHE-2.0](LICENSE-APACHE-2.0)). They are not part of Kiri and
 were not proposed to it.
 
@@ -11,7 +11,7 @@ were not proposed to it.
 | [`0001-gpu-bridge-channel.patch`](patches/0001-gpu-bridge-channel.patch) | The channel. On an Apple-silicon Mac, a container created with a GPU request gets its end of the bridge. Nine files. |
 | [`0002-memory-headroom-after-shortage.patch`](patches/0002-memory-headroom-after-shortage.patch) | A fix to the memory balloon, found while measuring. One file. Independent of the first. |
 
-Each applies alone to `baa2d41`, and both apply together.
+Each applies alone to `260cf66`, and both apply together.
 
 ## The channel
 
@@ -81,7 +81,7 @@ after (the one it learns from), then 0 in 60
 ## Applying and building
 
 ```sh
-kiri/apply.sh             # clones Kiri at baa2d41 into kiri/kiri-src and applies both patches
+kiri/apply.sh             # clones Kiri at 260cf66 into kiri/kiri-src and applies both patches
 ```
 
 Then build Kiri as its own `docs/development.md` says, from that directory.
@@ -107,7 +107,8 @@ KIRI_DATA_DIR=$PWD/target/gpu-data target/release/kiri daemon
 ```
 
 Its Docker socket is `~/.kiri/run/docker.sock`, where `docker version`
-reports `Server: Kiri` with `Version: 0.0.0` for a build from source. How
+reports `Server: Kiri` (with `Version: 27.5.1`, the Docker engine version
+Kiri gives itself, for a build from `260cf66`). How
 to use it from there is in the [quick start](../docs/quickstart.md#kiri).
 
 The daemon keeps its images in its data directory. One started from a new
@@ -124,6 +125,18 @@ engine, and the image stays in the builder unless the build is given
 ([setup](../docs/setup.md#docker-desktop-or-kiri)).
 
 ## What was verified, and what was not
+
+The patches were written against Kiri's commit `baa2d41` and moved to
+`260cf66` on 16 November 2026, 20 commits later: two hunks were placed
+again by hand, and the unit test of the refusals was given the two fields
+Kiri had added to a container. On a fresh clone at `260cf66` with both
+patches, on an Apple M4 Max: the four build steps complete (103 s with
+Docker's cache), the ten unit tests named below pass, the channel and the
+four refusals behave as described, and through that daemon, with its
+default virtual machine and the images copied from Docker Desktop,
+`ENGINE=kiri scripts/setup-mac.sh`, `scripts/doctor.sh` with each bridge's
+server alone on the socket, and examples 1 and 5 gave the results of the
+earlier commit.
 
 Verified on a fresh clone of upstream Kiri at `baa2d41`, on an Apple M4 Max:
 

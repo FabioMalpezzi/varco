@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 (16 November 2026)
+
+- The two Kiri patches are against Kiri's commit `260cf66` (they were
+  against `baa2d41`). On a Kiri built from that commit the channel, the
+  installation, the diagnosis and one example per bridge were run again.
+
 ## 0.1.0 (16 November 2026)
 
 The first release.

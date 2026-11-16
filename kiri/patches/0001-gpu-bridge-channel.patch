@@ -1,8 +1,8 @@
 diff --git a/crates/kiri-init/src/linux/agent.rs b/crates/kiri-init/src/linux/agent.rs
-index c7c8774..f6d5398 100644
+index 524d2c1..498d1b8 100644
 --- a/crates/kiri-init/src/linux/agent.rs
 +++ b/crates/kiri-init/src/linux/agent.rs
-@@ -125,6 +125,9 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
+@@ -127,6 +127,9 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
          }
          let mut hung = false;
          for p in procs.values() {
@@ -12,7 +12,7 @@ index c7c8774..f6d5398 100644
              // A hung-up pty polls as ready all the time; skip it a moment.
              if p.tty_hup.is_some_and(|t| t.elapsed() < TTY_HUP_WAIT) {
                  hung = true;
-@@ -253,6 +256,13 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
+@@ -263,6 +266,13 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
                  }
                  continue;
              }
@@ -23,10 +23,10 @@ index c7c8774..f6d5398 100644
 +                }
 +                continue;
 +            }
-             if let Some(r) = relays.iter_mut().find(|r| r.owns(pfd.fd)) {
-                 r.step();
+             if super::copy::on_readable(pfd.fd, paths) {
                  continue;
-@@ -370,10 +380,12 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
+             }
+@@ -383,10 +393,12 @@ pub fn serve(mut conn: File, paths: &Paths) -> io::Result<()> {
                          wait_for_lease(&mut dhcp, std::time::Duration::from_secs(3));
                      }
                      let join_pid = kiri_proto::net_opts::values(spec.net.opts, kiri_proto::net_opts::NETNS).next().and_then(|t| running_pid(&procs, t));
@@ -41,7 +41,7 @@ index c7c8774..f6d5398 100644
                  } {
                      Ok(run) => {
 diff --git a/crates/kiri-init/src/linux/container.rs b/crates/kiri-init/src/linux/container.rs
-index f4fed65..9007559 100644
+index 0dc6769..94e8892 100644
 --- a/crates/kiri-init/src/linux/container.rs
 +++ b/crates/kiri-init/src/linux/container.rs
 @@ -49,6 +49,9 @@ pub struct NetCtx<'a> {
@@ -97,7 +97,7 @@ index f4fed65..9007559 100644
          let (r, w) = sys::pipe().map_err(cleanup)?;
          prepared.net_ready = Some(r);
          go = Some(w);
-@@ -336,6 +355,15 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
+@@ -343,6 +362,15 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
              None => e,
          }
      };
@@ -113,15 +113,15 @@ index f4fed65..9007559 100644
      let mut veths = Vec::new();
      // Not bridged, but with sysctls to write: no network to wait for.
      if let Some(go) = go.take_if(|_| !bridged) {
-@@ -397,6 +425,7 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
+@@ -404,6 +432,7 @@ pub fn spawn(spec: &RunSpec<'_>, paths: &Paths, net: NetCtx<'_>) -> io::Result<P
          dns_entries: (bridged && embedded_dns).then(|| (spec.net.bridge.to_owned(), spec.net.ip)).into_iter().collect(),
          veths,
          netns,
 +        gpu_bridge,
-         teardown: Some(Teardown { base, rootfs, cgroup, remove }),
+         teardown: Some(Teardown { base, cgroup, remove }),
      })
  }
-@@ -514,6 +543,7 @@ pub fn exec(spec: &ExecSpec<'_>, target_pid: libc::pid_t, paths: &Paths) -> io::
+@@ -557,6 +586,7 @@ pub fn exec(spec: &ExecSpec<'_>, target_pid: libc::pid_t, paths: &Paths) -> io::
          dns_entries: Vec::new(),
          veths: Vec::new(),
          netns: 0,
@@ -237,10 +237,10 @@ index 12576ec..f376019 100644
  mod tests {
      use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 diff --git a/crates/kiri-proto/src/lib.rs b/crates/kiri-proto/src/lib.rs
-index 670ef71..97f322e 100644
+index 03585d2..881e7f3 100644
 --- a/crates/kiri-proto/src/lib.rs
 +++ b/crates/kiri-proto/src/lib.rs
-@@ -192,6 +192,17 @@ pub const DNS_RELAY_PORT: u32 = 1037;
+@@ -201,6 +201,17 @@ pub const DNS_RELAY_PORT: u32 = 1037;
  /// `speed u32 | devid u32` then USB/IP (crates/kiri-init/src/linux/usb.rs).
  pub const USB_PORT: u32 = 1040;
  
@@ -258,7 +258,7 @@ index 670ef71..97f322e 100644
  pub mod copy_op {
      pub const IN: u8 = 1;
      pub const OUT: u8 = 2;
-@@ -453,8 +464,9 @@ pub struct RunSpec<'a> {
+@@ -462,8 +473,9 @@ pub struct RunSpec<'a> {
      pub caps: u64,
      /// HostConfig settings applied at start, one per line, tab-separated:
      /// `rlimit res soft hard`, `sysctl ns path value`, `device host
@@ -271,10 +271,10 @@ index 670ef71..97f322e 100644
  }
  
 diff --git a/crates/kiri/src/daemon/api.rs b/crates/kiri/src/daemon/api.rs
-index d1c2c2a..939e150 100644
+index 03ebb0e..93f7492 100644
 --- a/crates/kiri/src/daemon/api.rs
 +++ b/crates/kiri/src/daemon/api.rs
-@@ -1440,7 +1440,7 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
+@@ -1542,7 +1542,7 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
      // refused now with Docker's error rather than at start.
      let host_opts = super::hostopts::from_host(host);
      super::hostopts::guest_lines(&host_opts, network_mode == "host").map_err(Error::BadRequest)?;
@@ -283,7 +283,7 @@ index d1c2c2a..939e150 100644
      if let Some(s) = body["StopSignal"].as_str().filter(|s| !s.is_empty()) {
          parse_signal(s)?;
      }
-@@ -1479,6 +1479,10 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
+@@ -1577,6 +1577,10 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
              env.push(p);
          }
      }
@@ -294,7 +294,7 @@ index d1c2c2a..939e150 100644
      for e in given {
          let key = e.split('=').next().unwrap_or_default().to_owned();
          env.retain(|x| x.split('=').next() != Some(key.as_str()));
-@@ -1557,10 +1561,11 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
+@@ -1655,10 +1659,11 @@ pub(super) fn create(req: &Request, engine: &Engine) -> Result<Value, Error> {
  }
  
  /// `--network container:<target>`: Docker's checks, then the mode as it is
@@ -308,7 +308,7 @@ index d1c2c2a..939e150 100644
      Ok(format!("container:{id}"))
  }
  
-@@ -1913,6 +1918,7 @@ fn inspect(c: &Container, nets: &[super::network::Network]) -> Value {
+@@ -2013,6 +2018,7 @@ fn inspect(c: &Container, nets: &[super::network::Network]) -> Value {
              "Devices": super::hostopts::inspect(&c.spec.host_opts, "Devices"),
              "DeviceCgroupRules": super::hostopts::inspect(&c.spec.host_opts, "DeviceCgroupRules"),
              "GroupAdd": super::hostopts::inspect(&c.spec.host_opts, "GroupAdd"),
@@ -317,10 +317,10 @@ index d1c2c2a..939e150 100644
          "NetworkSettings": network_settings(c, nets),
          "Mounts": c.spec.mount_info,
 diff --git a/crates/kiri/src/daemon/engine.rs b/crates/kiri/src/daemon/engine.rs
-index 542762a..ac42326 100644
+index b65e52c..20d93a5 100644
 --- a/crates/kiri/src/daemon/engine.rs
 +++ b/crates/kiri/src/daemon/engine.rs
-@@ -245,8 +245,8 @@ pub struct Spec {
+@@ -263,8 +263,8 @@ pub struct Spec {
      /// `--link` / Compose `links`: /etc/hosts entries for these containers.
      #[serde(default)]
      pub links: Vec<Link>,
@@ -331,7 +331,7 @@ index 542762a..ac42326 100644
      #[serde(default)]
      pub host_opts: serde_json::Value,
  }
-@@ -681,6 +681,10 @@ impl Engine {
+@@ -775,6 +775,10 @@ impl Engine {
          if cfg!(target_os = "macos") {
              vm.listen(kiri_proto::DNS_RELAY_PORT, Box::new(super::dns::serve_relay))?;
          }
@@ -342,7 +342,7 @@ index 542762a..ac42326 100644
          // Everything else on the guest's disk belongs to containers that are gone.
          let keep: Vec<String> = self.lock().containers.keys().cloned().collect();
          vm.retain(&keep)?;
-@@ -1940,10 +1944,21 @@ impl Engine {
+@@ -2341,10 +2345,21 @@ impl Engine {
          out
      }
  
@@ -364,7 +364,7 @@ index 542762a..ac42326 100644
      fn network_container(&self, id: &str, target: &str) -> Result<(String, String, String, String), Error> {
          let st = self.lock();
          let target = resolve(&st, target)?;
-@@ -1955,11 +1970,7 @@ impl Engine {
+@@ -2356,11 +2371,7 @@ impl Engine {
              return Err(Error::Conflict(format!("cannot join network of a non running container: {target}")));
          }
          let hostname = if c.spec.hostname.is_empty() { c.short_id().to_owned() } else { c.spec.hostname.clone() };
@@ -377,7 +377,7 @@ index 542762a..ac42326 100644
          Ok((target, hostname, c.spec.domainname.clone(), mode))
      }
  
-@@ -3125,6 +3136,127 @@ fn resolve(st: &State, key: &str) -> Result<String, Error> {
+@@ -3636,6 +3647,129 @@ fn resolve(st: &State, key: &str) -> Result<String, Error> {
      }
  }
  
@@ -420,6 +420,7 @@ index 542762a..ac42326 100644
 +        }))
 +        .unwrap();
 +        Container {
++            lifecycle: Arc::new(Mutex::new(0)),
 +            // Sixty-four characters, as real ids are: `short_id` takes twelve.
 +            id: format!("{name:f<64}"),
 +            name: name.to_owned(),
@@ -443,6 +444,7 @@ index 542762a..ac42326 100644
 +            forwards: None,
 +            paused: false,
 +            extra_ips: Vec::new(),
++            extra_ifs: Vec::new(),
 +            ip6: None,
 +            extra_ip6s: Vec::new(),
 +            live: false,

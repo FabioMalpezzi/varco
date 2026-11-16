@@ -47,7 +47,7 @@ the Unix socket `~/.kiri/run/gpu.sock` on the Mac (a nine-file patch in
 | | |
 |---|---|
 | Machine | Apple M4 Max, 128 GB, macOS 26.6.2 |
-| Kiri | upstream at `baa2d41` with the two patches of [`kiri/patches/`](../kiri/) (the GPU channel and the memory-headroom change below); VM of 2 CPUs and 8 GB unless stated, and of 8 CPUs and 16 GiB for the measurements on the released code |
+| Kiri | upstream at `baa2d41`, the commit the patches were against when the measurements were taken (they are now against `260cf66`), with the two patches of [`kiri/patches/`](../kiri/) (the GPU channel and the memory-headroom change below); VM of 2 CPUs and 8 GB unless stated, and of 8 CPUs and 16 GiB for the measurements on the released code |
 | Docker Desktop | engine 29.2.1, 16 CPUs |
 | MLX | 0.32.4 on both ends; mlx-lm 0.32.2; the patch and the server at the protocol version each table names |
 | PyTorch | 2.15.0 (Python 3.13 in the container), the same version on both ends; the rows marked 2.12.1 were taken with that version (Python 3.11) |
