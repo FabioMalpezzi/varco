@@ -177,8 +177,8 @@ measured figures and the limits, and a runnable example.
 - Containers that share one MLX server are not separated from each other,
   and custom Metal kernels are off unless you turn them on
   ([docs/security.md](docs/security.md)).
-- Kiri's channel is two patches against one commit of Kiri, not part of
-  Kiri.
+- Kiri's channel is a patch against one commit of Kiri. Kiri does not plan
+  to include it ([kiri/README.md](kiri/README.md)).
 
 [docs/compatibility.md](docs/compatibility.md) has the full list, and
 [docs/roadmap.md](docs/roadmap.md) says what could be done about each item

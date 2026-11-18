@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2 (18 November 2026)
+
+- The two Kiri patches are against Kiri's commit `69dc0b7`, its `main` of
+  18 November 2026 (they were against `260cf66`). On a Kiri built from that
+  commit the channel, the refusals, the diagnosis and the seven examples
+  were run again.
+- Kiri does not plan to include the channel (its issue 356, closed as not
+  planned): the patch stays in this repository.
+
 ## 0.1.1 (16 November 2026)
 
 - The two Kiri patches are against Kiri's commit `260cf66` (they were

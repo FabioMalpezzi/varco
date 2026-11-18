@@ -2,11 +2,18 @@
 
 [Kiri](https://github.com/libracoder/kiri) is a container engine for macOS,
 Windows and Linux that speaks the Docker API. These are two patches against
-its commit `260cf66`, licensed under Apache-2.0 as Kiri is
-([LICENSE-APACHE-2.0](LICENSE-APACHE-2.0)). They are not part of Kiri. On
-16 November 2026 the channel was proposed to Kiri in its
-[issue 356](https://github.com/libracoder/kiri/issues/356), and the memory
-change was reported in its
+its commit `69dc0b7`, licensed under Apache-2.0 as Kiri is
+([LICENSE-APACHE-2.0](LICENSE-APACHE-2.0)). They are not part of Kiri.
+
+The channel was proposed to Kiri on 16 November 2026 in its
+[issue 356](https://github.com/libracoder/kiri/issues/356). Kiri's
+maintainer closed it the next day as not planned: Kiri works on the
+container engine itself, and the channel is outside that. The patch stays
+here for those who build Kiri themselves, and is moved to a newer commit of
+Kiri when someone needs it: on 18 November 2026 it was moved to `69dc0b7`,
+Kiri's `main` of that day. With Docker Desktop the bridges need no patch.
+
+The memory change was reported in Kiri's
 [issue 210](https://github.com/libracoder/kiri/issues/210), which tracks the
 same cause and for which Kiri's maintainer announced a fix in Kiri 0.2.2.
 
@@ -15,7 +22,7 @@ same cause and for which Kiri's maintainer announced a fix in Kiri 0.2.2.
 | [`0001-gpu-bridge-channel.patch`](patches/0001-gpu-bridge-channel.patch) | The channel. On an Apple-silicon Mac, a container created with a GPU request gets its end of the bridge. Nine files. |
 | [`0002-memory-headroom-after-shortage.patch`](patches/0002-memory-headroom-after-shortage.patch) | A fix to the memory balloon, found while measuring. One file. Independent of the first. |
 
-Each applies alone to `260cf66`, and both apply together.
+Each applies alone to `69dc0b7`, and both apply together.
 
 ## The channel
 
@@ -85,7 +92,7 @@ after (the one it learns from), then 0 in 60
 ## Applying and building
 
 ```sh
-kiri/apply.sh             # clones Kiri at 260cf66 into kiri/kiri-src and applies both patches
+kiri/apply.sh             # clones Kiri at 69dc0b7 into kiri/kiri-src and applies both patches
 ```
 
 Then build Kiri as its own `docs/development.md` says, from that directory.
@@ -112,7 +119,7 @@ KIRI_DATA_DIR=$PWD/target/gpu-data target/release/kiri daemon
 
 Its Docker socket is `~/.kiri/run/docker.sock`, where `docker version`
 reports `Server: Kiri` (with `Version: 27.5.1`, the Docker engine version
-Kiri gives itself, for a build from `260cf66`). How
+Kiri gives itself, for a build from `69dc0b7`). How
 to use it from there is in the [quick start](../docs/quickstart.md#kiri).
 
 The daemon keeps its images in its data directory. One started from a new
@@ -129,6 +136,21 @@ engine, and the image stays in the builder unless the build is given
 ([setup](../docs/setup.md#docker-desktop-or-kiri)).
 
 ## What was verified, and what was not
+
+On 18 November 2026 the patches were moved from `260cf66` to `69dc0b7`,
+31 commits later. In the channel, two places had changed around it and
+keep both changes: the guest agent now waits for the container's root
+before it reports the start, and opens the bridge's listener after that,
+while the program still waits for its network; and the daemon's startup
+keeps the files of containers missing from a damaged container list, and
+starts the bridge's listener just before. The memory patch applied as it
+was. On that commit, on an Apple M4 Max, with Docker's cache: each patch
+applies alone and both together; the four build steps complete in 123 s;
+`cargo test -p kiri` passes (428 tests, 6 ignored), with the ten named
+below; the listener, the variable and the refusals behave as described;
+and through that daemon, with its default virtual machine and the images
+copied from Docker Desktop, `scripts/doctor.sh` with each bridge's server
+alone on the socket and the seven examples completed with status 0.
 
 The patches were written against Kiri's commit `baa2d41` and moved to
 `260cf66` on 16 November 2026, 20 commits later: two hunks were placed

@@ -32,7 +32,7 @@ PyTorch
 Kiri
   https://github.com/libracoder/kiri
   Apache License, Version 2.0.
-  kiri/patches/ are patches against the commit 260cf66. They are derivative
+  kiri/patches/ are patches against the commit 69dc0b7. They are derivative
   works of Kiri and are licensed under the Apache License, Version 2.0; the
   changes they make are described in kiri/README.md.
 

@@ -278,7 +278,7 @@ the import check of vLLM.
 
 ### Proposing it upstream
 
-This is the order that was thought through, and where it stands on 16
+This is the order that was thought through, and where it stands on 18
 November 2026:
 
 1. a working demonstration and this repository, with its measurements:
@@ -287,9 +287,12 @@ November 2026:
    directory next to the existing backends: asked in MLX's
    [discussion 4900](https://github.com/ml-explore/mlx/discussions/4900);
 3. Kiri's channel, proposed in Kiri's
-   [issue 356](https://github.com/libracoder/kiri/issues/356), and the
-   memory change, reported in its
-   [issue 210](https://github.com/libracoder/kiri/issues/210);
+   [issue 356](https://github.com/libracoder/kiri/issues/356) and closed
+   by its maintainer as not planned, because it is outside the container
+   engine: it stays a patch in this repository. The memory change,
+   reported in Kiri's
+   [issue 210](https://github.com/libracoder/kiri/issues/210), where a
+   fix is announced for Kiri 0.2.2;
 4. a discussion, not a pull request, with vllm-metal on splitting what its
    operations are from how Metal runs them: not started.
 
