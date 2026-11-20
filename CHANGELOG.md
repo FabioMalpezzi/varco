@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 (20 November 2026)
+
+- Added an opt-in native Mac HTTP server for MLX-LM. Two queues share one
+  model and one GPU stream. Short prompts get priority between blocks of
+  up to 512 tokens. A long request gets a turn after at most four short
+  turns when both queues have work.
+- Added an HTTP check for streaming, client disconnects and sustained short
+  traffic, and a repeatable burst comparison. See the [native server guide](docs/native-priority.md)
+  for the command and measurements on an M4 Max.
+
 ## 0.1.2 (18 November 2026)
 
 - The two Kiri patches are against Kiri's commit `69dc0b7`, its `main` of

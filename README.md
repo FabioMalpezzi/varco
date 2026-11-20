@@ -63,6 +63,10 @@ which this repository carries two patches, a container started with
 `--gpus all` finds its bridge at `127.0.0.1:47700` inside its own network,
 and a container started without it finds none.
 
+For MLX programs served directly on the Mac, varco also has an experimental
+[short-prompt priority server](docs/native-priority.md). Interactive requests
+can get a turn between blocks of a long prompt.
+
 ## Quick start
 
 You need a Mac with Apple silicon and macOS 14 or later, Docker Desktop, the
