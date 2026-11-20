@@ -7,7 +7,7 @@ otherwise. That code is not in this repository, whose history begins with
 release 0.1.0. [Measured again on the released code](#measured-again-on-the-released-code)
 gives what was run on 16 November 2026 on the code as released (MLX protocol
 11, PyTorch protocol 3, PyTorch 2.15.0), from a fresh clone, with Docker
-Desktop and through Kiri.
+Desktop and through Kiri. The [native server comparison](#native-server-priority-in-varco-020) covers the changes from 0.1.2 to 0.2.0.
 
 These are measurements of a prototype on a single Mac, and were not repeated
 on other hardware. Many rows are one run; the method below says how the
@@ -15,8 +15,7 @@ others were taken. Rows marked "as reported" come from the notes of the work
 and were not read back from raw files. Two training projects used as test
 beds are private: their rows are field reports, kept because they are the
 heaviest real programs the bridges ran, and a reader cannot reproduce them.
-Everything else on this page can be run again with the programs in this
-repository: see [Running them again](#running-them-again).
+For the bridge tests and benchmarks in this repository, see [Running them again](#running-them-again).
 
 Related pages: [what the Apple GPU allows](apple-gpu-limits.md),
 [what is and is not supported](compatibility.md), [roadmap](roadmap.md),
@@ -718,6 +717,66 @@ Desktop, in the order Mac, container. The container gave 131.0 and 141.4
 tokens per second and the Mac 138.5 and 137.8, with identical text. The
 Mac's two figures are above those of its four earlier runs, and that run
 was not repeated.
+
+## Native server priority in Varco 0.2.0
+
+The 0.1.2 Mac environment provided the standard MLX-LM server. Version 0.2.0
+adds an opt-in priority server on the same MLX 0.32.4 and MLX-LM 0.32.2.
+The baseline below was the standard server in the release test environment;
+it uses the same dependency versions as 0.1.2. The comparison measures the
+native HTTP service on a Mac. The Docker and Kiri bridge protocols stayed
+the same across these two releases.
+
+On 20 November 2026, [the HTTP burst test](../mlx/tests/priority_server_http.py)
+sent three short requests during a long prompt on one M4 Max with 128 GB
+and Qwen3.6-35B-A3B-4bit. Each value is the median of four paired rounds
+with prefix caching disabled and alternating server order.
+
+| Client measurement | Standard server available in 0.1.2 | Priority server in 0.2.0 | Time saved |
+|---|---:|---:|---:|
+| Short client 1, first visible text | 21.75 s | 0.66 s | 21.10 s |
+| Short client 2, first visible text | 21.70 s | 0.61 s | 21.10 s |
+| Short client 3, first visible text | 21.66 s | 0.56 s | 21.10 s |
+| Long request, completion | 23.24 s | 9.15 s | 14.10 s |
+
+Savings are differences of the unrounded medians. Each client received the
+word it requested. The [four individual rounds and reproduction instructions](native-priority.md#release-measurements)
+give the scope of this comparison.
+
+### Why the scheduler uses one stream and 512-token blocks
+
+A short request can spend most of its time waiting for a long prompt's
+current block to finish. In four instrumented prototype rounds, the first
+short client waited a median 297 ms for that block. Once the short batch
+got its turn, its first GPU compute pass started within 3.4 ms (median).
+Reducing the wait between turns offered more room for improvement than
+optimizing the CPU instructions used to submit work.
+
+Three prototype comparisons on the same Mac guided the design. Their
+timings are from separate experiments and should be compared within each
+experiment:
+
+- **One model, one GPU stream and two queues.** With 512-token long blocks,
+  a single stream with explicit priority gave the three clients first text
+  in 0.35–0.45 s (per-client medians). Two independent streams sharing the
+  same weights took 1.88–2.06 s. The single stream lets the scheduler give
+  the next turn to the waiting short batch.
+- **512 tokens per long block.** In the generator test, reducing the block
+  from 2,048 to 512 tokens brought the short client's median first-token
+  time from 1.88 to 0.44 s, at a median paired cost of 0.07 s for the long
+  request. At 256 tokens the short client reached 0.28 s, but the long
+  request took 1.40 s longer than at 2,048.
+- **A fixed block size.** A policy that grew blocks after a quiet period
+  often left the first unexpected arrival behind a 2,048-token block. Over
+  72 short requests per policy in synthetic bursts and irregular traffic,
+  the 95th percentile to first text was 1.13 s with fixed 512-token blocks
+  and 1.77 s with the adaptive policy.
+
+The released scheduler also gives a waiting long batch a turn after at most
+four consecutive short turns, so a continuous stream of short requests
+can coexist with a long document. The release comparison measures the
+combined scheduling changes. The results apply to this model, machine and
+workload.
 
 ## Running them again
 
